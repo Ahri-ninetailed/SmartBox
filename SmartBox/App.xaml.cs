@@ -1,12 +1,14 @@
-﻿namespace SmartBox
+﻿using SmartBox.Views;
+
+namespace SmartBox
 {
     public partial class App : Application
     {
-        public App()
+        public App(AppShell appShell)
         {
             InitializeComponent();
 
-            MainPage = new AppShell();
+            MainPage = appShell;
         }
     }
 }

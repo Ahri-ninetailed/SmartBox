@@ -1,0 +1,28 @@
+<Shell
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:SmartBox.Views"
+    x:Class="SmartBox.Views.AppShell"
+    FlyoutBehavior="Disabled"
+    Shell.NavBarHasShadow="False">
+
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="5,2,5,2" >
+
+            <HorizontalStackLayout Grid.Column="0" Spacing="5">
+                <Button Text="Dictionary" Command="{Binding GoToDictionaryCommand}" />
+                <Button Text="Parser" Command="{Binding GoToParserCommand}" />
+            </HorizontalStackLayout>
+
+            <Grid Grid.Column="1" />
+
+            <HorizontalStackLayout Grid.Column="2" Spacing="5">
+                <Button Text="🌞" Command="{Binding LightThemeClickedCommand}" />
+                <Button Text="🌙" Command="{Binding DarkThemeClickedCommand}" />
+            </HorizontalStackLayout>
+        </Grid>
+    </Shell.TitleView>
+
+    <ShellContent ContentTemplate="{DataTemplate views:DictionaryPage}" Route="dictionary" />
+    <ShellContent ContentTemplate="{DataTemplate views:ParserPage}" Route="parser" />
+</Shell>
