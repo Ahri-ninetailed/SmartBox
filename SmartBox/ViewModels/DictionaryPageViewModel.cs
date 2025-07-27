@@ -1,29 +1,44 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿#pragma warning disable MVVMTK0045
+
+using CommunityToolkit.Mvvm.ComponentModel;
+using SmartBox.Models;
+using System.Collections.ObjectModel;
 
 namespace SmartBox.ViewModels
 {
     public partial class DictionaryPageViewModel : ObservableObject
     {
-        private int _count = 0;
-
-#pragma warning disable MVVMTK0045
+        [ObservableProperty]
+        private ObservableCollection<Word> words;
 
         [ObservableProperty]
-        private string counterText = "Click me";
+        private ObservableCollection<object> rawSelectedWords = new();
+        
+        private IEnumerable<Word> SelectedWords => RawSelectedWords.OfType<Word>();
 
-#pragma warning restore MVVMTK0045
-
-        [RelayCommand]
-        private void Counter()
+        public DictionaryPageViewModel()
         {
-            _count++;
-
-            CounterText = _count == 1
-                ? $"Clicked {_count} time"
-                : $"Clicked {_count} times";
-
-            SemanticScreenReader.Announce(CounterText);
+            Words = new ObservableCollection<Word>
+            {
+                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
+                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
+                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
+                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
+                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
+                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
+                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
+                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
+                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
+                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
+                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
+                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
+                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
+                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
+                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
+                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
+                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
+                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
+            };
         }
     }
 }

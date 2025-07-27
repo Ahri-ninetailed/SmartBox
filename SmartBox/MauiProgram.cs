@@ -3,6 +3,7 @@ using SmartBox.Interfaces;
 using SmartBox.Services;
 using SmartBox.ViewModels;
 using SmartBox.Views;
+using Syncfusion.Maui.Core.Hosting;
 
 namespace SmartBox
 {
@@ -12,7 +13,7 @@ namespace SmartBox
         {
             var builder = MauiApp.CreateBuilder();
             builder
-               
+                .ConfigureSyncfusionCore()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
