@@ -70,6 +70,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\DI\DI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Compile Update="Views\DictionaryPage.xaml.cs">
 	    <DependentUpon>DictionaryPage.xaml</DependentUpon>
 	  </Compile>

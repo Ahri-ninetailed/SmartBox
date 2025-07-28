@@ -1,9 +1,6 @@
 ﻿using CommunityToolkit.Maui;
+using DI;
 using Microsoft.Extensions.Logging;
-using SmartBox.Interfaces;
-using SmartBox.Services;
-using SmartBox.ViewModels;
-using SmartBox.Views;
 using Syncfusion.Maui.Core.Hosting;
 
 namespace SmartBox
@@ -26,20 +23,8 @@ namespace SmartBox
     		builder.Logging.AddDebug();
 #endif
 
-            builder.Services.AddSingleton<AppShell>();
-            builder.Services.AddSingleton<App>();
-
-            // 👇 Регистрируем View
-            builder.Services.AddSingleton<DictionaryPage>();
-            builder.Services.AddSingleton<ParserPage>();
-
-            // 👇 Регистрируем ViewModel
-            builder.Services.AddTransient<AppShellViewModel>();
-            builder.Services.AddTransient<DictionaryPageViewModel>();
-            builder.Services.AddTransient<ParserPageViewModel>();
-
-            // 👇 Регистрируем UI Services
-            builder.Services.AddSingleton<IThemeService, ThemeService>();
+            builder.Services.AddUIServices();
+            builder.Services.AddAllServices();
 
             builder.UseMauiApp(sp => sp.GetRequiredService<App>());
 
