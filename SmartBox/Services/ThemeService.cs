@@ -1,4 +1,5 @@
-﻿using SmartBox.Interfaces;
+﻿using Mapster;
+using SmartBox.Interfaces;
 using Syncfusion.Maui.Themes;
 
 namespace SmartBox.Services
@@ -12,22 +13,11 @@ namespace SmartBox.Services
             _syncfusionThemeDictionary = source;
         }
 
-        public void SetTheme(AppTheme theme)
+        public void SetTheme(AppTheme source)
         {
-            Application.Current!.UserAppTheme = theme;
+            Application.Current!.UserAppTheme = source;
 
-            _syncfusionThemeDictionary!.VisualTheme = MapTheme(theme);
-        }
-
-        // TODO: Использовать Mapster
-        private static SfVisuals MapTheme(AppTheme source)
-        {
-            return source switch
-            {
-                AppTheme.Dark => SfVisuals.MaterialDark,
-                AppTheme.Light => SfVisuals.MaterialLight,
-                _ => throw new ArgumentException(),
-            };
+            _syncfusionThemeDictionary!.VisualTheme = source.Adapt<SfVisuals>();
         }
     }
 }

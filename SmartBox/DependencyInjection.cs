@@ -1,4 +1,6 @@
-﻿using SmartBox.Interfaces;
+﻿using Mapster;
+using SmartBox.Interfaces;
+using SmartBox.MappingConfigs;
 using SmartBox.Services;
 using SmartBox.ViewModels;
 using SmartBox.Views;
@@ -9,6 +11,12 @@ namespace SmartBox
     {
         public static IServiceCollection AddUIServices(this IServiceCollection services)
         {
+            var config = TypeAdapterConfig.GlobalSettings;
+
+            new AppThemeMappingConfig().Register(config);
+
+            services.AddSingleton(config);
+
             services.AddSingleton<AppShell>();
             services.AddSingleton<App>();
 
