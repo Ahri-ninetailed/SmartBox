@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.Logging;
 using SmartBox.Interfaces;
 using SmartBox.Services;
 using SmartBox.ViewModels;
@@ -14,6 +15,7 @@ namespace SmartBox
             var builder = MauiApp.CreateBuilder();
             builder
                 .ConfigureSyncfusionCore()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

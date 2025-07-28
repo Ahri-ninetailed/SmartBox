@@ -1,6 +1,7 @@
 ﻿#pragma warning disable MVVMTK0045
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SmartBox.Models;
 using System.Collections.ObjectModel;
 
@@ -13,7 +14,10 @@ namespace SmartBox.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<object> rawSelectedWords = new();
-        
+
+        [ObservableProperty]
+        private string searchText;
+
         private IEnumerable<Word> SelectedWords => RawSelectedWords.OfType<Word>();
 
         public DictionaryPageViewModel()
@@ -39,6 +43,11 @@ namespace SmartBox.ViewModels
                 new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
                 new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
             };
+        }
+        [RelayCommand]
+        private void Search()
+        {
+
         }
     }
 }

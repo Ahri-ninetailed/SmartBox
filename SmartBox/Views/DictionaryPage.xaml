@@ -15,7 +15,13 @@
         <VerticalStackLayout Padding="30,0" Spacing="25">
             
             <HorizontalStackLayout>
-                <Entry x:Name="WordEntry" Placeholder="Word" />
+                <Entry x:Name="WordEntry" Placeholder="Word" Text="{Binding SearchText, Mode=TwoWay}">
+                    <Entry.Behaviors>
+                        <toolkit:UserStoppedTypingBehavior
+                            Command="{Binding SearchCommand}"
+                            StoppedTypingTimeThreshold="1000" />
+                    </Entry.Behaviors>
+                </Entry>
                 <Entry x:Name="CommentEntry" Placeholder="Comment"/>
             </HorizontalStackLayout>
             
