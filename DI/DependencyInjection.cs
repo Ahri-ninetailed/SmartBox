@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Application;
+using Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DI
 {
@@ -6,6 +8,9 @@ namespace DI
     {
         public static IServiceCollection AddAllServices(this IServiceCollection services)
         {
+            services.AddInfrastructureServices();
+            services.AddApplicationServices();
+
             return services;
         }
     }

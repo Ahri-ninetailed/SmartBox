@@ -15,7 +15,7 @@ namespace SmartBox.Services
 
         public void SetTheme(AppTheme source)
         {
-            Application.Current!.UserAppTheme = source;
+            Microsoft.Maui.Controls.Application.Current!.UserAppTheme = source;
 
             _syncfusionThemeDictionary!.VisualTheme = source.Adapt<SfVisuals>();
         }

@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Maui;
-using DI;
+﻿using Application;
+using CommunityToolkit.Maui;
+using Infrastructure;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Core.Hosting;
 
@@ -24,7 +25,8 @@ namespace SmartBox
 #endif
 
             builder.Services.AddUIServices();
-            builder.Services.AddAllServices();
+            builder.Services.AddInfrastructureServices();
+            builder.Services.AddApplicationServices();
 
             builder.UseMauiApp(sp => sp.GetRequiredService<App>());
 
