@@ -38,15 +38,29 @@
                 SelectionMode="Multiple"
                 GridLinesVisibility="Both"
                 HeaderGridLinesVisibility="Both"
+                NavigationMode="Row"
                 Margin="10">
 
                 <syncfusion:SfDataGrid.Columns>
                     <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" />
                     <syncfusion:DataGridTextColumn MappingName="Value" HeaderText="Word" />
-                    <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" />
-                    <syncfusion:DataGridTextColumn MappingName="Type" HeaderText="Type" />
-                    <syncfusion:DataGridCheckBoxColumn MappingName="ShouldStudy" HeaderText="Should Study" />
-                    <syncfusion:DataGridCheckBoxColumn MappingName="Learned" HeaderText="Learned" />
+                    <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" Format="0.##########" />
+                    <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" />
+                    <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study">
+                        <syncfusion:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding ShouldStudy}" IsEnabled="False" HorizontalOptions="Center"/>
+                            </DataTemplate>
+                        </syncfusion:DataGridTemplateColumn.CellTemplate>
+                    </syncfusion:DataGridTemplateColumn>
+
+                    <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned">
+                        <syncfusion:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding Learned}" IsEnabled="False" HorizontalOptions="Center"/>
+                            </DataTemplate>
+                        </syncfusion:DataGridTemplateColumn.CellTemplate>
+                    </syncfusion:DataGridTemplateColumn>
                     <syncfusion:DataGridTextColumn MappingName="Comments" HeaderText="Comments" />
                 </syncfusion:SfDataGrid.Columns>
             </syncfusion:SfDataGrid>
