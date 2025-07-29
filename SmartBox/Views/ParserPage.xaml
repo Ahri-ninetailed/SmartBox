@@ -5,10 +5,6 @@
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
     x:Class="SmartBox.Views.ParserPage">
 
-    <ContentPage.BindingContext>
-        <vm:ParserPageViewModel />
-    </ContentPage.BindingContext>
-
     <ScrollView>
         <VerticalStackLayout Padding="30,0" Spacing="25">
             

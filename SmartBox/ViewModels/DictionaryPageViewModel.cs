@@ -3,6 +3,7 @@
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Mapster;
 using SmartBox.Models;
 using System.Collections.ObjectModel;
 
@@ -19,42 +20,35 @@ namespace SmartBox.ViewModels
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
-        private string searchText;
+        private string? searchText;
 
         private IEnumerable<Word> SelectedWords => RawSelectedWords.OfType<Word>();
 
-        public DictionaryPageViewModel() { }
-
         public DictionaryPageViewModel(IDictionaryService dictionaryService)
         {
+            words = new ObservableCollection<Word>();
+
             _dictionaryService = dictionaryService;
-
-            Words = new ObservableCollection<Word>
-            {
-                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
-                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
-                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
-                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
-                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
-                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
-                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
-                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
-                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
-                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
-                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
-                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
-                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
-                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
-                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
-                new Word { Id = 1, Value = "apple", Popularity = 0.8, Type = "noun", ShouldStudy = true, Learned = false, Comments = "Common word" },
-                new Word { Id = 2, Value = "benevolent", Popularity = 0.3, Type = "adjective", ShouldStudy = true, Learned = false, Comments = "Advanced vocabulary" },
-                new Word { Id = 3, Value = "run", Popularity = 0.95, Type = "verb", ShouldStudy = false, Learned = true, Comments = "" },
-            };
         }
-        [RelayCommand]
-        private async Task Search()
-        {
 
+        [RelayCommand]
+        private async Task SearchAsync()
+        {
+            
+        }
+
+        public async Task InitializeAsync()
+        {
+            Words = await GetWordsForLearningAsync();
+        }
+
+        private async Task<ObservableCollection<Word>> GetWordsForLearningAsync()
+        {
+            Application.Models.Word[] rawWords = await _dictionaryService.GetWordsForLearningAsync();
+
+            Word[] result = rawWords.Adapt<Word[]>();
+
+            return new ObservableCollection<Word>(result);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Application;
 using CommunityToolkit.Maui;
 using Infrastructure;
+using Mapster;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Core.Hosting;
 
@@ -23,6 +24,11 @@ namespace SmartBox
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+
+            TypeAdapterConfig config = TypeAdapterConfig.GlobalSettings;
+            config.RequireExplicitMapping = true;
+            config.RequireDestinationMemberSource = true;
+            builder.Services.AddSingleton(config);
 
             builder.Services.AddUIServices();
             builder.Services.AddInfrastructureServices();

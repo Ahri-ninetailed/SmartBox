@@ -7,10 +7,6 @@
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
     x:Class="SmartBox.Views.DictionaryPage">
 
-    <ContentPage.BindingContext>
-        <vm:DictionaryPageViewModel />
-    </ContentPage.BindingContext>
-
     <ScrollView>
         <VerticalStackLayout Padding="30,0" Spacing="25">
             

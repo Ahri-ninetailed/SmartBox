@@ -10,6 +10,13 @@ namespace SmartBox.Views
 
             BindingContext = viewModel;
         }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            await ((DictionaryPageViewModel)BindingContext).InitializeAsync();
+        }
     }
 
 }
