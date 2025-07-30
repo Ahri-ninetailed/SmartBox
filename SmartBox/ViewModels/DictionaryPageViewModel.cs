@@ -1,9 +1,9 @@
 ﻿#pragma warning disable MVVMTK0045
-
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mapster;
+using SmartBox.Interfaces;
 using SmartBox.Models;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -13,6 +13,7 @@ namespace SmartBox.ViewModels
     public partial class DictionaryPageViewModel : ObservableObject
     {
         private readonly IDictionaryService _dictionaryService;
+        private readonly IAlertService _alertService;
 
         [ObservableProperty]
         private ObservableCollection<Word> words;
@@ -25,7 +26,7 @@ namespace SmartBox.ViewModels
 
         private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
 
-        public DictionaryPageViewModel(IDictionaryService dictionaryService)
+        public DictionaryPageViewModel(IDictionaryService dictionaryService, IAlertService alertService)
         {
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
 
@@ -34,6 +35,7 @@ namespace SmartBox.ViewModels
             searchText = string.Empty;
 
             _dictionaryService = dictionaryService;
+            _alertService = alertService;
         }
 
         [RelayCommand]
@@ -56,15 +58,21 @@ namespace SmartBox.ViewModels
         [RelayCommand(CanExecute = nameof(IsLearnButtonEnabled))]
         private async Task LearnAsync()
         {
-            List<int> idsForLearning = new List<int>();
+            IEnumerable<int> idsForLearning = SelectedWords.Select(word => word.Id);
 
-            // TODO: нужно удостовериться, что слова действительно изучены и не произошло ошибок
-            //await _dictionaryService.LearnWordsAsync(idsForLearning);
+            try
+            {
+                //await _dictionaryService.LearnWordsAsync(idsForLearning);
+            }
+            catch (Exception ex)
+            {
+                await _alertService.DisplayAlertAsync("Error", $"Failed to mark words as learned: {ex.Message}");
+
+                return;
+            }
 
             foreach (Word word in SelectedWords)
             {
-                idsForLearning.Add(word.Id);
-
                 Words.Remove(word);
             }
         }

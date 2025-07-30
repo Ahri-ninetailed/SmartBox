@@ -29,6 +29,7 @@ namespace SmartBox
             services.AddTransient<ParserPageViewModel>();
 
             services.AddSingleton<IThemeService, ThemeService>();
+            services.AddSingleton<IAlertService, AlertService>();
 
             return services;
         }
