@@ -20,7 +20,7 @@ namespace SmartBox.ViewModels
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
-        private string? searchText;
+        private string searchText;
 
         private IEnumerable<Word> SelectedWords => RawSelectedWords.OfType<Word>();
 
@@ -28,13 +28,26 @@ namespace SmartBox.ViewModels
         {
             words = new ObservableCollection<Word>();
 
+            searchText = string.Empty;
+
             _dictionaryService = dictionaryService;
         }
 
         [RelayCommand]
         private async Task SearchAsync()
         {
-            
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Words = await GetWordsForLearningAsync();
+
+                return;
+            }
+
+            Application.Models.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
+
+            Word[] words = appWords.Adapt<Word[]>();
+
+            Words = new ObservableCollection<Word>(words);
         }
 
         public async Task InitializeAsync()
@@ -44,11 +57,11 @@ namespace SmartBox.ViewModels
 
         private async Task<ObservableCollection<Word>> GetWordsForLearningAsync()
         {
-            Application.Models.Word[] rawWords = await _dictionaryService.GetWordsForLearningAsync();
+            Application.Models.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
 
-            Word[] result = rawWords.Adapt<Word[]>();
+            Word[] words = appWords.Adapt<Word[]>();
 
-            return new ObservableCollection<Word>(result);
+            return new ObservableCollection<Word>(words);
         }
     }
 }

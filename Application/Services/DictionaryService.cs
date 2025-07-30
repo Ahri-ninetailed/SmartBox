@@ -16,9 +16,16 @@ namespace Application.Services
 
         public async Task<Word[]> GetWordsForLearningAsync()
         {
-            Domain.Models.Word[] rawResult = await _wordRepository.GetWordsForLearningAsync();
+            Domain.Models.Word[] words = await _wordRepository.GetWordsForLearningAsync();
 
-            return rawResult.Adapt<Word[]>();
+            return words.Adapt<Word[]>();
+        }
+
+        public async Task<Word[]> SearchWordsAsync(string entry)
+        {
+            Domain.Models.Word[] words = await _wordRepository.SearchWordsAsync(entry);
+
+            return words.Adapt<Word[]>();
         }
     }
 }

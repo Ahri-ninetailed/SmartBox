@@ -50,5 +50,40 @@ namespace Infrastructure.Services
                 throw;
             }
         }
+
+        public async Task<Domain.Models.Word[]> SearchWordsAsync(string entry)
+        {
+            try
+            {
+                using MyDbContext _db = _dbFactory.CreateDbContext();
+
+                Models.Word[] words = await _db.EnglishWords
+                    .Where(el => el.Value.Contains(entry))
+                    .Select(el => new
+                    {
+                        Word = el,
+                        StartsWith = el.Value.StartsWith(entry),
+                        IndexOf = el.Value.IndexOf(entry),
+                        Length = el.Value.Length
+                    })
+                    .OrderByDescending(x => x.StartsWith)// Сначала те, что начинаются на value
+                    .ThenBy(x => x.IndexOf)              // Затем те, где value ближе к началу
+                    .ThenBy(x => x.Length)               // Потом более короткие
+                    .ThenBy(x => x.Word.Value)
+                    .Select(x => x.Word)
+                    .ToArrayAsync();
+
+                Domain.Models.Word[] result = words.Adapt<Domain.Models.Word[]>();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // TODO: начать логировать
+                // TODO: добавить полли
+                //_logger.LogError(ex, "Ошибка при поиске слов в бд");
+                throw;
+            }
+        }
     }
 }
