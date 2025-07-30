@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Mapster;
 using SmartBox.Models;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace SmartBox.ViewModels
 {
@@ -22,10 +23,12 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         private string searchText;
 
-        private IEnumerable<Word> SelectedWords => RawSelectedWords.OfType<Word>();
+        private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
 
         public DictionaryPageViewModel(IDictionaryService dictionaryService)
         {
+            RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
+
             words = new ObservableCollection<Word>();
 
             searchText = string.Empty;
@@ -50,17 +53,20 @@ namespace SmartBox.ViewModels
             Words = new ObservableCollection<Word>(words);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(IsLearnButtonEnabled))]
         private async Task LearnAsync()
         {
-            if (SelectedWords.Count() == 0)
+            List<int> idsForLearning = new List<int>();
+
+            // TODO: нужно удостовериться, что слова действительно изучены и не произошло ошибок
+            //await _dictionaryService.LearnWordsAsync(idsForLearning);
+
+            foreach (Word word in SelectedWords)
             {
-                return;
+                idsForLearning.Add(word.Id);
+
+                Words.Remove(word);
             }
-
-            IEnumerable<int> idsForLearning = SelectedWords.Select(word => word.Id);
-
-            await _dictionaryService.LearnWordsAsync(idsForLearning);
         }
 
         public async Task InitializeAsync()
@@ -75,6 +81,16 @@ namespace SmartBox.ViewModels
             Word[] words = appWords.Adapt<Word[]>();
 
             return new ObservableCollection<Word>(words);
+        }
+
+        private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            LearnCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool IsLearnButtonEnabled()
+        {
+            return RawSelectedWords.Any();
         }
     }
 }
