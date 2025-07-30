@@ -7,64 +7,57 @@
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
     x:Class="SmartBox.Views.DictionaryPage">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="30,0" Spacing="25">
-            
-            <HorizontalStackLayout>
-                <Entry x:Name="WordEntry" Placeholder="Word" Text="{Binding SearchText, Mode=TwoWay}">
-                    <Entry.Behaviors>
-                        <toolkit:UserStoppedTypingBehavior
-                            Command="{Binding SearchCommand}"
-                            StoppedTypingTimeThreshold="1000" />
-                    </Entry.Behaviors>
-                </Entry>
-                <Entry x:Name="CommentEntry" Placeholder="Comment"/>
-            </HorizontalStackLayout>
-            
-            <HorizontalStackLayout>
-                <Button Text="Search"/>
-                <Button Text="Add" />
-                <Button Text="Mark" />
-                <Button Text="Get" />
-                <Button Text="Learn" />
-                <Button Text="Change" />
-            </HorizontalStackLayout>
-            
-            <syncfusion:SfDataGrid
-                x:Name="WordTable"
-                ItemsSource="{Binding Words}"
-                SelectedRows="{Binding RawSelectedWords, Mode=TwoWay}"
-                AllowResizingColumns="True"
-                SelectionMode="Multiple"
-                GridLinesVisibility="Both"
-                HeaderGridLinesVisibility="Both"
-                NavigationMode="Row"
-                Margin="10">
+    <Grid Padding="30,0" RowDefinitions="Auto,*,Auto">
 
-                <syncfusion:SfDataGrid.Columns>
-                    <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" />
-                    <syncfusion:DataGridTextColumn MappingName="Value" HeaderText="Word" />
-                    <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" Format="0.##########" />
-                    <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" />
-                    <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study">
-                        <syncfusion:DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding ShouldStudy}" IsEnabled="False" HorizontalOptions="Center"/>
-                            </DataTemplate>
-                        </syncfusion:DataGridTemplateColumn.CellTemplate>
-                    </syncfusion:DataGridTemplateColumn>
+        <HorizontalStackLayout Grid.Row="0" Spacing="10">
+            <Entry x:Name="WordEntry" Placeholder="Word" Text="{Binding SearchText, Mode=TwoWay}">
+                <Entry.Behaviors>
+                    <toolkit:UserStoppedTypingBehavior
+                        Command="{Binding SearchCommand}"
+                        StoppedTypingTimeThreshold="1000" />
+                </Entry.Behaviors>
+            </Entry>
+            <Entry x:Name="CommentEntry" Placeholder="Comment"/>
+        </HorizontalStackLayout>
 
-                    <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned">
-                        <syncfusion:DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <CheckBox IsChecked="{Binding Learned}" IsEnabled="False" HorizontalOptions="Center"/>
-                            </DataTemplate>
-                        </syncfusion:DataGridTemplateColumn.CellTemplate>
-                    </syncfusion:DataGridTemplateColumn>
-                    <syncfusion:DataGridTextColumn MappingName="Comments" HeaderText="Comments" />
-                </syncfusion:SfDataGrid.Columns>
-            </syncfusion:SfDataGrid>
-            
-        </VerticalStackLayout>
-    </ScrollView>
+        <syncfusion:SfDataGrid
+            x:Name="WordTable"
+            Grid.Row="1"
+            ItemsSource="{Binding Words}"
+            SelectedRows="{Binding RawSelectedWords, Mode=TwoWay}"
+            AllowResizingColumns="True"
+            SelectionMode="Multiple"
+            GridLinesVisibility="Both"
+            HeaderGridLinesVisibility="Both"
+            NavigationMode="Row"
+            Margin="10">
+            <syncfusion:SfDataGrid.Columns>
+                <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" />
+                <syncfusion:DataGridTextColumn MappingName="Value" HeaderText="Word" />
+                <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" Format="0.##########" />
+                <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" />
+                <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study">
+                    <syncfusion:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding ShouldStudy}" IsEnabled="False" HorizontalOptions="Center"/>
+                        </DataTemplate>
+                    </syncfusion:DataGridTemplateColumn.CellTemplate>
+                </syncfusion:DataGridTemplateColumn>
+                <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned">
+                    <syncfusion:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Learned}" IsEnabled="False" HorizontalOptions="Center"/>
+                        </DataTemplate>
+                    </syncfusion:DataGridTemplateColumn.CellTemplate>
+                </syncfusion:DataGridTemplateColumn>
+                <syncfusion:DataGridTextColumn MappingName="Comments" HeaderText="Comments" />
+            </syncfusion:SfDataGrid.Columns>
+        </syncfusion:SfDataGrid>
+
+        <HorizontalStackLayout Grid.Row="2" Spacing="10">
+            <Button Text="Add" />
+            <Button Text="Mark" />
+            <Button Text="Learn" />
+        </HorizontalStackLayout>
+    </Grid>
 </ContentPage>
