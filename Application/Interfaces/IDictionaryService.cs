@@ -7,5 +7,7 @@ namespace Application.Interfaces
         Task<Word[]> GetWordsForLearningAsync();
 
         Task<Word[]> SearchWordsAsync(string entry);
+
+        Task LearnWordsAsync(IEnumerable<int> ids);
     }
 }

@@ -50,6 +50,19 @@ namespace SmartBox.ViewModels
             Words = new ObservableCollection<Word>(words);
         }
 
+        [RelayCommand]
+        private async Task LearnAsync()
+        {
+            if (SelectedWords.Count() == 0)
+            {
+                return;
+            }
+
+            IEnumerable<int> idsForLearning = SelectedWords.Select(word => word.Id);
+
+            await _dictionaryService.LearnWordsAsync(idsForLearning);
+        }
+
         public async Task InitializeAsync()
         {
             Words = await GetWordsForLearningAsync();

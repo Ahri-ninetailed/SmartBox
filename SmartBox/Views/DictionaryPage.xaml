@@ -55,9 +55,7 @@
         </syncfusion:SfDataGrid>
 
         <HorizontalStackLayout Grid.Row="2" Spacing="10">
-            <Button Text="Add" />
-            <Button Text="Mark" />
-            <Button Text="Learn" />
+            <Button Text="Learn" Command="{Binding LearnCommand}" />
         </HorizontalStackLayout>
     </Grid>
 </ContentPage>

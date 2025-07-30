@@ -7,5 +7,7 @@ namespace Domain.Interfaces
         Task<Word[]> GetWordsForLearningAsync(int count = 40);
 
         Task<Word[]> SearchWordsAsync(string entry);
+
+        Task LearnWordsAsync(IEnumerable<int> ids);
     }
 }

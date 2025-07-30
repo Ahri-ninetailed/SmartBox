@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Infrastructure.Models;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,6 +48,32 @@ namespace Infrastructure.Services
                 // TODO: начать логировать
                 // TODO: добавить полли
                 //_logger.LogError(ex, "Ошибка при получении слов для изучения из бд");
+                throw;
+            }
+        }
+
+        public async Task LearnWordsAsync(IEnumerable<int> ids)
+        {
+            // TODO: логгировать какие слова изучены
+            try
+            {
+                using MyDbContext db = _dbFactory.CreateDbContext();
+
+                IQueryable<Word> words = db.EnglishWords.Where(el => ids.Contains(el.Id));
+
+                foreach (Word word in words)
+                {
+                    word.Learned = true;
+                    word.ShouldStudy = false;
+                }
+
+                await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // TODO: начать логировать
+                // TODO: добавить полли
+                // _logger.LogError(ex, "Ошибка при изучении слов из бд");
                 throw;
             }
         }

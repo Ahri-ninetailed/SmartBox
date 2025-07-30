@@ -21,6 +21,11 @@ namespace Application.Services
             return words.Adapt<Word[]>();
         }
 
+        public async Task LearnWordsAsync(IEnumerable<int> ids)
+        {
+            await _wordRepository.LearnWordsAsync(ids);
+        }
+
         public async Task<Word[]> SearchWordsAsync(string entry)
         {
             Domain.Models.Word[] words = await _wordRepository.SearchWordsAsync(entry);
