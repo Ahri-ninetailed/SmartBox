@@ -24,9 +24,6 @@ namespace Infrastructure
                 options.UseNpgsql(sqlConnectionString);
 
                 options.EnableDetailedErrors();
-
-                // TODO: Добавить серилог
-                //options.LogTo(message => Log.Logger.Information(message), LogLevel.Information);
             });
 
             return services;

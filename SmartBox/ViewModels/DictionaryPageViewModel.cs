@@ -3,6 +3,7 @@ using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Mapster;
+using Microsoft.Extensions.Logging;
 using SmartBox.Interfaces;
 using SmartBox.Models;
 using System.Collections.ObjectModel;
@@ -12,6 +13,12 @@ namespace SmartBox.ViewModels
 {
     public partial class DictionaryPageViewModel : ObservableObject
     {
+        private const string ErrorDialogTitle = "Error";
+        private const string SearchWordsErrorMessage = "Failed to search words";
+        private const string LearnWordsErrorMessage = "Failed to mark words as learned";
+        private const string LoadWordsErrorMessage = "Failed to get words for learning";
+
+        private readonly ILogger<DictionaryPageViewModel> _logger;
         private readonly IDictionaryService _dictionaryService;
         private readonly IAlertService _alertService;
 
@@ -26,8 +33,10 @@ namespace SmartBox.ViewModels
 
         private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
 
-        public DictionaryPageViewModel(IDictionaryService dictionaryService, IAlertService alertService)
+        public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, IDictionaryService dictionaryService, IAlertService alertService)
         {
+            _logger = logger;
+
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
 
             words = new ObservableCollection<Word>();
@@ -58,8 +67,9 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
-                await _alertService.DisplayAlertAsync("Error", $"Failed to search words: {ex.Message}");
-                // TODO: логгирование
+                _logger.LogError(ex, SearchWordsErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{SearchWordsErrorMessage}: {ex.Message}");
             }
         }
 
@@ -74,8 +84,10 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
-                await _alertService.DisplayAlertAsync("Error", $"Failed to mark words as learned: {ex.Message}");
-                // TODO: логгирование
+                _logger.LogError(ex, LearnWordsErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{LearnWordsErrorMessage}: {ex.Message}");
+
                 return;
             }
 
@@ -102,8 +114,9 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
-                await _alertService.DisplayAlertAsync("Error", $"Failed to get words for learning: {ex.Message}");
-                //TODO: логгирование
+                _logger.LogError(ex, LoadWordsErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{LoadWordsErrorMessage}: {ex.Message}");
             }
 
             return new ObservableCollection<Word>();

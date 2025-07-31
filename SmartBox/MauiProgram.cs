@@ -3,6 +3,7 @@ using CommunityToolkit.Maui;
 using Infrastructure;
 using Mapster;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using Syncfusion.Maui.Core.Hosting;
 
 namespace SmartBox
@@ -11,7 +12,7 @@ namespace SmartBox
     {
         public static MauiApp CreateMauiApp()
         {
-            var builder = MauiApp.CreateBuilder();
+            MauiAppBuilder builder = MauiApp.CreateBuilder();
             builder
                 .ConfigureSyncfusionCore()
                 .UseMauiCommunityToolkit()
@@ -21,9 +22,32 @@ namespace SmartBox
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            #region Logging Configuration
+            string appName = AppInfo.Name;
+
+            string logsPath = Path.Combine(FileSystem.AppDataDirectory, $"{appName}_Logs", $"{appName.ToLowerInvariant()}-.log");
+
+            string logsDirectory = Path.GetDirectoryName(logsPath)!;
+            if (!Directory.Exists(logsDirectory))
+            {
+                Directory.CreateDirectory(logsDirectory);
+            }
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.File(logsPath,
+                              rollingInterval: RollingInterval.Day,
+                              outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties}{NewLine}{Exception}")
+                .CreateLogger();
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
+
+            builder.Logging.AddSerilog(Log.Logger);
+
+            #endregion
 
             TypeAdapterConfig config = TypeAdapterConfig.GlobalSettings;
             config.RequireExplicitMapping = true;

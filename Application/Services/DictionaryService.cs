@@ -2,17 +2,20 @@
 using Application.Models;
 using Domain.Interfaces;
 using Mapster;
+using Microsoft.Extensions.Logging;
 using Polly;
 
 namespace Application.Services
 {
     public class DictionaryService : IDictionaryService
     {
+        private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
         private readonly ResiliencePipeline _retryPipeline;
 
-        public DictionaryService(IWordRepository wordRepository)
+        public DictionaryService(IWordRepository wordRepository, ILogger<DictionaryService> logger)
         {
+            _logger = logger;
             _wordRepository = wordRepository;
 
             _retryPipeline = new ResiliencePipelineBuilder()
@@ -25,9 +28,11 @@ namespace Application.Services
                             ex.Message.Contains("transient failure", StringComparison.OrdinalIgnoreCase)),
                     OnRetry = args =>
                     {
-                        // TODO: логгирование
-                       /* _logger.LogWarning("Retry attempt {AttemptNumber} for operation. Exception: {Exception}",
-                                         args.AttemptNumber, args.Outcome.Exception?.Message);*/
+                        string operationName = args.Context.OperationKey ?? "Unknown";
+
+                        _logger.LogWarning("Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}",
+                                         args.AttemptNumber, operationName, args.Outcome.Exception?.GetType().Name);
+                        
                         return ValueTask.CompletedTask;
                     }
                 })
@@ -36,37 +41,64 @@ namespace Application.Services
 
         public async Task<Word[]> GetWordsForLearningAsync()
         {
-            return await _retryPipeline.ExecuteAsync(async _ =>
-            {
-                Domain.Models.Word[] words = await _wordRepository.GetWordsForLearningAsync();
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(GetWordsForLearningAsync));
 
-                return words.Adapt<Word[]>();
-            });
+            try
+            {
+                return await _retryPipeline.ExecuteAsync(async _ =>
+                {
+                    Domain.Models.Word[] words = await _wordRepository.GetWordsForLearningAsync();
+
+                    return words.Adapt<Word[]>();
+                }, context);
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
         }
 
         public async Task LearnWordsAsync(IEnumerable<int> ids)
         {
-            await _retryPipeline.ExecuteAsync(async _ =>
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(LearnWordsAsync));
+
+            try
             {
-                Domain.Models.Word[] words = await _wordRepository.GetWordsByIds(ids);
-
-                foreach (Domain.Models.Word word in words)
+                await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    word.Learn();
-                }
+                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIds(ids);
 
-                await _wordRepository.SaveWords(words);
-            });
+                    foreach (Domain.Models.Word word in words)
+                    {
+                        word.Learn();
+                    }
+
+                    await _wordRepository.SaveWords(words);
+                }, context);
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
         }
 
         public async Task<Word[]> SearchWordsAsync(string entry)
         {
-            return await _retryPipeline.ExecuteAsync(async _ =>
-            {
-                Domain.Models.Word[] words = await _wordRepository.SearchWordsAsync(entry);
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchWordsAsync));
 
-                return words.Adapt<Word[]>();
-            });
+            try
+            {
+                return await _retryPipeline.ExecuteAsync(async _ =>
+                {
+                    Domain.Models.Word[] words = await _wordRepository.SearchWordsAsync(entry);
+
+                    return words.Adapt<Word[]>();
+                }, context);
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
         }
     }
 }
