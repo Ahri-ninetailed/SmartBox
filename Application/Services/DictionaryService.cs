@@ -23,7 +23,14 @@ namespace Application.Services
 
         public async Task LearnWordsAsync(IEnumerable<int> ids)
         {
-            await _wordRepository.LearnWordsAsync(ids);
+            Domain.Models.Word[] words = await _wordRepository.GetWordsByIds(ids);
+
+            foreach (Domain.Models.Word word in words)
+            {
+                word.Learn();
+            }
+
+           await _wordRepository.SaveWords(words);
         }
 
         public async Task<Word[]> SearchWordsAsync(string entry)

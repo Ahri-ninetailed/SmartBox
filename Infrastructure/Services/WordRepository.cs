@@ -14,6 +14,29 @@ namespace Infrastructure.Services
             _dbFactory = dbFactory;
         }
 
+        public async Task<Domain.Models.Word[]> GetWordsByIds(IEnumerable<int> ids)
+        {
+            using MyDbContext db = _dbFactory.CreateDbContext();
+
+            Word[] words  = await db.EnglishWords.Where(el => ids.Contains(el.Id)).ToArrayAsync();
+
+            return words.Adapt<Domain.Models.Word[]>();
+        }
+
+        public async Task SaveWords(Domain.Models.Word[] words)
+        {
+            using MyDbContext db = _dbFactory.CreateDbContext();
+
+            Word[] rows = words.Adapt<Word[]>();
+
+            foreach (Word row in rows)
+            {
+                db.Entry(row).State = EntityState.Modified;
+            }
+
+            await db.SaveChangesAsync();
+        }
+
         public async Task<Domain.Models.Word[]> GetWordsForLearningAsync(int count = 40)
         {
             try
@@ -52,32 +75,6 @@ namespace Infrastructure.Services
             }
         }
 
-        public async Task LearnWordsAsync(IEnumerable<int> ids)
-        {
-            // TODO: логгировать какие слова изучены
-            try
-            {
-                using MyDbContext db = _dbFactory.CreateDbContext();
-
-                IQueryable<Word> words = db.EnglishWords.Where(el => ids.Contains(el.Id));
-
-                foreach (Word word in words)
-                {
-                    word.Learned = true;
-                    word.ShouldStudy = false;
-                }
-
-                await db.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                // TODO: начать логировать
-                // TODO: добавить полли
-                // _logger.LogError(ex, "Ошибка при изучении слов из бд");
-                throw;
-            }
-        }
-
         public async Task<Domain.Models.Word[]> SearchWordsAsync(string entry)
         {
             try
@@ -86,7 +83,7 @@ namespace Infrastructure.Services
 
                 Models.Word[] words = await _db.EnglishWords
                     .Where(el => el.Value.Contains(entry))
-                    .Select(el => new
+                    .Select(el => new // TODO: сортировку можно в бизнес логику вынести
                     {
                         Word = el,
                         StartsWith = el.Value.StartsWith(entry),

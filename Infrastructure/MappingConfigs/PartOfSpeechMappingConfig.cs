@@ -7,9 +7,12 @@ namespace Infrastructure.MappingConfigs
         public void Register(TypeAdapterConfig config)
         {
             config.NewConfig<Models.PartOfSpeech?, Domain.Models.PartOfSpeech>().MapWith(src => MapPartOfSpeech(src));
+
+            config.NewConfig<Domain.Models.PartOfSpeech, Models.PartOfSpeech?>().MapWith(src => MapPartOfSpeech(src));
+
         }
 
-        public static Domain.Models.PartOfSpeech MapPartOfSpeech(Models.PartOfSpeech? src)
+        private static Domain.Models.PartOfSpeech MapPartOfSpeech(Models.PartOfSpeech? src)
         {
             switch (src)
             {
@@ -20,6 +23,21 @@ namespace Infrastructure.MappingConfigs
                     return Domain.Models.PartOfSpeech.Verb;
                 case null:
                     return Domain.Models.PartOfSpeech.Unknown;
+                default:
+                    throw new InvalidOperationException($"Unknown enum value: {src}");
+            }
+        }
+
+        private static Models.PartOfSpeech? MapPartOfSpeech(Domain.Models.PartOfSpeech src)
+        {
+            switch (src)
+            {
+                case Domain.Models.PartOfSpeech.Verb:
+                    return Models.PartOfSpeech.Verb;
+                case Domain.Models.PartOfSpeech.Other:
+                    return Models.PartOfSpeech.Other;
+                case Domain.Models.PartOfSpeech.Unknown:
+                    return null;// TODO: сделать в бд такой же тип частей речей как и в Domain
                 default:
                     throw new InvalidOperationException($"Unknown enum value: {src}");
             }
