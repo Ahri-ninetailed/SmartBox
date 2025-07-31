@@ -9,6 +9,10 @@ namespace Application.Services
 {
     public class DictionaryService : IDictionaryService
     {
+        private const string RetryAttemptMessage = "Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}";
+        private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds}";
+        private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds}";
+
         private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
         private readonly ResiliencePipeline _retryPipeline;
@@ -30,9 +34,8 @@ namespace Application.Services
                     {
                         string operationName = args.Context.OperationKey ?? "Unknown";
 
-                        _logger.LogWarning("Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}",
-                                         args.AttemptNumber, operationName, args.Outcome.Exception?.GetType().Name);
-                        
+                        _logger.LogWarning(RetryAttemptMessage, args.AttemptNumber, operationName, args.Outcome.Exception?.GetType().Name);
+
                         return ValueTask.CompletedTask;
                     }
                 })
@@ -74,6 +77,34 @@ namespace Application.Services
                     }
 
                     await _wordRepository.SaveWords(words);
+
+                    _logger.LogInformation(LearnedWordsMessage, words.Length, string.Join(", ", words.Select(w => w.Id)));
+                }, context);
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
+        }
+
+        public async Task MarkWordsAsync(IEnumerable<int> ids)
+        {
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(MarkWordsAsync));
+
+            try
+            {
+                await _retryPipeline.ExecuteAsync(async _ =>
+                {
+                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIds(ids);
+
+                    foreach (Domain.Models.Word word in words)
+                    {
+                        word.MarkForStudy();
+                    }
+
+                    await _wordRepository.SaveWords(words);
+
+                    _logger.LogInformation(MarkedWordsMessage, words.Length, string.Join(", ", words.Select(w => w.Id)));
                 }, context);
             }
             finally

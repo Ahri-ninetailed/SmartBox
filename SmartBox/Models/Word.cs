@@ -1,13 +1,20 @@
-﻿namespace SmartBox.Models
+﻿#pragma warning disable MVVMTK0045
+
+using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace SmartBox.Models
 {
-    public class Word
+    public partial class Word : ObservableObject
     {
         public int Id { get; set; }
         public required string Value { get; set; }
         public decimal? Popularity { get; set; }
         public required string PartOfSpeech { get; set; }
-        public bool ShouldStudy { get; set; }
-        public bool Learned { get; set; }
+
+        [ObservableProperty]
+        private bool shouldStudy;
+        [ObservableProperty]
+        private bool learned;
         public string? Comments { get; set; }
     }
 }

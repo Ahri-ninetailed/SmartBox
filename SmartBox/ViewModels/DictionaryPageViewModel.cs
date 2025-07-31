@@ -16,6 +16,7 @@ namespace SmartBox.ViewModels
         private const string ErrorDialogTitle = "Error";
         private const string SearchWordsErrorMessage = "Failed to search words";
         private const string LearnWordsErrorMessage = "Failed to mark words as learned";
+        private const string MarkWordsErrorMessage = "Failed to mark words for further study";
         private const string LoadWordsErrorMessage = "Failed to get words for learning";
 
         private readonly ILogger<DictionaryPageViewModel> _logger;
@@ -23,13 +24,13 @@ namespace SmartBox.ViewModels
         private readonly IAlertService _alertService;
 
         [ObservableProperty]
-        private ObservableCollection<Word> words;
+        private ObservableCollection<Word> words = new();
 
         [ObservableProperty]
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
-        private string searchText;
+        private string searchText = string.Empty;
 
         private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
 
@@ -38,10 +39,6 @@ namespace SmartBox.ViewModels
             _logger = logger;
 
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
-
-            words = new ObservableCollection<Word>();
-
-            searchText = string.Empty;
 
             _dictionaryService = dictionaryService;
             _alertService = alertService;
@@ -73,7 +70,7 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(IsLearnButtonEnabled))]
+        [RelayCommand(CanExecute = nameof(CanLearnWords))]
         private async Task LearnAsync()
         {
             IEnumerable<int> idsForLearning = SelectedWords.Select(word => word.Id);
@@ -95,6 +92,32 @@ namespace SmartBox.ViewModels
             {
                 Words.Remove(word);
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMarkWords))]
+        private async Task MarkAsync()
+        {
+            IEnumerable<int> idsForMarking = SelectedWords.Select(word => word.Id);
+
+            try
+            {
+                //await _dictionaryService.MarkWordsAsync(idsForMarking);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MarkWordsErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{MarkWordsErrorMessage}: {ex.Message}");
+
+                return;
+            }
+
+            foreach (Word word in SelectedWords)
+            {
+                word.ShouldStudy = true;
+            }
+
+            ClearSelectedWords();
         }
 
         public async Task InitializeAsync()
@@ -125,11 +148,29 @@ namespace SmartBox.ViewModels
         private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             LearnCommand.NotifyCanExecuteChanged();
+            MarkCommand.NotifyCanExecuteChanged();
         }
 
-        private bool IsLearnButtonEnabled()
+        private void ClearSelectedWords()
         {
-            return RawSelectedWords.Any();
+            RawSelectedWords.CollectionChanged -= OnSelectedWordsChanged;
+            RawSelectedWords.Clear();
+            RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
+
+            LearnCommand.NotifyCanExecuteChanged();
+            MarkCommand.NotifyCanExecuteChanged();
+        }
+
+        private bool CanLearnWords()
+        {
+            return SelectedWords.Any() &&
+                   SelectedWords.All(word => word.Learned == false);
+        }
+
+        private bool CanMarkWords()
+        {
+            return SelectedWords.Any() &&
+                   SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
         }
     }
 }

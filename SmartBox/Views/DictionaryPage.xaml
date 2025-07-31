@@ -39,14 +39,14 @@
                 <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding ShouldStudy}" IsEnabled="False" HorizontalOptions="Center"/>
+                            <CheckBox IsChecked="{Binding ShouldStudy, Mode=OneWay}" IsEnabled="False" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>
                 </syncfusion:DataGridTemplateColumn>
                 <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding Learned}" IsEnabled="False" HorizontalOptions="Center"/>
+                            <CheckBox IsChecked="{Binding Learned, Mode=OneWay}" IsEnabled="False" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>
                 </syncfusion:DataGridTemplateColumn>
@@ -55,6 +55,7 @@
         </syncfusion:SfDataGrid>
 
         <HorizontalStackLayout Grid.Row="2" Spacing="10">
+            <Button Text="Mark" Command="{Binding MarkCommand}" />
             <Button Text="Learn" Command="{Binding LearnCommand}" />
         </HorizontalStackLayout>
     </Grid>
