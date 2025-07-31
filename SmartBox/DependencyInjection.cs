@@ -14,6 +14,7 @@ namespace SmartBox
             var config = TypeAdapterConfig.GlobalSettings;
 
             new AppThemeMappingConfig().Register(config);
+            new PartOfSpeechMappingConfig().Register(config);
             new WordMappingConfig().Register(config);
 
             services.AddSingleton(config);

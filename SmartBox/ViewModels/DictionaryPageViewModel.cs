@@ -32,6 +32,12 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         private string searchText = string.Empty;
 
+        [ObservableProperty]
+        private PartOfSpeech selectedPartOfSpeech;
+
+        [ObservableProperty]
+        private ObservableCollection<PartOfSpeech> partOfSpeechOptions = new(Enum.GetValues<PartOfSpeech>());
+
         private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
 
         public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, IDictionaryService dictionaryService, IAlertService alertService)

@@ -9,7 +9,7 @@ namespace SmartBox.Models
         public int Id { get; set; }
         public required string Value { get; set; }
         public decimal? Popularity { get; set; }
-        public required string PartOfSpeech { get; set; }
+        public PartOfSpeech PartOfSpeech { get; set; }
 
         [ObservableProperty]
         private bool shouldStudy;
