@@ -7,6 +7,10 @@ namespace Infrastructure.Services
 {
     public class WordRepository : IWordRepository
     {
+        private const string EmptyIdsCollectionError = "The ids collection cannot be empty";
+        private const string EmptyWordsCollectionError = "The words collection cannot be empty";
+        private const string EmptyEntryError = "The entry cannot be null or whitespace";
+
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
         public WordRepository(IDbContextFactory<MyDbContext> dbFactory)
@@ -16,6 +20,11 @@ namespace Infrastructure.Services
 
         public async Task<Domain.Models.Word[]> GetWordsByIds(IEnumerable<int> ids)
         {
+            if (ids.Any() == false)
+            {
+                throw new ArgumentException(EmptyIdsCollectionError);
+            }
+
             using MyDbContext db = _dbFactory.CreateDbContext();
 
             Word[] words  = await db.EnglishWords.Where(el => ids.Contains(el.Id)).ToArrayAsync();
@@ -25,6 +34,11 @@ namespace Infrastructure.Services
 
         public async Task SaveWords(Domain.Models.Word[] words)
         {
+            if (words.Any() == false)
+            {
+                throw new ArgumentException(EmptyWordsCollectionError);
+            }
+
             using MyDbContext db = _dbFactory.CreateDbContext();
 
             Word[] rows = words.Adapt<Word[]>();
@@ -67,6 +81,11 @@ namespace Infrastructure.Services
 
         public async Task<Domain.Models.Word[]> SearchWordsAsync(string entry)
         {
+            if (string.IsNullOrWhiteSpace(entry))
+            {
+                throw new ArgumentException(EmptyEntryError);
+            }
+
             using MyDbContext _db = _dbFactory.CreateDbContext();
 
             Word[] words = await _db.EnglishWords
