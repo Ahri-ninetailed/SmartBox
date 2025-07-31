@@ -41,18 +41,26 @@ namespace SmartBox.ViewModels
         [RelayCommand]
         private async Task SearchAsync()
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
+            try
             {
-                Words = await GetWordsForLearningAsync();
+                if (string.IsNullOrWhiteSpace(SearchText))
+                {
+                    Words = await GetWordsForLearningAsync();
 
-                return;
+                    return;
+                }
+
+                Application.Models.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
+
+                Word[] words = appWords.Adapt<Word[]>();
+
+                Words = new ObservableCollection<Word>(words);
             }
-
-            Application.Models.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
-
-            Word[] words = appWords.Adapt<Word[]>();
-
-            Words = new ObservableCollection<Word>(words);
+            catch (Exception ex)
+            {
+                await _alertService.DisplayAlertAsync("Error", $"Failed to search words: {ex.Message}");
+                // TODO: логгирование
+            }
         }
 
         [RelayCommand(CanExecute = nameof(IsLearnButtonEnabled))]
@@ -67,7 +75,7 @@ namespace SmartBox.ViewModels
             catch (Exception ex)
             {
                 await _alertService.DisplayAlertAsync("Error", $"Failed to mark words as learned: {ex.Message}");
-
+                // TODO: логгирование
                 return;
             }
 
@@ -84,11 +92,21 @@ namespace SmartBox.ViewModels
 
         private async Task<ObservableCollection<Word>> GetWordsForLearningAsync()
         {
-            Application.Models.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
+            try
+            {
+                Application.Models.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
 
-            Word[] words = appWords.Adapt<Word[]>();
+                Word[] words = appWords.Adapt<Word[]>();
 
-            return new ObservableCollection<Word>(words);
+                return new ObservableCollection<Word>(words);
+            }
+            catch (Exception ex)
+            {
+                await _alertService.DisplayAlertAsync("Error", $"Failed to get words for learning: {ex.Message}");
+                //TODO: логгирование
+            }
+
+            return new ObservableCollection<Word>();
         }
 
         private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
