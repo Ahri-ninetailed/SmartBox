@@ -13,16 +13,21 @@ namespace SmartBox.ViewModels
 {
     public partial class DictionaryPageViewModel : ObservableObject
     {
+        #region Constants
         private const string ErrorDialogTitle = "Error";
         private const string SearchWordsErrorMessage = "Failed to search words";
         private const string LearnWordsErrorMessage = "Failed to mark words as learned";
         private const string MarkWordsErrorMessage = "Failed to mark words for further study";
         private const string LoadWordsErrorMessage = "Failed to get words for learning";
+        #endregion
 
+        #region Fields
         private readonly ILogger<DictionaryPageViewModel> _logger;
         private readonly IDictionaryService _dictionaryService;
         private readonly IAlertService _alertService;
+        #endregion
 
+        #region Properties
         [ObservableProperty]
         private ObservableCollection<Word> words = new();
 
@@ -39,6 +44,7 @@ namespace SmartBox.ViewModels
         private ObservableCollection<PartOfSpeech> partOfSpeechOptions = new(Enum.GetValues<PartOfSpeech>());
 
         private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
+        #endregion
 
         public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, IDictionaryService dictionaryService, IAlertService alertService)
         {
@@ -50,6 +56,14 @@ namespace SmartBox.ViewModels
             _alertService = alertService;
         }
 
+        #region Public Methods
+        public async Task InitializeAsync()
+        {
+            Words = await GetWordsForLearningAsync();
+        }
+        #endregion
+
+        #region Commands
         [RelayCommand]
         private async Task SearchAsync()
         {
@@ -126,11 +140,45 @@ namespace SmartBox.ViewModels
             ClearSelectedWords();
         }
 
-        public async Task InitializeAsync()
+        [RelayCommand(CanExecute = nameof(CanAddWord))]
+        private async Task AddAsync()
         {
-            Words = await GetWordsForLearningAsync();
+
+        }
+        #endregion
+
+        #region CanExecute Methods
+        private bool CanLearnWords()
+        {
+            return SelectedWords.Any() &&
+                   SelectedWords.All(word => word.Learned == false);
         }
 
+        private bool CanMarkWords()
+        {
+            return SelectedWords.Any() &&
+                   SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
+        }
+
+        private bool CanAddWord() => string.IsNullOrWhiteSpace(SearchText) == false;
+        #endregion
+
+        #region Property Changed Handlers
+        partial void OnSearchTextChanged(string value)
+        {
+            AddCommand.NotifyCanExecuteChanged();
+        }
+        #endregion
+
+        #region Event Handlers
+        private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            LearnCommand.NotifyCanExecuteChanged();
+            MarkCommand.NotifyCanExecuteChanged();
+        }
+        #endregion
+
+        #region Private Helper Methods
         private async Task<ObservableCollection<Word>> GetWordsForLearningAsync()
         {
             try
@@ -151,12 +199,6 @@ namespace SmartBox.ViewModels
             return new ObservableCollection<Word>();
         }
 
-        private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            LearnCommand.NotifyCanExecuteChanged();
-            MarkCommand.NotifyCanExecuteChanged();
-        }
-
         private void ClearSelectedWords()
         {
             RawSelectedWords.CollectionChanged -= OnSelectedWordsChanged;
@@ -166,17 +208,6 @@ namespace SmartBox.ViewModels
             LearnCommand.NotifyCanExecuteChanged();
             MarkCommand.NotifyCanExecuteChanged();
         }
-
-        private bool CanLearnWords()
-        {
-            return SelectedWords.Any() &&
-                   SelectedWords.All(word => word.Learned == false);
-        }
-
-        private bool CanMarkWords()
-        {
-            return SelectedWords.Any() &&
-                   SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
-        }
+        #endregion
     }
 }
