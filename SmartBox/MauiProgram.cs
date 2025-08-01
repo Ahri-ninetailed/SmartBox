@@ -1,7 +1,6 @@
 ﻿using Application;
 using CommunityToolkit.Maui;
 using Infrastructure;
-using Mapster;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Syncfusion.Maui.Core.Hosting;
@@ -48,11 +47,6 @@ namespace SmartBox
             builder.Logging.AddSerilog(Log.Logger);
 
             #endregion
-
-            TypeAdapterConfig config = TypeAdapterConfig.GlobalSettings;
-            config.RequireExplicitMapping = true;
-            config.RequireDestinationMemberSource = true;
-            builder.Services.AddSingleton(config);
 
             builder.Services.AddUIServices();
             builder.Services.AddInfrastructureServices();

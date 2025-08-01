@@ -1,7 +1,8 @@
-﻿using Infrastructure.MappingConfigs;
-using Mapster;
+﻿using Infrastructure.Mappers;
+using Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Shared;
 
 namespace Infrastructure
 {
@@ -9,12 +10,10 @@ namespace Infrastructure
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
-            var config = TypeAdapterConfig.GlobalSettings;
-
-            new PartOfSpeechMappingConfig().Register(config);
-            new WordMappingConfig().Register(config);
-
-            services.AddSingleton(config);
+            services.AddSingleton<IMapper<PartOfSpeech?, Domain.Models.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Domain.Models.PartOfSpeech, PartOfSpeech?>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Word, Domain.Models.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Word, Word>, WordMapper>();
 
             services.AddSingleton<Domain.Interfaces.IWordRepository, Services.WordRepository>();
 

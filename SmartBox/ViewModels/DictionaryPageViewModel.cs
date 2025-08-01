@@ -2,8 +2,8 @@
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Mapster;
 using Microsoft.Extensions.Logging;
+using Shared;
 using SmartBox.Interfaces;
 using SmartBox.Models;
 using System.Collections.ObjectModel;
@@ -27,6 +27,9 @@ namespace SmartBox.ViewModels
         private readonly ILogger<DictionaryPageViewModel> _logger;
         private readonly IDictionaryService _dictionaryService;
         private readonly IAlertService _alertService;
+
+        private readonly IMapper<Application.Models.Word, Models.Word> _wordMapper;
+        private readonly IMapper<Models.PartOfSpeech, Application.Models.PartOfSpeech> _partOfSpeechMapper;
         #endregion
 
         #region Properties
@@ -56,12 +59,19 @@ namespace SmartBox.ViewModels
         private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
         #endregion
 
-        public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, IDictionaryService dictionaryService, IAlertService alertService)
+        public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, 
+                                       IDictionaryService dictionaryService, 
+                                       IAlertService alertService,
+                                       IMapper<Application.Models.Word, Models.Word> wordMapper,
+                                       IMapper<Models.PartOfSpeech, Application.Models.PartOfSpeech> partOfSpeechMapper)
         {
             _logger = logger;
 
             _dictionaryService = dictionaryService;
             _alertService = alertService;
+
+            _wordMapper = wordMapper;
+            _partOfSpeechMapper = partOfSpeechMapper;
 
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
 
@@ -90,7 +100,7 @@ namespace SmartBox.ViewModels
 
                 Application.Models.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
 
-                Word[] words = appWords.Adapt<Word[]>();
+                Word[] words = _wordMapper.MapToArray(appWords);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>  
                 { 
@@ -182,7 +192,7 @@ namespace SmartBox.ViewModels
             Application.Models.Word addedWord;
             try
             {
-                Application.Models.PartOfSpeech partOfSpeech = SelectedPartOfSpeech.Adapt<Application.Models.PartOfSpeech>();
+                Application.Models.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
                 addedWord = await _dictionaryService.AddWordAsync(SearchText, partOfSpeech, CommentText);
             }
@@ -197,7 +207,7 @@ namespace SmartBox.ViewModels
 
             try
             {
-                Word uiWord = addedWord.Adapt<Word>();
+                Word uiWord = _wordMapper.Map(addedWord);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
@@ -297,7 +307,7 @@ namespace SmartBox.ViewModels
             {
                 Application.Models.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
 
-                Word[] words = appWords.Adapt<Word[]>();
+                Word[] words = _wordMapper.MapToArray(appWords);
 
                 return new ObservableCollection<Word>(words);
             }

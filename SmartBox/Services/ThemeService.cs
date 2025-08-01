@@ -1,4 +1,4 @@
-﻿using Mapster;
+﻿using Shared;
 using SmartBox.Interfaces;
 using Syncfusion.Maui.Themes;
 
@@ -7,6 +7,13 @@ namespace SmartBox.Services
     public class ThemeService : IThemeService
     {
         private SyncfusionThemeResourceDictionary? _syncfusionThemeDictionary;
+
+        private readonly IMapper<AppTheme, SfVisuals> _appThemeMapper;
+
+        public ThemeService(IMapper<AppTheme, SfVisuals> appThemeMapper)
+        {
+            _appThemeMapper = appThemeMapper;
+        }
 
         public void Initialize(SyncfusionThemeResourceDictionary source)
         {
@@ -17,7 +24,7 @@ namespace SmartBox.Services
         {
             Microsoft.Maui.Controls.Application.Current!.UserAppTheme = source;
 
-            _syncfusionThemeDictionary!.VisualTheme = source.Adapt<SfVisuals>();
+            _syncfusionThemeDictionary!.VisualTheme = _appThemeMapper.Map(source);
         }
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Application.Interfaces;
-using Application.MappingConfigs;
+using Application.Mapper;
+using Application.Mappers;
+using Application.Models;
 using Application.Services;
-using Mapster;
 using Microsoft.Extensions.DependencyInjection;
+using Shared;
 
 namespace Application
 {
@@ -10,12 +12,12 @@ namespace Application
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            var config = TypeAdapterConfig.GlobalSettings;
+            services.AddSingleton<IMapper<Domain.Models.Word, Word>, WordMapper>();
+            services.AddSingleton<IMapper<Word, Domain.Models.Word>, WordMapper>();
 
-            new PartOfSpeechMappingConfig().Register(config);
-            new WordMappingConfig().Register(config);
+            services.AddSingleton<IMapper<Domain.Models.PartOfSpeech, PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<PartOfSpeech, Domain.Models.PartOfSpeech>, PartOfSpeechMapper>();
 
-            services.AddSingleton(config);
 
             services.AddSingleton<IDictionaryService, DictionaryService>();
 

@@ -1,9 +1,10 @@
-﻿using Mapster;
+﻿using Shared;
 using SmartBox.Interfaces;
-using SmartBox.MappingConfigs;
+using SmartBox.Mappers;
 using SmartBox.Services;
 using SmartBox.ViewModels;
 using SmartBox.Views;
+using Syncfusion.Maui.Themes;
 
 namespace SmartBox
 {
@@ -11,13 +12,10 @@ namespace SmartBox
     {
         public static IServiceCollection AddUIServices(this IServiceCollection services)
         {
-            var config = TypeAdapterConfig.GlobalSettings;
-
-            new AppThemeMappingConfig().Register(config);
-            new PartOfSpeechMappingConfig().Register(config);
-            new WordMappingConfig().Register(config);
-
-            services.AddSingleton(config);
+            services.AddSingleton<IMapper<AppTheme, SfVisuals>, AppThemeMapper>();
+            services.AddSingleton<IMapper<Application.Models.PartOfSpeech, Models.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Models.PartOfSpeech, Application.Models.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Application.Models.Word, Models.Word>, WordMapper>();
 
             services.AddSingleton<AppShell>();
             services.AddSingleton<App>();

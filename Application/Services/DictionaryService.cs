@@ -1,9 +1,9 @@
 ﻿using Application.Interfaces;
 using Application.Models;
 using Domain.Interfaces;
-using Mapster;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Shared;
 
 namespace Application.Services
 {
@@ -14,15 +14,23 @@ namespace Application.Services
         private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds}";
         private const string WordAlreadyExistsError = "Word '{0}' with part of speech '{1}' already exists in the dictionary";
 
-
         private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
         private readonly ResiliencePipeline _retryPipeline;
 
-        public DictionaryService(IWordRepository wordRepository, ILogger<DictionaryService> logger)
+        private readonly IMapper<PartOfSpeech, Domain.Models.PartOfSpeech> _partOfSpeechToDomMapper;
+        private readonly IMapper<Domain.Models.Word, Word> _wordToAppMapper;
+
+        public DictionaryService(ILogger<DictionaryService> logger,
+                                 IWordRepository wordRepository,
+                                 IMapper<PartOfSpeech, Domain.Models.PartOfSpeech> partOfSpeechToDomMapper,
+                                 IMapper<Domain.Models.Word, Word> wordToAppMapper)
         {
             _logger = logger;
             _wordRepository = wordRepository;
+
+            _partOfSpeechToDomMapper = partOfSpeechToDomMapper;
+            _wordToAppMapper = wordToAppMapper;
 
             _retryPipeline = new ResiliencePipelineBuilder()
                 .AddRetry(new()
@@ -50,7 +58,7 @@ namespace Application.Services
 
             try
             {
-                Domain.Models.PartOfSpeech domainPartOfSpeech = partOfSpeech.Adapt<Domain.Models.PartOfSpeech>();
+                Domain.Models.PartOfSpeech domainPartOfSpeech = _partOfSpeechToDomMapper.Map(partOfSpeech);
 
                 bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValue, domainPartOfSpeech);
 
@@ -68,7 +76,7 @@ namespace Application.Services
 
                 Domain.Models.Word word = await _wordRepository.AddWordAsync(newWord);
 
-                Word result = word.Adapt<Word>();
+                Word result = _wordToAppMapper.Map(word);
 
                 return result;
             }
@@ -88,7 +96,7 @@ namespace Application.Services
                 {
                     Domain.Models.Word[] words = await _wordRepository.GetWordsForLearningAsync();
 
-                    return words.Adapt<Word[]>();
+                    return _wordToAppMapper.MapToArray(words);
                 }, context);
             }
             finally
@@ -159,7 +167,7 @@ namespace Application.Services
                 {
                     Domain.Models.Word[] words = await _wordRepository.SearchWordsAsync(entry);
 
-                    return words.Adapt<Word[]>();
+                    return _wordToAppMapper.MapToArray(words);
                 }, context);
             }
             finally

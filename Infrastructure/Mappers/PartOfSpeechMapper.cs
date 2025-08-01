@@ -1,22 +1,15 @@
-﻿using Mapster;
+﻿using Shared;
 
-namespace Infrastructure.MappingConfigs
+namespace Infrastructure.Mappers
 {
-    public class PartOfSpeechMappingConfig : IRegister
+    public class PartOfSpeechMapper : IMapper<Models.PartOfSpeech?, Domain.Models.PartOfSpeech>,
+                                      IMapper<Domain.Models.PartOfSpeech, Models.PartOfSpeech?>
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 
-        public void Register(TypeAdapterConfig config)
+        public Domain.Models.PartOfSpeech Map(Models.PartOfSpeech? source)
         {
-            config.NewConfig<Models.PartOfSpeech?, Domain.Models.PartOfSpeech>().MapWith(src => MapPartOfSpeech(src));
-
-            config.NewConfig<Domain.Models.PartOfSpeech, Models.PartOfSpeech?>().MapWith(src => MapPartOfSpeech(src));
-
-        }
-
-        private static Domain.Models.PartOfSpeech MapPartOfSpeech(Models.PartOfSpeech? src)
-        {
-            switch (src)
+            switch (source)
             {
                 case Models.PartOfSpeech.Noun:
                 case Models.PartOfSpeech.Other:
@@ -26,13 +19,13 @@ namespace Infrastructure.MappingConfigs
                 case null:
                     return Domain.Models.PartOfSpeech.Unknown;
                 default:
-                    throw new InvalidOperationException(string.Format(UnknownEnumValueError, src));
+                    throw new InvalidOperationException(string.Format(UnknownEnumValueError, source));
             }
         }
 
-        private static Models.PartOfSpeech? MapPartOfSpeech(Domain.Models.PartOfSpeech src)
+        public Models.PartOfSpeech? Map(Domain.Models.PartOfSpeech source)
         {
-            switch (src)
+            switch (source)
             {
                 case Domain.Models.PartOfSpeech.Verb:
                     return Models.PartOfSpeech.Verb;
@@ -41,7 +34,7 @@ namespace Infrastructure.MappingConfigs
                 case Domain.Models.PartOfSpeech.Unknown:
                     return null;// TODO: сделать в бд такой же тип частей речей как и в Domain
                 default:
-                    throw new InvalidOperationException(string.Format(UnknownEnumValueError, src));
+                    throw new InvalidOperationException(string.Format(UnknownEnumValueError, source));
             }
         }
     }

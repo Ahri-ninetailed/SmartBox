@@ -1,7 +1,7 @@
 ﻿using Domain.Interfaces;
 using Infrastructure.Models;
-using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Shared;
 
 namespace Infrastructure.Services
 {
@@ -15,9 +15,20 @@ namespace Infrastructure.Services
 
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
-        public WordRepository(IDbContextFactory<MyDbContext> dbFactory)
+        private readonly IMapper<Word, Domain.Models.Word> _wordToDomMapper;
+        private readonly IMapper<Domain.Models.Word, Word> _wordToInfsMapper;
+        private readonly IMapper<Domain.Models.PartOfSpeech, PartOfSpeech?> _partOfSpeechToInfsMapper;
+
+        public WordRepository(IDbContextFactory<MyDbContext> dbFactory,
+                              IMapper<Word, Domain.Models.Word> wordToDomMapper,
+                              IMapper<Domain.Models.Word, Word> wordToInfsMapper,
+                              IMapper<Domain.Models.PartOfSpeech, PartOfSpeech?> partOfSpeechToInfsMapper)
         {
             _dbFactory = dbFactory;
+
+            _wordToDomMapper = wordToDomMapper;
+            _wordToInfsMapper = wordToInfsMapper;
+            _partOfSpeechToInfsMapper = partOfSpeechToInfsMapper;
         }
 
         public async Task<Domain.Models.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids)
@@ -31,7 +42,7 @@ namespace Infrastructure.Services
 
             Word[] words  = await db.EnglishWords.Where(el => ids.Contains(el.Id)).ToArrayAsync();
 
-            return words.Adapt<Domain.Models.Word[]>();
+            return _wordToDomMapper.MapToArray(words);
         }
 
         public async Task SaveWordsAsync(Domain.Models.Word[] words)
@@ -43,7 +54,7 @@ namespace Infrastructure.Services
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
-            Word[] rows = words.Adapt<Word[]>();
+            Word[] rows = _wordToInfsMapper.MapToArray(words);
 
             foreach (Word row in rows)
             {
@@ -76,7 +87,7 @@ namespace Infrastructure.Services
                 firstPack.AddRange(secondPack);
             }
 
-            Domain.Models.Word[] result = firstPack.Adapt<Domain.Models.Word[]>();
+            Domain.Models.Word[] result = _wordToDomMapper.MapToArray(firstPack);
 
             return result;
         }
@@ -106,7 +117,7 @@ namespace Infrastructure.Services
                 .Select(x => x.Word)
                 .ToArrayAsync();
 
-            Domain.Models.Word[] result = words.Adapt<Domain.Models.Word[]>();
+            Domain.Models.Word[] result = _wordToDomMapper.MapToArray(words);
 
             return result;
         }
@@ -118,7 +129,7 @@ namespace Infrastructure.Services
                 throw new ArgumentNullException(nameof(newWord), NullWordError);
             }
 
-            Word word = newWord.Adapt<Word>();
+            Word word = _wordToInfsMapper.Map(newWord);
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
@@ -126,7 +137,7 @@ namespace Infrastructure.Services
 
             await db.SaveChangesAsync();
 
-            Domain.Models.Word result = word.Adapt<Domain.Models.Word>();
+            Domain.Models.Word result = _wordToDomMapper.Map(word);
 
             return result;
         }
@@ -140,7 +151,7 @@ namespace Infrastructure.Services
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
-            PartOfSpeech? dbPartOfSpeech = partOfSpeech.Adapt<PartOfSpeech?>();
+            PartOfSpeech? dbPartOfSpeech = _partOfSpeechToInfsMapper.Map(partOfSpeech);
 
             bool result = await db.EnglishWords.AnyAsync(el => el.Value == wordValue && el.PartOfSpeech == dbPartOfSpeech);
 
