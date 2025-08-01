@@ -32,6 +32,8 @@ namespace SmartBox.ViewModels
         private ObservableCollection<Word> words = new();
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(LearnCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MarkCommand))]
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
@@ -50,10 +52,10 @@ namespace SmartBox.ViewModels
         {
             _logger = logger;
 
-            RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
-
             _dictionaryService = dictionaryService;
             _alertService = alertService;
+
+            RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
         }
 
         #region Public Methods
@@ -137,7 +139,7 @@ namespace SmartBox.ViewModels
                 word.ShouldStudy = true;
             }
 
-            ClearSelectedWords();
+            RawSelectedWords = new ObservableCollection<object>();
         }
 
         [RelayCommand(CanExecute = nameof(CanAddWord))]
@@ -176,6 +178,19 @@ namespace SmartBox.ViewModels
             LearnCommand.NotifyCanExecuteChanged();
             MarkCommand.NotifyCanExecuteChanged();
         }
+
+        partial void OnRawSelectedWordsChanged(ObservableCollection<object>? oldValue, ObservableCollection<object> newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.CollectionChanged -= OnSelectedWordsChanged;
+            }
+
+            if (newValue != null)
+            {
+                newValue.CollectionChanged += OnSelectedWordsChanged;
+            }
+        }
         #endregion
 
         #region Private Helper Methods
@@ -197,16 +212,6 @@ namespace SmartBox.ViewModels
             }
 
             return new ObservableCollection<Word>();
-        }
-
-        private void ClearSelectedWords()
-        {
-            RawSelectedWords.CollectionChanged -= OnSelectedWordsChanged;
-            RawSelectedWords.Clear();
-            RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
-
-            LearnCommand.NotifyCanExecuteChanged();
-            MarkCommand.NotifyCanExecuteChanged();
         }
         #endregion
     }
