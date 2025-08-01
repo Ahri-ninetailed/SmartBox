@@ -2,8 +2,10 @@
 
 namespace Infrastructure.MappingConfigs
 {
-    internal class PartOfSpeechMappingConfig : IRegister
+    public class PartOfSpeechMappingConfig : IRegister
     {
+        private const string UnknownEnumValueError = "Unknown enum value: {0}";
+
         public void Register(TypeAdapterConfig config)
         {
             config.NewConfig<Models.PartOfSpeech?, Domain.Models.PartOfSpeech>().MapWith(src => MapPartOfSpeech(src));
@@ -24,7 +26,7 @@ namespace Infrastructure.MappingConfigs
                 case null:
                     return Domain.Models.PartOfSpeech.Unknown;
                 default:
-                    throw new InvalidOperationException($"Unknown enum value: {src}");
+                    throw new InvalidOperationException(string.Format(UnknownEnumValueError, src));
             }
         }
 
@@ -39,7 +41,7 @@ namespace Infrastructure.MappingConfigs
                 case Domain.Models.PartOfSpeech.Unknown:
                     return null;// TODO: сделать в бд такой же тип частей речей как и в Domain
                 default:
-                    throw new InvalidOperationException($"Unknown enum value: {src}");
+                    throw new InvalidOperationException(string.Format(UnknownEnumValueError, src));
             }
         }
     }

@@ -12,6 +12,8 @@ namespace Application.Services
         private const string RetryAttemptMessage = "Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}";
         private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds}";
         private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds}";
+        private const string WordAlreadyExistsError = "Word '{0}' with part of speech '{1}' already exists in the dictionary";
+
 
         private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
@@ -42,6 +44,40 @@ namespace Application.Services
                 .Build();
         }
 
+        public async Task<Word> AddWordAsync(string wordValue, PartOfSpeech partOfSpeech, string comment)
+        {
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(AddWordAsync));
+
+            try
+            {
+                Domain.Models.PartOfSpeech domainPartOfSpeech = partOfSpeech.Adapt<Domain.Models.PartOfSpeech>();
+
+                bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValue, domainPartOfSpeech);
+
+                if (isWordExisted)
+                {
+                    throw new InvalidOperationException(string.Format(WordAlreadyExistsError, wordValue, domainPartOfSpeech));
+                }
+
+                Domain.Models.Word newWord = new Domain.Models.Word()
+                {
+                    Value = wordValue,
+                    PartOfSpeech = domainPartOfSpeech,
+                    Comments = comment
+                };
+
+                Domain.Models.Word word = await _wordRepository.AddWordAsync(newWord);
+
+                Word result = word.Adapt<Word>();
+
+                return result;
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
+        }
+
         public async Task<Word[]> GetWordsForLearningAsync()
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(GetWordsForLearningAsync));
@@ -69,14 +105,14 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIds(ids);
+                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
 
                     foreach (Domain.Models.Word word in words)
                     {
                         word.Learn();
                     }
 
-                    await _wordRepository.SaveWords(words);
+                    await _wordRepository.SaveWordsAsync(words);
 
                     _logger.LogInformation(LearnedWordsMessage, words.Length, string.Join(", ", words.Select(w => w.Id)));
                 }, context);
@@ -95,14 +131,14 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIds(ids);
+                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
 
                     foreach (Domain.Models.Word word in words)
                     {
                         word.MarkForStudy();
                     }
 
-                    await _wordRepository.SaveWords(words);
+                    await _wordRepository.SaveWordsAsync(words);
 
                     _logger.LogInformation(MarkedWordsMessage, words.Length, string.Join(", ", words.Select(w => w.Id)));
                 }, context);

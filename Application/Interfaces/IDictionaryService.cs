@@ -11,5 +11,7 @@ namespace Application.Interfaces
         Task LearnWordsAsync(IEnumerable<int> ids);
 
         Task MarkWordsAsync(IEnumerable<int> ids);
+
+        Task<Word> AddWordAsync(string word, PartOfSpeech partOfSpeech, string comment);
     }
 }

@@ -18,7 +18,7 @@
                         StoppedTypingTimeThreshold="1000" />
                 </Entry.Behaviors>
             </Entry>
-            <Entry x:Name="CommentEntry" Placeholder="Comment"/>
+            <Entry x:Name="CommentEntry" Placeholder="Comment" Text="{Binding CommentText, Mode=TwoWay}"/>
             <inputs:SfComboBox 
                 x:Name="PartOfSpeechComboBox"
                 ItemsSource="{Binding PartOfSpeechOptions}"

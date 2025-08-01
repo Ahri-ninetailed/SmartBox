@@ -13,7 +13,7 @@ namespace Infrastructure.MappingConfigs
                 .Map(dest => dest.PartOfSpeech, src => src.PartOfSpeech)
                 .Map(dest => dest.ShouldStudy, src => src.ShouldStudy)
                 .Map(dest => dest.Learned, src => src.Learned)
-                .Map(dest => dest.Comments, src => src.Comments);
+                .Map(dest => dest.Comments, src => src.Comments ?? string.Empty);
 
             config.NewConfig<Domain.Models.Word, Models.Word>()
                 .Map(dest => dest.Id, src => src.Id)

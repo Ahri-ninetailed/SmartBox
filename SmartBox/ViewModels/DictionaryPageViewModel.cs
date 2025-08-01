@@ -15,10 +15,12 @@ namespace SmartBox.ViewModels
     {
         #region Constants
         private const string ErrorDialogTitle = "Error";
+        private const string UpdateUIErrorMessage = "Operation completed, but failed to update the interface";
         private const string SearchWordsErrorMessage = "Failed to search words";
         private const string LearnWordsErrorMessage = "Failed to mark words as learned";
         private const string MarkWordsErrorMessage = "Failed to mark words for further study";
         private const string LoadWordsErrorMessage = "Failed to get words for learning";
+        private const string AddWordErrorMessage = "Failed to add new word";
         #endregion
 
         #region Fields
@@ -40,6 +42,9 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private string searchText = string.Empty;
+
+        [ObservableProperty]
+        private string commentText = string.Empty;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
@@ -103,11 +108,11 @@ namespace SmartBox.ViewModels
         [RelayCommand(CanExecute = nameof(CanLearnWords))]
         private async Task LearnAsync()
         {
-            IEnumerable<int> idsForLearning = SelectedWords.Select(word => word.Id);
-
             try
             {
-                //await _dictionaryService.LearnWordsAsync(idsForLearning);
+                IEnumerable<int> idsForLearning = SelectedWords.Select(word => word.Id);
+
+                await _dictionaryService.LearnWordsAsync(idsForLearning);
             }
             catch (Exception ex)
             {
@@ -118,20 +123,32 @@ namespace SmartBox.ViewModels
                 return;
             }
 
-            foreach (Word word in SelectedWords)
+            try
             {
-                Words.Remove(word);
+                foreach (Word word in SelectedWords)
+                {
+                    word.ShouldStudy = false;
+                    word.Learned = true;
+                }
+
+                RawSelectedWords = new ObservableCollection<object>();
+            }
+            catch  (Exception ex)
+            {
+                _logger.LogError(ex, UpdateUIErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{UpdateUIErrorMessage}: {ex.Message}");
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanMarkWords))]
         private async Task MarkAsync()
         {
-            IEnumerable<int> idsForMarking = SelectedWords.Select(word => word.Id);
-
             try
             {
-                //await _dictionaryService.MarkWordsAsync(idsForMarking);
+                IEnumerable<int> idsForMarking = SelectedWords.Select(word => word.Id);
+
+                await _dictionaryService.MarkWordsAsync(idsForMarking);
             }
             catch (Exception ex)
             {
@@ -142,18 +159,60 @@ namespace SmartBox.ViewModels
                 return;
             }
 
-            foreach (Word word in SelectedWords)
+            try
             {
-                word.ShouldStudy = true;
-            }
+                foreach (Word word in SelectedWords)
+                {
+                    word.ShouldStudy = true;
+                }
 
-            RawSelectedWords = new ObservableCollection<object>();
+                RawSelectedWords = new ObservableCollection<object>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, UpdateUIErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{UpdateUIErrorMessage}: {ex.Message}");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanAddWord))]
         private async Task AddAsync()
         {
+            Application.Models.Word addedWord;
+            try
+            {
+                Application.Models.PartOfSpeech partOfSpeech = SelectedPartOfSpeech.Adapt<Application.Models.PartOfSpeech>();
 
+                addedWord = await _dictionaryService.AddWordAsync(SearchText, partOfSpeech, CommentText);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, AddWordErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{AddWordErrorMessage}: {ex.Message}");
+
+                return;
+            }
+
+            try
+            {
+                Word uiWord = addedWord.Adapt<Word>();
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Words.Insert(0, uiWord);
+                });
+
+                CommentText = string.Empty;
+                SelectedPartOfSpeech = default;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, UpdateUIErrorMessage);
+
+                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{UpdateUIErrorMessage}: {ex.Message}");
+            }
         }
         #endregion
 

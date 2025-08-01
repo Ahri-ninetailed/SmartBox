@@ -15,6 +15,6 @@ namespace SmartBox.Models
         private bool shouldStudy;
         [ObservableProperty]
         private bool learned;
-        public string? Comments { get; set; }
+        public string Comments { get; set; } = string.Empty;
     }
 }

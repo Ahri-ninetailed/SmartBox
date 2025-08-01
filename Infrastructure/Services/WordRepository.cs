@@ -10,6 +10,8 @@ namespace Infrastructure.Services
         private const string EmptyIdsCollectionError = "The ids collection cannot be empty";
         private const string EmptyWordsCollectionError = "The words collection cannot be empty";
         private const string EmptyEntryError = "The entry cannot be null or whitespace";
+        private const string NullWordError = "The new word cannot be null";
+        private const string EmptyWordValueError = "Word value cannot be null or whitespace";
 
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
@@ -18,7 +20,7 @@ namespace Infrastructure.Services
             _dbFactory = dbFactory;
         }
 
-        public async Task<Domain.Models.Word[]> GetWordsByIds(IEnumerable<int> ids)
+        public async Task<Domain.Models.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids)
         {
             if (ids.Any() == false)
             {
@@ -32,7 +34,7 @@ namespace Infrastructure.Services
             return words.Adapt<Domain.Models.Word[]>();
         }
 
-        public async Task SaveWords(Domain.Models.Word[] words)
+        public async Task SaveWordsAsync(Domain.Models.Word[] words)
         {
             if (words.Any() == false)
             {
@@ -105,6 +107,42 @@ namespace Infrastructure.Services
                 .ToArrayAsync();
 
             Domain.Models.Word[] result = words.Adapt<Domain.Models.Word[]>();
+
+            return result;
+        }
+
+        public async Task<Domain.Models.Word> AddWordAsync(Domain.Models.Word newWord)
+        {
+            if (newWord == null)
+            {
+                throw new ArgumentNullException(nameof(newWord), NullWordError);
+            }
+
+            Word word = newWord.Adapt<Word>();
+
+            using MyDbContext db = _dbFactory.CreateDbContext();
+
+            db.EnglishWords.Add(word);
+
+            await db.SaveChangesAsync();
+
+            Domain.Models.Word result = word.Adapt<Domain.Models.Word>();
+
+            return result;
+        }
+
+        public async Task<bool> IsWordExistedAsync(string wordValue, Domain.Models.PartOfSpeech partOfSpeech)
+        {
+            if (string.IsNullOrWhiteSpace(wordValue))
+            {
+                throw new ArgumentException(EmptyWordValueError);
+            }
+
+            using MyDbContext db = _dbFactory.CreateDbContext();
+
+            PartOfSpeech? dbPartOfSpeech = partOfSpeech.Adapt<PartOfSpeech?>();
+
+            bool result = await db.EnglishWords.AnyAsync(el => el.Value == wordValue && el.PartOfSpeech == dbPartOfSpeech);
 
             return result;
         }
