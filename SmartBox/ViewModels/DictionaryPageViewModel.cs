@@ -29,6 +29,7 @@ namespace SmartBox.ViewModels
 
         #region Properties
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private ObservableCollection<Word> words = new();
 
         [ObservableProperty]
@@ -37,9 +38,11 @@ namespace SmartBox.ViewModels
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private string searchText = string.Empty;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private PartOfSpeech selectedPartOfSpeech;
 
         [ObservableProperty]
@@ -56,6 +59,8 @@ namespace SmartBox.ViewModels
             _alertService = alertService;
 
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
+
+            Words.CollectionChanged += OnWordsCollectionChanged;
         }
 
         #region Public Methods
@@ -82,7 +87,10 @@ namespace SmartBox.ViewModels
 
                 Word[] words = appWords.Adapt<Word[]>();
 
-                Words = new ObservableCollection<Word>(words);
+                await MainThread.InvokeOnMainThreadAsync(() =>  
+                { 
+                    Words = new ObservableCollection<Word>(words); 
+                });
             }
             catch (Exception ex)
             {
@@ -162,22 +170,27 @@ namespace SmartBox.ViewModels
                    SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
         }
 
-        private bool CanAddWord() => string.IsNullOrWhiteSpace(SearchText) == false;
+        private bool CanAddWord()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return false;
+            }
+
+            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && el.Value == SearchText)) 
+            {
+                return false;
+            }
+
+            return true;
+        }
         #endregion
 
         #region Property Changed Handlers
-        partial void OnSearchTextChanged(string value)
-        {
-            AddCommand.NotifyCanExecuteChanged();
-        }
+
         #endregion
 
         #region Event Handlers
-        private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            LearnCommand.NotifyCanExecuteChanged();
-            MarkCommand.NotifyCanExecuteChanged();
-        }
 
         partial void OnRawSelectedWordsChanged(ObservableCollection<object>? oldValue, ObservableCollection<object> newValue)
         {
@@ -191,6 +204,31 @@ namespace SmartBox.ViewModels
                 newValue.CollectionChanged += OnSelectedWordsChanged;
             }
         }
+
+        private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            LearnCommand.NotifyCanExecuteChanged();
+            MarkCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnWordsChanged(ObservableCollection<Word>? oldValue, ObservableCollection<Word> newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.CollectionChanged -= OnWordsCollectionChanged;
+            }
+
+            if (newValue != null)
+            {
+                newValue.CollectionChanged += OnWordsCollectionChanged;
+            }
+        }
+
+        private void OnWordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            AddCommand.NotifyCanExecuteChanged();
+        }
+
         #endregion
 
         #region Private Helper Methods
