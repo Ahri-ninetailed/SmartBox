@@ -13,10 +13,13 @@ namespace Application.Services
         private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds}";
         private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds}";
         private const string WordAlreadyExistsError = "Word '{0}' with part of speech '{1}' already exists in the dictionary";
+        private const string GetWordPopularityErrorMessage = "Failed to get word popularity for '{WordValue}'";
+        private const string AddedWordMessage = "Added word '{Word}' (Id: {Id}, PartOfSpeech: {PartOfSpeech}) to the database.";
 
+        private readonly ResiliencePipeline _retryPipeline;
         private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
-        private readonly ResiliencePipeline _retryPipeline;
+        private readonly IWordPopularityService _wordPopularityService;
 
         private readonly IMapper<PartOfSpeech, Domain.Models.PartOfSpeech> _partOfSpeechToDomMapper;
         private readonly IMapper<Domain.Models.Word, Word> _wordToAppMapper;
@@ -24,13 +27,10 @@ namespace Application.Services
         public DictionaryService(ILogger<DictionaryService> logger,
                                  IWordRepository wordRepository,
                                  IMapper<PartOfSpeech, Domain.Models.PartOfSpeech> partOfSpeechToDomMapper,
-                                 IMapper<Domain.Models.Word, Word> wordToAppMapper)
+                                 IMapper<Domain.Models.Word, Word> wordToAppMapper,
+                                 IWordPopularityService wordPopularityService)
         {
             _logger = logger;
-            _wordRepository = wordRepository;
-
-            _partOfSpeechToDomMapper = partOfSpeechToDomMapper;
-            _wordToAppMapper = wordToAppMapper;
 
             _retryPipeline = new ResiliencePipelineBuilder()
                 .AddRetry(new()
@@ -38,7 +38,7 @@ namespace Application.Services
                     MaxRetryAttempts = 3,
                     Delay = TimeSpan.FromSeconds(1),
                     ShouldHandle = new PredicateBuilder()
-                        .Handle<InvalidOperationException>(ex => 
+                        .Handle<InvalidOperationException>(ex =>
                             ex.Message.Contains("transient failure", StringComparison.OrdinalIgnoreCase)),
                     OnRetry = args =>
                     {
@@ -50,6 +50,12 @@ namespace Application.Services
                     }
                 })
                 .Build();
+
+            _partOfSpeechToDomMapper = partOfSpeechToDomMapper;
+            _wordToAppMapper = wordToAppMapper;
+            
+            _wordRepository = wordRepository;
+            _wordPopularityService = wordPopularityService;   
         }
 
         public async Task<Word> AddWordAsync(string wordValue, PartOfSpeech partOfSpeech, string comment)
@@ -67,14 +73,29 @@ namespace Application.Services
                     throw new InvalidOperationException(string.Format(WordAlreadyExistsError, wordValue, domainPartOfSpeech));
                 }
 
+                decimal? wordPopularity = null;
+                try
+                {
+                    // TODO: разделять в UI слое
+                    string[] words = wordValue.Split(new[] { ", ", "," }, StringSplitOptions.RemoveEmptyEntries);
+                    wordPopularity = await _wordPopularityService.GetWordPopularityAsync(words);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, GetWordPopularityErrorMessage, wordValue);
+                }
+
                 Domain.Models.Word newWord = new Domain.Models.Word()
                 {
                     Value = wordValue,
                     PartOfSpeech = domainPartOfSpeech,
-                    Comments = comment
+                    Comments = comment,
+                    Popularity = wordPopularity
                 };
 
                 Domain.Models.Word word = await _wordRepository.AddWordAsync(newWord);
+
+                _logger.LogInformation(AddedWordMessage, word.Value, word.Id, word.PartOfSpeech);
 
                 Word result = _wordToAppMapper.Map(word);
 
