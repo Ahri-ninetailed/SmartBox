@@ -248,7 +248,7 @@ namespace SmartBox.ViewModels
                 return false;
             }
 
-            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && el.Value == SearchText)) 
+            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && el.Values.Contains(SearchText))) 
             {
                 return false;
             }
