@@ -1,6 +1,6 @@
 ﻿namespace Domain.Models.Parser
 {
-    public enum PartsOfSpeech
+    public enum PartOfSpeech
     {
         Unknown,
         Noun,

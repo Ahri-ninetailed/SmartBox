@@ -10,11 +10,11 @@ namespace Infrastructure.Mappers
 
         private readonly IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomDictionaryMapper;
         private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?> _partOfSpeechToInfsDBMapper;
-        private readonly IMapper<Models.Parser.PartsOfSpeech, Domain.Models.Parser.PartsOfSpeech> _partOfSpeechToDomParserMapper;
+        private readonly IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> _partOfSpeechToDomParserMapper;
 
         public WordMapper(IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomDictionaryMapper,
                           IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?> partOfSpeechToInfsDBMapper,
-                          IMapper<Models.Parser.PartsOfSpeech, Domain.Models.Parser.PartsOfSpeech> partOfSpeechToDomParserMapper)
+                          IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> partOfSpeechToDomParserMapper)
         {
             _partOfSpeechToDomDictionaryMapper = partOfSpeechToDomDictionaryMapper;
             _partOfSpeechToInfsDBMapper = partOfSpeechToInfsDBMapper;

@@ -1,0 +1,56 @@
+[
+  {
+    "Value": "draught",
+    "Type": "Noun",
+    "Area": null,
+    "MeaningsAndExamples": {
+      "A current of unpleasantly cold air blowing through a room": [],
+      "The depth of water needed for a boat to be able to float": [
+        "A punt has a shallow draught"
+      ],
+      "A system of storing and serving drinks from large containers, especially barrels": [
+        "Is the lager on draught or is it bottled?"
+      ],
+      "(of drinks such as beer) stored in and served from large containers, especially barrels": [
+        "Draught beer/lager/cider"
+      ],
+      "(of animals) used for pulling heavy loads, vehicles, etc": [
+        "A draught horse"
+      ]
+    },
+    "PluralForms": [],
+    "OtherForms": [ "draft" ]
+  },
+  {
+    "Value": "draught",
+    "Type": "Noun",
+    "Area": "American Dictionary",
+    "MeaningsAndExamples": {
+      "Draft": []
+    },
+    "PluralForms": [],
+    "OtherForms": []
+  },
+  {
+    "Value": "draught",
+    "Type": "Noun",
+    "Area": "Business English",
+    "MeaningsAndExamples": {
+      "The distance between the bottom of a ship and the level of the water when the ship is floating": []
+    },
+    "PluralForms": [],
+    "OtherForms": [ "draft" ]
+  },
+  {
+    "Value": "draughts",
+    "Type": "BlueRectangle",
+    "Area": null,
+    "MeaningsAndExamples": {
+      "A game for two people, each with twelve circular pieces that they move on a board with black and white squares": [
+        "I play draughts but I don't play chess"
+      ]
+    },
+    "PluralForms": [],
+    "OtherForms": []
+  }
+]

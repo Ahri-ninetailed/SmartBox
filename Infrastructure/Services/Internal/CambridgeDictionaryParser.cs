@@ -35,7 +35,7 @@ namespace Infrastructure.Services.Internal
             IDocument page = await _context.OpenAsync(req => req.Content(html));
             IHtmlCollection<IElement> areasOfWords = page.QuerySelectorAll(".pr.di.superentry");
 
-            Dictionary<(string word, PartsOfSpeech type, string? area), Word> wordsData = new();
+            Dictionary<(string word, PartOfSpeech type, string? area), Word> wordsData = new();
 
             foreach (IElement areaOfWord in areasOfWords)
             {
@@ -108,7 +108,7 @@ namespace Infrastructure.Services.Internal
                 result[i] = new Word()
                 {
                     Value = value,
-                    Type = PartsOfSpeech.BlueRectangle,
+                    Type = PartOfSpeech.BlueRectangle,
                     Area = area,
                 };
 
@@ -185,7 +185,7 @@ namespace Infrastructure.Services.Internal
                 throw new Exception("Нет заголовка со словом");
             }
 
-            PartsOfSpeech type = GetPartOfSpeech(cardWordAndAdditionalData);
+            PartOfSpeech type = GetPartOfSpeech(cardWordAndAdditionalData);
 
             IEnumerable<string> pluralForms = GetPluralForms(cardWordAndAdditionalData);
 
@@ -218,7 +218,7 @@ namespace Infrastructure.Services.Internal
                 throw new Exception("Нет заголовка фразового глагола");
             }
 
-            PartsOfSpeech type = PartsOfSpeech.PhrasalVerb;
+            PartOfSpeech type = PartOfSpeech.PhrasalVerb;
 
             Dictionary<string, List<string>> meaningsAndExamples;
 
@@ -249,7 +249,7 @@ namespace Infrastructure.Services.Internal
 
             IEnumerable<string> otherForms = GetOtherForms(card);
 
-            PartsOfSpeech type = PartsOfSpeech.Idiom;
+            PartOfSpeech type = PartOfSpeech.Idiom;
 
             Dictionary<string, List<string>> meaningsAndExamples;
 
@@ -304,23 +304,23 @@ namespace Infrastructure.Services.Internal
             return result;
         }
 
-        private PartsOfSpeech GetPartOfSpeech(IElement cardWordAndAdditionalData)
+        private PartOfSpeech GetPartOfSpeech(IElement cardWordAndAdditionalData)
         {
             IHtmlCollection<IElement> tagsWithTypes = cardWordAndAdditionalData.QuerySelectorAll(".pos.dpos");
             if (tagsWithTypes == null || tagsWithTypes.Length == 0)
             {
                 _logger.LogInformation("Нет тегов с частью речи");
-                return PartsOfSpeech.Unknown;
+                return PartOfSpeech.Unknown;
             }
 
             IEnumerable<string?> types = tagsWithTypes.Select(el => el?.TextContent.ToLower());
 
             if (types.Any(el => _partsOfSpeech.Contains(el)))
             {
-                return PartsOfSpeech.Verb;
+                return PartOfSpeech.Verb;
             }
 
-            return PartsOfSpeech.Noun;
+            return PartOfSpeech.Noun;
         }
 
         private IEnumerable<string> GetPluralForms(IElement cardWordAndAdditionalData)
@@ -336,9 +336,9 @@ namespace Infrastructure.Services.Internal
             return result;
         }
 
-        private void AddWordToDictionary(Dictionary<(string word, PartsOfSpeech type, string? area), Word> dictionary, Word word, string? area)
+        private void AddWordToDictionary(Dictionary<(string word, PartOfSpeech type, string? area), Word> dictionary, Word word, string? area)
         {
-            (string word, PartsOfSpeech type, string? area) wordKey = (word.Value, word.Type, area);
+            (string word, PartOfSpeech type, string? area) wordKey = (word.Value, word.Type, area);
             if (dictionary.ContainsKey(wordKey))
             {
                 Summarize(dictionary[wordKey], word);

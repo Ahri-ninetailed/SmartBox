@@ -1,0 +1,40 @@
+[
+  {
+    "Value": "eve",
+    "Type": "Noun",
+    "Area": null,
+    "MeaningsAndExamples": {
+      "The day or period before an important event": [
+        "Mrs Clayton was speaking to Arab journalists in Paris on the eve of her visit to Egypt",
+        "Where did you spend Christmas Eve?",
+        "Sheena always throws a party on New Year's Eve"
+      ],
+      "The evening": []
+    },
+    "PluralForms": [],
+    "OtherForms": []
+  },
+  {
+    "Value": "Eve",
+    "Type": "Noun",
+    "Area": null,
+    "MeaningsAndExamples": {
+      "The first woman, according to the biblical story of how the world was made": []
+    },
+    "PluralForms": [],
+    "OtherForms": []
+  },
+  {
+    "Value": "eve",
+    "Type": "Noun",
+    "Area": "American Dictionary",
+    "MeaningsAndExamples": {
+      "The evening or day before a holiday, or the period immediately before an important event": [
+        "New Year’s Eve",
+        "The eve of the election"
+      ]
+    },
+    "PluralForms": [],
+    "OtherForms": []
+  }
+]

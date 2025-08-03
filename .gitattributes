@@ -61,3 +61,8 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+# Исключаем HTML-файлы из анализа языков
+*.html linguist-detectable=false
+*.htm linguist-detectable=false
+*.json linguist-detectable=false

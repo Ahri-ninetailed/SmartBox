@@ -4,7 +4,7 @@ namespace Infrastructure.Mappers
 {
     public class PartOfSpeechMapper : IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>,
                                       IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?>,
-                                      IMapper<Models.Parser.PartsOfSpeech, Domain.Models.Parser.PartsOfSpeech>
+                                      IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 
@@ -39,24 +39,24 @@ namespace Infrastructure.Mappers
             }
         }
 
-        public Domain.Models.Parser.PartsOfSpeech Map(Models.Parser.PartsOfSpeech source)
+        public Domain.Models.Parser.PartOfSpeech Map(Models.Parser.PartOfSpeech source)
         {
             switch (source)
             {
-                case Models.Parser.PartsOfSpeech.Noun:
-                    return Domain.Models.Parser.PartsOfSpeech.Noun;
-                case Models.Parser.PartsOfSpeech.Verb:
-                    return Domain.Models.Parser.PartsOfSpeech.Verb;
-                case Models.Parser.PartsOfSpeech.PhrasalVerb:
-                    return Domain.Models.Parser.PartsOfSpeech.PhrasalVerb;
-                case Models.Parser.PartsOfSpeech.Idiom:
-                    return Domain.Models.Parser.PartsOfSpeech.Idiom;
-                case Models.Parser.PartsOfSpeech.BlueRectangle:
-                    return Domain.Models.Parser.PartsOfSpeech.BlueRectangle;
-                case Models.Parser.PartsOfSpeech.Other:
-                    return Domain.Models.Parser.PartsOfSpeech.Other;
-                case Models.Parser.PartsOfSpeech.Unknown:
-                    return Domain.Models.Parser.PartsOfSpeech.Unknown;
+                case Models.Parser.PartOfSpeech.Noun:
+                    return Domain.Models.Parser.PartOfSpeech.Noun;
+                case Models.Parser.PartOfSpeech.Verb:
+                    return Domain.Models.Parser.PartOfSpeech.Verb;
+                case Models.Parser.PartOfSpeech.PhrasalVerb:
+                    return Domain.Models.Parser.PartOfSpeech.PhrasalVerb;
+                case Models.Parser.PartOfSpeech.Idiom:
+                    return Domain.Models.Parser.PartOfSpeech.Idiom;
+                case Models.Parser.PartOfSpeech.BlueRectangle:
+                    return Domain.Models.Parser.PartOfSpeech.BlueRectangle;
+                case Models.Parser.PartOfSpeech.Other:
+                    return Domain.Models.Parser.PartOfSpeech.Other;
+                case Models.Parser.PartOfSpeech.Unknown:
+                    return Domain.Models.Parser.PartOfSpeech.Unknown;
                 default:
                     throw new InvalidOperationException(string.Format(UnknownEnumValueError, source));
             }

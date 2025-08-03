@@ -22,7 +22,7 @@ namespace Infrastructure
         {
             services.AddSingleton<IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
             services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<Models.Parser.PartsOfSpeech, Domain.Models.Parser.PartsOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
 
             services.AddSingleton<IMapper<Models.DataBase.Word, Domain.Models.Dictionary.Word>, WordMapper>();
             services.AddSingleton<IMapper<Domain.Models.Dictionary.Word, Models.DataBase.Word>, WordMapper>();
