@@ -14,6 +14,8 @@ namespace SmartBox.ViewModels
     public partial class DictionaryPageViewModel : ObservableObject
     {
         #region Constants
+        private readonly string[] Separators = [",", ", "];
+
         private const string ErrorDialogTitle = "Error";
         private const string UpdateUIErrorMessage = "Operation completed, but failed to update the interface";
         private const string SearchWordsErrorMessage = "Failed to search words";
@@ -194,7 +196,7 @@ namespace SmartBox.ViewModels
             {
                 Application.Models.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
-                addedWord = await _dictionaryService.AddWordAsync(SearchText, partOfSpeech, CommentText);
+                addedWord = await _dictionaryService.AddWordAsync(SearchText.Split(Separators, StringSplitOptions.TrimEntries), partOfSpeech, CommentText);
             }
             catch (Exception ex)
             {

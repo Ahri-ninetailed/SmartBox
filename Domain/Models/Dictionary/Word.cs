@@ -1,25 +1,25 @@
-﻿namespace Domain.Models
+﻿namespace Domain.Models.Dictionary
 {
     public class Word
     {
         private const string WordAlreadyLearnedError = "Word '{0}' is already learned";
         private const string WordAlreadyMarkedForStudyError = "Word '{0}' is already marked for study";
-        private const string WordValueNullOrEmptyError = "Word value cannot be null or empty";
+        private const string ValuesNullOrEmptyError = "Values array cannot be null, empty, or contain null/whitespace elements.";
 
         public int Id { get; set; }
 
-        private string _value = string.Empty;
-        public required string Value
+        private string[] _values = [];
+        public string[] Values
         {
-            get => _value;
+            get => _values;
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
+                if (value == null || value.Length == 0 || value.Any(string.IsNullOrWhiteSpace))
                 {
-                    throw new ArgumentException(WordValueNullOrEmptyError, nameof(Value));
+                    throw new ArgumentException(ValuesNullOrEmptyError, nameof(Values));
                 }
 
-                _value = value;
+                _values = value;
             }
         }
        
@@ -33,7 +33,7 @@
         {
             if (Learned)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, Value));
+                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, Values));
             }
 
             Learned = true;
@@ -45,12 +45,12 @@
         {
             if (Learned)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, Value));
+                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, Values));
             }
 
             if (ShouldStudy)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyMarkedForStudyError, Value));
+                throw new InvalidOperationException(string.Format(WordAlreadyMarkedForStudyError, Values));
             }
 
             ShouldStudy = true;

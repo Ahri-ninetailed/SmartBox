@@ -1,5 +1,5 @@
 ﻿using Domain.Interfaces;
-using Infrastructure.Models;
+using Infrastructure.Models.DataBase;
 using Microsoft.EntityFrameworkCore;
 using Shared;
 
@@ -7,22 +7,23 @@ namespace Infrastructure.Services
 {
     public class WordRepository : IWordRepository
     {
+        private const string Separator = ", ";
+
         private const string EmptyIdsCollectionError = "The ids collection cannot be empty";
         private const string EmptyWordsCollectionError = "The words collection cannot be empty";
         private const string EmptyEntryError = "The entry cannot be null or whitespace";
         private const string NullWordError = "The new word cannot be null";
-        private const string EmptyWordValueError = "Word value cannot be null or whitespace";
-
+        private const string WordValuesNullOrEmptyError = "Word values array cannot be null, empty, or contain null/whitespace elements.";
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
-        private readonly IMapper<Word, Domain.Models.Word> _wordToDomMapper;
-        private readonly IMapper<Domain.Models.Word, Word> _wordToInfsMapper;
-        private readonly IMapper<Domain.Models.PartOfSpeech, PartOfSpeech?> _partOfSpeechToInfsMapper;
+        private readonly IMapper<Word, Domain.Models.Dictionary.Word> _wordToDomMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, Word> _wordToInfsMapper;
+        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, PartOfSpeech?> _partOfSpeechToInfsMapper;
 
         public WordRepository(IDbContextFactory<MyDbContext> dbFactory,
-                              IMapper<Word, Domain.Models.Word> wordToDomMapper,
-                              IMapper<Domain.Models.Word, Word> wordToInfsMapper,
-                              IMapper<Domain.Models.PartOfSpeech, PartOfSpeech?> partOfSpeechToInfsMapper)
+                              IMapper<Word, Domain.Models.Dictionary.Word> wordToDomMapper,
+                              IMapper<Domain.Models.Dictionary.Word, Word> wordToInfsMapper,
+                              IMapper<Domain.Models.Dictionary.PartOfSpeech, PartOfSpeech?> partOfSpeechToInfsMapper)
         {
             _dbFactory = dbFactory;
 
@@ -31,7 +32,7 @@ namespace Infrastructure.Services
             _partOfSpeechToInfsMapper = partOfSpeechToInfsMapper;
         }
 
-        public async Task<Domain.Models.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids)
+        public async Task<Domain.Models.Dictionary.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids)
         {
             if (ids.Any() == false)
             {
@@ -45,7 +46,7 @@ namespace Infrastructure.Services
             return _wordToDomMapper.MapToArray(words);
         }
 
-        public async Task SaveWordsAsync(Domain.Models.Word[] words)
+        public async Task SaveWordsAsync(Domain.Models.Dictionary.Word[] words)
         {
             if (words.Any() == false)
             {
@@ -64,7 +65,7 @@ namespace Infrastructure.Services
             await db.SaveChangesAsync();
         }
 
-        public async Task<Domain.Models.Word[]> GetWordsForLearningAsync(int count = 40)
+        public async Task<Domain.Models.Dictionary.Word[]> GetWordsForLearningAsync(int count = 40)
         {
             using MyDbContext db = _dbFactory.CreateDbContext();
 
@@ -87,12 +88,12 @@ namespace Infrastructure.Services
                 firstPack.AddRange(secondPack);
             }
 
-            Domain.Models.Word[] result = _wordToDomMapper.MapToArray(firstPack);
+            Domain.Models.Dictionary.Word[] result = _wordToDomMapper.MapToArray(firstPack);
 
             return result;
         }
 
-        public async Task<Domain.Models.Word[]> SearchWordsAsync(string entry)
+        public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string entry)
         {
             if (string.IsNullOrWhiteSpace(entry))
             {
@@ -117,12 +118,12 @@ namespace Infrastructure.Services
                 .Select(x => x.Word)
                 .ToArrayAsync();
 
-            Domain.Models.Word[] result = _wordToDomMapper.MapToArray(words);
+            Domain.Models.Dictionary.Word[] result = _wordToDomMapper.MapToArray(words);
 
             return result;
         }
 
-        public async Task<Domain.Models.Word> AddWordAsync(Domain.Models.Word newWord)
+        public async Task<Domain.Models.Dictionary.Word> AddWordAsync(Domain.Models.Dictionary.Word newWord)
         {
             if (newWord == null)
             {
@@ -137,25 +138,43 @@ namespace Infrastructure.Services
 
             await db.SaveChangesAsync();
 
-            Domain.Models.Word result = _wordToDomMapper.Map(word);
+            Domain.Models.Dictionary.Word result = _wordToDomMapper.Map(word);
 
             return result;
         }
 
-        public async Task<bool> IsWordExistedAsync(string wordValue, Domain.Models.PartOfSpeech partOfSpeech)
+        public async Task<bool> IsWordExistedAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
         {
-            if (string.IsNullOrWhiteSpace(wordValue))
+            if (wordValues == null || wordValues.Length == 0 || wordValues.Any(string.IsNullOrWhiteSpace))
             {
-                throw new ArgumentException(EmptyWordValueError);
+                throw new ArgumentException(WordValuesNullOrEmptyError);
             }
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
             PartOfSpeech? dbPartOfSpeech = _partOfSpeechToInfsMapper.Map(partOfSpeech);
 
-            bool result = await db.EnglishWords.AnyAsync(el => el.Value == wordValue && el.PartOfSpeech == dbPartOfSpeech);
+            List<string> permutations = GetAllPermutations(wordValues).ToList();
 
-            return result;
+            bool exists = await db.EnglishWords
+                .AnyAsync(el => permutations.Contains(el.Value) && el.PartOfSpeech == dbPartOfSpeech);
+
+            return exists;
+        }
+
+        private IEnumerable<string> GetAllPermutations(string[] wordValues)
+        {
+            return GetPermutations(wordValues, wordValues.Length)
+                .Select(arr => string.Join(Separator, arr));
+        }
+
+        private IEnumerable<IEnumerable<T>> GetPermutations<T>(IEnumerable<T> list, int length)
+        {
+            if (length == 1) return list.Select(t => new T[] { t });
+
+            return GetPermutations(list, length - 1)
+                .SelectMany(t => list.Where(e => !t.Contains(e)),
+                    (t1, t2) => t1.Concat(new T[] { t2 }));
         }
     }
 }

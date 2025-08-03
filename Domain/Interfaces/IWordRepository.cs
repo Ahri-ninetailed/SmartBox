@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+﻿using Domain.Models.Dictionary;
 
 namespace Domain.Interfaces
 {
@@ -14,6 +14,6 @@ namespace Domain.Interfaces
 
         Task<Word> AddWordAsync(Word newWord);
 
-        Task<bool> IsWordExistedAsync(string wordValue, PartOfSpeech partOfSpeech);
+        Task<bool> IsWordExistedAsync(string[] wordValues, PartOfSpeech partOfSpeech);
     }
 }

@@ -9,6 +9,8 @@ namespace Application.Services
 {
     public class DictionaryService : IDictionaryService
     {
+        private const string Separator = ", ";
+
         private const string RetryAttemptMessage = "Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}";
         private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds}";
         private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds}";
@@ -21,13 +23,13 @@ namespace Application.Services
         private readonly IWordRepository _wordRepository;
         private readonly IWordPopularityService _wordPopularityService;
 
-        private readonly IMapper<PartOfSpeech, Domain.Models.PartOfSpeech> _partOfSpeechToDomMapper;
-        private readonly IMapper<Domain.Models.Word, Word> _wordToAppMapper;
+        private readonly IMapper<PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, Word> _wordToAppMapper;
 
         public DictionaryService(ILogger<DictionaryService> logger,
                                  IWordRepository wordRepository,
-                                 IMapper<PartOfSpeech, Domain.Models.PartOfSpeech> partOfSpeechToDomMapper,
-                                 IMapper<Domain.Models.Word, Word> wordToAppMapper,
+                                 IMapper<PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomMapper,
+                                 IMapper<Domain.Models.Dictionary.Word, Word> wordToAppMapper,
                                  IWordPopularityService wordPopularityService)
         {
             _logger = logger;
@@ -58,44 +60,42 @@ namespace Application.Services
             _wordPopularityService = wordPopularityService;   
         }
 
-        public async Task<Word> AddWordAsync(string wordValue, PartOfSpeech partOfSpeech, string comment)
+        public async Task<Word> AddWordAsync(string[] wordValues, PartOfSpeech partOfSpeech, string comment)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(AddWordAsync));
 
             try
             {
-                Domain.Models.PartOfSpeech domainPartOfSpeech = _partOfSpeechToDomMapper.Map(partOfSpeech);
+                Domain.Models.Dictionary.PartOfSpeech domainPartOfSpeech = _partOfSpeechToDomMapper.Map(partOfSpeech);
 
-                bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValue, domainPartOfSpeech);
+                bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValues, domainPartOfSpeech);
 
                 if (isWordExisted)
                 {
-                    throw new InvalidOperationException(string.Format(WordAlreadyExistsError, wordValue, domainPartOfSpeech));
+                    throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, wordValues), domainPartOfSpeech));
                 }
 
                 decimal? wordPopularity = null;
                 try
                 {
-                    // TODO: разделять в UI слое
-                    string[] words = wordValue.Split(new[] { ", ", "," }, StringSplitOptions.RemoveEmptyEntries);
-                    wordPopularity = await _wordPopularityService.GetWordPopularityAsync(words);
+                    wordPopularity = await _wordPopularityService.GetWordPopularityAsync(wordValues);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, GetWordPopularityErrorMessage, wordValue);
+                    _logger.LogError(ex, GetWordPopularityErrorMessage, string.Join(Separator, wordValues));
                 }
 
-                Domain.Models.Word newWord = new Domain.Models.Word()
+                Domain.Models.Dictionary.Word newWord = new Domain.Models.Dictionary.Word()
                 {
-                    Value = wordValue,
+                    Values = wordValues,
                     PartOfSpeech = domainPartOfSpeech,
                     Comments = comment,
                     Popularity = wordPopularity
                 };
 
-                Domain.Models.Word word = await _wordRepository.AddWordAsync(newWord);
+                Domain.Models.Dictionary.Word word = await _wordRepository.AddWordAsync(newWord);
 
-                _logger.LogInformation(AddedWordMessage, word.Value, word.Id, word.PartOfSpeech);
+                _logger.LogInformation(AddedWordMessage, word.Values, word.Id, word.PartOfSpeech);
 
                 Word result = _wordToAppMapper.Map(word);
 
@@ -115,7 +115,7 @@ namespace Application.Services
             {
                 return await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Word[] words = await _wordRepository.GetWordsForLearningAsync();
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsForLearningAsync();
 
                     return _wordToAppMapper.MapToArray(words);
                 }, context);
@@ -134,16 +134,16 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
 
-                    foreach (Domain.Models.Word word in words)
+                    foreach (Domain.Models.Dictionary.Word word in words)
                     {
                         word.Learn();
                     }
 
                     await _wordRepository.SaveWordsAsync(words);
 
-                    _logger.LogInformation(LearnedWordsMessage, words.Length, string.Join(", ", words.Select(w => w.Id)));
+                    _logger.LogInformation(LearnedWordsMessage, words.Length, string.Join(Separator, words.Select(w => w.Id)));
                 }, context);
             }
             finally
@@ -160,16 +160,16 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
 
-                    foreach (Domain.Models.Word word in words)
+                    foreach (Domain.Models.Dictionary.Word word in words)
                     {
                         word.MarkForStudy();
                     }
 
                     await _wordRepository.SaveWordsAsync(words);
 
-                    _logger.LogInformation(MarkedWordsMessage, words.Length, string.Join(", ", words.Select(w => w.Id)));
+                    _logger.LogInformation(MarkedWordsMessage, words.Length, string.Join(Separator, words.Select(w => w.Id)));
                 }, context);
             }
             finally
@@ -186,7 +186,7 @@ namespace Application.Services
             {
                 return await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Word[] words = await _wordRepository.SearchWordsAsync(entry);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.SearchWordsAsync(entry);
 
                     return _wordToAppMapper.MapToArray(words);
                 }, context);

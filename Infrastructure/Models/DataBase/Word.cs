@@ -1,4 +1,4 @@
-﻿namespace Infrastructure.Models
+﻿namespace Infrastructure.Models.DataBase
 {
     public class Word
     {

@@ -1,11 +1,13 @@
 ﻿using Infrastructure.Mappers;
-using Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
 using Shared;
+using Infrastructure.Services;
+using Infrastructure.Interfaces;
+using Infrastructure.Services.Internal;
 
 namespace Infrastructure
 {
@@ -13,25 +15,65 @@ namespace Infrastructure
     {
         private const string NotAvailable = "N/A";
         private const string WordPopularityServiceRetryMessage = "WordPopularityService retry attempt {RetryCount} after {Delay}s. Status: {StatusCode}, Exception: {ExceptionType}, Message: {ErrorMessage}";
+        private const string ParserRetryMessage = "{Parser} retry attempt {RetryCount} after {Delay}s. Status: {StatusCode}, Exception: {ExceptionType}, Message: {ErrorMessage}";
+
 
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
-            services.AddSingleton<IMapper<PartOfSpeech?, Domain.Models.PartOfSpeech>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<Domain.Models.PartOfSpeech, PartOfSpeech?>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<Word, Domain.Models.Word>, WordMapper>();
-            services.AddSingleton<IMapper<Domain.Models.Word, Word>, WordMapper>();
+            services.AddSingleton<IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Models.Parser.PartsOfSpeech, Domain.Models.Parser.PartsOfSpeech>, PartOfSpeechMapper>();
 
-            services.AddSingleton<Domain.Interfaces.IWordRepository, Services.WordRepository>();
+            services.AddSingleton<IMapper<Models.DataBase.Word, Domain.Models.Dictionary.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.Word, Models.DataBase.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Models.Parser.Word, Domain.Models.Parser.Word>, WordMapper>();
 
-            services.AddHttpClient<Domain.Interfaces.IWordPopularityService, Services.WordPopularityService>(client =>
+            services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
+            services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
+
+            services.AddSingleton<IParser, CambridgeDictionaryParser>();
+
+            services.AddHttpClient<Domain.Interfaces.IWordPopularityService, WordPopularityService>(client =>
             {
                 client.BaseAddress = new Uri("https://books.google.com/ngrams/json");
                 client.Timeout = TimeSpan.FromSeconds(10);
             })
             .AddPolicyHandler((serviceProvider, request) =>
             {
-                ILogger<Services.WordPopularityService> logger = serviceProvider.GetService<ILogger<Services.WordPopularityService>>()!;
+                ILogger<WordPopularityService> logger = serviceProvider.GetService<ILogger<WordPopularityService>>()!;
                 return GetRetryPolicy(logger);
+            });
+
+            services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
+            {
+                client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
+                client.Timeout = TimeSpan.FromSeconds(10);
+            })
+            // TODO: Вынести в отдельный метод, когда появится другой парсер
+            .AddPolicyHandler((serviceProvider, request) =>
+            {
+                ILogger logger = serviceProvider.GetService<ILoggerFactory>()!
+                    .CreateLogger(Models.Parser.Parser.CambridgeDictionary.ToString());
+            
+                return Policy
+                    .Handle<HttpRequestException>()
+                    .OrResult<HttpResponseMessage>(r => r.StatusCode != System.Net.HttpStatusCode.OK)
+                    .WaitAndRetryForeverAsync(
+                        retryAttempt => TimeSpan.FromSeconds(2),
+                        (result, retryCount, timespan) =>
+                        {
+                            string statusCode = result.Result?.StatusCode.ToString() ?? NotAvailable;
+                            string exceptionType = result.Exception?.GetType().Name ?? NotAvailable;
+                            string errorMessage = result.Exception?.Message ?? result.Result?.ReasonPhrase ?? NotAvailable;
+            
+                            logger.LogWarning(ParserRetryMessage,
+                                Models.Parser.Parser.CambridgeDictionary,
+                                retryCount,
+                                timespan.TotalSeconds,
+                                statusCode,
+                                exceptionType,
+                                errorMessage);
+                        });
             });
 
             string sqlConnectionString = Environment.GetEnvironmentVariable("ENGLISH_WORDS_STORAGE")!;

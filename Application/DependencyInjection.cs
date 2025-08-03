@@ -12,11 +12,11 @@ namespace Application
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            services.AddSingleton<IMapper<Domain.Models.Word, Word>, WordMapper>();
-            services.AddSingleton<IMapper<Word, Domain.Models.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.Word, Word>, WordMapper>();
+            services.AddSingleton<IMapper<Word, Domain.Models.Dictionary.Word>, WordMapper>();
 
-            services.AddSingleton<IMapper<Domain.Models.PartOfSpeech, PartOfSpeech>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<PartOfSpeech, Domain.Models.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
 
 
             services.AddSingleton<IDictionaryService, DictionaryService>();
