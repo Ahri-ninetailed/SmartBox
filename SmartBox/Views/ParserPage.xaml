@@ -3,18 +3,14 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     x:Class="SmartBox.Views.ParserPage">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="30,0" Spacing="25">
-            
-            <Label
-                Text="Hello, Wor123ld!"
-                Style="{StaticResource Headline}"
-                SemanticProperties.HeadingLevel="Level1" />
-
-     
-           
-        </VerticalStackLayout>
-    </ScrollView>
+    <Entry Placeholder="Entry" Text="{Binding EntryText, Mode=TwoWay}">
+        <Entry.Behaviors>
+            <toolkit:UserStoppedTypingBehavior
+            Command="{Binding ParseCommand}"
+            StoppedTypingTimeThreshold="1500" />
+        </Entry.Behaviors>
+    </Entry>
 </ContentPage>

@@ -2,29 +2,29 @@
 
 namespace SmartBox.Mappers
 {
-    public class PartOfSpeechMapper : IMapper<Application.Models.PartOfSpeech, Models.PartOfSpeech>,
-                                      IMapper<Models.PartOfSpeech, Application.Models.PartOfSpeech>
+    public class PartOfSpeechMapper : IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech>,
+                                      IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech>
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 
-        public Models.PartOfSpeech Map(Application.Models.PartOfSpeech source)
+        public Models.Dictionary.PartOfSpeech Map(Application.Models.Dictionary.PartOfSpeech source)
         {
             return source switch
             {
-                Application.Models.PartOfSpeech.Unknown => Models.PartOfSpeech.Unknown,
-                Application.Models.PartOfSpeech.Other => Models.PartOfSpeech.Other,
-                Application.Models.PartOfSpeech.Verb => Models.PartOfSpeech.Verb,
+                Application.Models.Dictionary.PartOfSpeech.Unknown => Models.Dictionary.PartOfSpeech.Unknown,
+                Application.Models.Dictionary.PartOfSpeech.Other => Models.Dictionary.PartOfSpeech.Other,
+                Application.Models.Dictionary.PartOfSpeech.Verb => Models.Dictionary.PartOfSpeech.Verb,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }
 
-        public Application.Models.PartOfSpeech Map(Models.PartOfSpeech source)
+        public Application.Models.Dictionary.PartOfSpeech Map(Models.Dictionary.PartOfSpeech source)
         {
             return source switch
             {
-                Models.PartOfSpeech.Unknown => Application.Models.PartOfSpeech.Unknown,
-                Models.PartOfSpeech.Other => Application.Models.PartOfSpeech.Other,
-                Models.PartOfSpeech.Verb => Application.Models.PartOfSpeech.Verb,
+                Models.Dictionary.PartOfSpeech.Unknown => Application.Models.Dictionary.PartOfSpeech.Unknown,
+                Models.Dictionary.PartOfSpeech.Other => Application.Models.Dictionary.PartOfSpeech.Other,
+                Models.Dictionary.PartOfSpeech.Verb => Application.Models.Dictionary.PartOfSpeech.Verb,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }

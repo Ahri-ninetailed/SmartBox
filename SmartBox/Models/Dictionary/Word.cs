@@ -2,7 +2,7 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace SmartBox.Models
+namespace SmartBox.Models.Dictionary
 {
     public partial class Word : ObservableObject
     {

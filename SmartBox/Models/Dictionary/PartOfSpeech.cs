@@ -1,4 +1,4 @@
-﻿namespace SmartBox.Models
+﻿namespace SmartBox.Models.Dictionary
 {
     public enum PartOfSpeech
     {

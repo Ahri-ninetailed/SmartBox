@@ -30,14 +30,14 @@ namespace SmartBox.ViewModels
         private readonly IDictionaryService _dictionaryService;
         private readonly IAlertService _alertService;
 
-        private readonly IMapper<Application.Models.Word, Models.Word> _wordMapper;
-        private readonly IMapper<Models.PartOfSpeech, Application.Models.PartOfSpeech> _partOfSpeechMapper;
+        private readonly IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word> _wordMapper;
+        private readonly IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> _partOfSpeechMapper;
         #endregion
 
         #region Properties
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
-        private ObservableCollection<Word> words = new();
+        private ObservableCollection<Models.Dictionary.Word> words = new();
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(LearnCommand))]
@@ -53,19 +53,19 @@ namespace SmartBox.ViewModels
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
-        private PartOfSpeech selectedPartOfSpeech;
+        private Models.Dictionary.PartOfSpeech selectedPartOfSpeech;
 
         [ObservableProperty]
-        private ObservableCollection<PartOfSpeech> partOfSpeechOptions = new(Enum.GetValues<PartOfSpeech>());
+        private ObservableCollection<Models.Dictionary.PartOfSpeech> partOfSpeechOptions = new(Enum.GetValues<Models.Dictionary.PartOfSpeech>());
 
-        private Word[] SelectedWords => RawSelectedWords.OfType<Word>().ToArray();
+        private Models.Dictionary.Word[] SelectedWords => RawSelectedWords.OfType<Models.Dictionary.Word>().ToArray();
         #endregion
 
         public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, 
                                        IDictionaryService dictionaryService, 
                                        IAlertService alertService,
-                                       IMapper<Application.Models.Word, Models.Word> wordMapper,
-                                       IMapper<Models.PartOfSpeech, Application.Models.PartOfSpeech> partOfSpeechMapper)
+                                       IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word> wordMapper,
+                                       IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> partOfSpeechMapper)
         {
             _logger = logger;
 
@@ -100,13 +100,13 @@ namespace SmartBox.ViewModels
                     return;
                 }
 
-                Application.Models.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
+                Application.Models.Dictionary.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
 
-                Word[] words = _wordMapper.MapToArray(appWords);
+                Models.Dictionary.Word[] words = _wordMapper.MapToArray(appWords);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>  
                 { 
-                    Words = new ObservableCollection<Word>(words); 
+                    Words = new ObservableCollection<Models.Dictionary.Word>(words); 
                 });
             }
             catch (Exception ex)
@@ -137,7 +137,7 @@ namespace SmartBox.ViewModels
 
             try
             {
-                foreach (Word word in SelectedWords)
+                foreach (Models.Dictionary.Word word in SelectedWords)
                 {
                     word.ShouldStudy = false;
                     word.Learned = true;
@@ -173,7 +173,7 @@ namespace SmartBox.ViewModels
 
             try
             {
-                foreach (Word word in SelectedWords)
+                foreach (Models.Dictionary.Word word in SelectedWords)
                 {
                     word.ShouldStudy = true;
                 }
@@ -191,10 +191,10 @@ namespace SmartBox.ViewModels
         [RelayCommand(CanExecute = nameof(CanAddWord))]
         private async Task AddAsync()
         {
-            Application.Models.Word addedWord;
+            Application.Models.Dictionary.Word addedWord;
             try
             {
-                Application.Models.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
+                Application.Models.Dictionary.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
                 addedWord = await _dictionaryService.AddWordAsync(SearchText.Split(Separators, StringSplitOptions.TrimEntries), partOfSpeech, CommentText);
             }
@@ -209,7 +209,7 @@ namespace SmartBox.ViewModels
 
             try
             {
-                Word uiWord = _wordMapper.Map(addedWord);
+                Models.Dictionary.Word uiWord = _wordMapper.Map(addedWord);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
@@ -282,7 +282,7 @@ namespace SmartBox.ViewModels
             MarkCommand.NotifyCanExecuteChanged();
         }
 
-        partial void OnWordsChanged(ObservableCollection<Word>? oldValue, ObservableCollection<Word> newValue)
+        partial void OnWordsChanged(ObservableCollection<Models.Dictionary.Word>? oldValue, ObservableCollection<Models.Dictionary.Word> newValue)
         {
             if (oldValue != null)
             {
@@ -303,15 +303,15 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Private Helper Methods
-        private async Task<ObservableCollection<Word>> GetWordsForLearningAsync()
+        private async Task<ObservableCollection<Models.Dictionary.Word>> GetWordsForLearningAsync()
         {
             try
             {
-                Application.Models.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
+                Application.Models.Dictionary.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
 
-                Word[] words = _wordMapper.MapToArray(appWords);
+                Models.Dictionary.Word[] words = _wordMapper.MapToArray(appWords);
 
-                return new ObservableCollection<Word>(words);
+                return new ObservableCollection<Models.Dictionary.Word>(words);
             }
             catch (Exception ex)
             {
@@ -320,7 +320,7 @@ namespace SmartBox.ViewModels
                 await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{LoadWordsErrorMessage}: {ex.Message}");
             }
 
-            return new ObservableCollection<Word>();
+            return new ObservableCollection<Models.Dictionary.Word>();
         }
         #endregion
     }

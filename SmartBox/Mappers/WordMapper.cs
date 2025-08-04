@@ -2,22 +2,22 @@
 
 namespace SmartBox.Mappers
 {
-    public class WordMapper : IMapper<Application.Models.Word, Models.Word>
+    public class WordMapper : IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word>
     {
         private const string Separator = ", ";
 
-        private readonly IMapper<Application.Models.PartOfSpeech, Models.PartOfSpeech> _mapper;
+        private readonly IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> _mapper;
 
-        public WordMapper(IMapper<Application.Models.PartOfSpeech, Models.PartOfSpeech> mapper)
+        public WordMapper(IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> mapper)
         {
             _mapper = mapper;
         }
 
-        public Models.Word Map(Application.Models.Word source)
+        public Models.Dictionary.Word Map(Application.Models.Dictionary.Word source)
         {
-            Models.PartOfSpeech partOfSpeech = _mapper.Map(source.PartOfSpeech);
+            Models.Dictionary.PartOfSpeech partOfSpeech = _mapper.Map(source.PartOfSpeech);
 
-            return new Models.Word
+            return new Models.Dictionary.Word
             {
                 Id = source.Id,
                 Value = string.Join(Separator, source.Values),

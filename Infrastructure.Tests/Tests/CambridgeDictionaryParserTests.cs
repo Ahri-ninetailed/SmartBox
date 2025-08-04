@@ -37,7 +37,7 @@ namespace Infrastructure.Tests.Tests
             var testHtml = await LoadTestHtmlAsync(entry);
 
             // Act
-            var result = await _parser.GetParsedWords(testHtml);
+            var result = await _parser.ExtractWordDataAsync(testHtml);
 
             // Assert
             var normalizedResult = NormalizeResult(result);

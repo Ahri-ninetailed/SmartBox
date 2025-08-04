@@ -23,13 +23,13 @@ namespace Application.Services
         private readonly IWordRepository _wordRepository;
         private readonly IWordPopularityService _wordPopularityService;
 
-        private readonly IMapper<PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomMapper;
-        private readonly IMapper<Domain.Models.Dictionary.Word, Word> _wordToAppMapper;
+        private readonly IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word> _wordToAppMapper;
 
         public DictionaryService(ILogger<DictionaryService> logger,
                                  IWordRepository wordRepository,
-                                 IMapper<PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomMapper,
-                                 IMapper<Domain.Models.Dictionary.Word, Word> wordToAppMapper,
+                                 IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomMapper,
+                                 IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word> wordToAppMapper,
                                  IWordPopularityService wordPopularityService)
         {
             _logger = logger;
@@ -60,7 +60,7 @@ namespace Application.Services
             _wordPopularityService = wordPopularityService;   
         }
 
-        public async Task<Word> AddWordAsync(string[] wordValues, PartOfSpeech partOfSpeech, string comment)
+        public async Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(AddWordAsync));
 
@@ -97,7 +97,7 @@ namespace Application.Services
 
                 _logger.LogInformation(AddedWordMessage, word.Values, word.Id, word.PartOfSpeech);
 
-                Word result = _wordToAppMapper.Map(word);
+                Models.Dictionary.Word result = _wordToAppMapper.Map(word);
 
                 return result;
             }
@@ -107,7 +107,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Word[]> GetWordsForLearningAsync()
+        public async Task<Models.Dictionary.Word[]> GetWordsForLearningAsync()
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(GetWordsForLearningAsync));
 
@@ -178,7 +178,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Word[]> SearchWordsAsync(string entry)
+        public async Task<Models.Dictionary.Word[]> SearchWordsAsync(string entry)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchWordsAsync));
 

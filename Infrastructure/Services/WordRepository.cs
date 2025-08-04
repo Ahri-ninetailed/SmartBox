@@ -9,8 +9,8 @@ namespace Infrastructure.Services
     {
         private const string Separator = ", ";
 
-        private const string EmptyIdsCollectionError = "The ids collection cannot be empty";
-        private const string EmptyWordsCollectionError = "The words collection cannot be empty";
+        private const string EmptyIdsCollectionError = "The 'ids' collection must not be null, empty, or contain zero values.";
+        private const string EmptyWordsCollectionError = "The 'words' array must not be null, empty, or contain null elements.";
         private const string EmptyEntryError = "The entry cannot be null or whitespace";
         private const string NullWordError = "The new word cannot be null";
         private const string WordValuesNullOrEmptyError = "Word values array cannot be null, empty, or contain null/whitespace elements.";
@@ -34,7 +34,7 @@ namespace Infrastructure.Services
 
         public async Task<Domain.Models.Dictionary.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids)
         {
-            if (ids.Any() == false)
+            if (ids == null || ids.Any() == false || ids.Any(el => el == 0))
             {
                 throw new ArgumentException(EmptyIdsCollectionError);
             }
@@ -48,7 +48,7 @@ namespace Infrastructure.Services
 
         public async Task SaveWordsAsync(Domain.Models.Dictionary.Word[] words)
         {
-            if (words.Any() == false)
+            if (words == null || words.Length == 0 || words.Any(el => el == null))
             {
                 throw new ArgumentException(EmptyWordsCollectionError);
             }

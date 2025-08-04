@@ -4,14 +4,14 @@ namespace Application.Interfaces
 {
     public interface IDictionaryService
     {
-        Task<Word[]> GetWordsForLearningAsync();
+        Task<Models.Dictionary.Word[]> GetWordsForLearningAsync();
 
-        Task<Word[]> SearchWordsAsync(string entry);
+        Task<Models.Dictionary.Word[]> SearchWordsAsync(string entry);
 
         Task LearnWordsAsync(IEnumerable<int> ids);
 
         Task MarkWordsAsync(IEnumerable<int> ids);
 
-        Task<Word> AddWordAsync(string[] wordValues, PartOfSpeech partOfSpeech, string comment);
+        Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment);
     }
 }

@@ -30,7 +30,7 @@ namespace Infrastructure.Services.Internal
         private const string BLUE_RECTANGLE_HEADER_TAGS = ".phrase-title.dphrase-title";
         private readonly string[] _partsOfSpeech = { "verb", "phrasal verb", "idiom", "phrase" };
 
-        public async Task<List<Word>> GetParsedWords(string html)
+        public async Task<List<Word>> ExtractWordDataAsync(string html)
         {
             IDocument page = await _context.OpenAsync(req => req.Content(html));
             IHtmlCollection<IElement> areasOfWords = page.QuerySelectorAll(".pr.di.superentry");

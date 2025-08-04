@@ -1,4 +1,4 @@
-﻿namespace Application.Models
+﻿namespace Application.Models.Dictionary
 {
     public enum PartOfSpeech
     {
