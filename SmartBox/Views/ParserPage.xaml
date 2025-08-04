@@ -4,13 +4,49 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:syncfusion="clr-namespace:Syncfusion.Maui.TreeView;assembly=Syncfusion.Maui.TreeView"
     x:Class="SmartBox.Views.ParserPage">
 
-    <Entry Placeholder="Entry" Text="{Binding EntryText, Mode=TwoWay}">
-        <Entry.Behaviors>
-            <toolkit:UserStoppedTypingBehavior
-            Command="{Binding ParseCommand}"
-            StoppedTypingTimeThreshold="1500" />
-        </Entry.Behaviors>
-    </Entry>
+    <Grid RowDefinitions="Auto,*" Padding="20">
+
+        <Entry Grid.Row="0" 
+               Placeholder="Entry" 
+               Text="{Binding EntryText, Mode=TwoWay}"
+               Margin="0,0,0,20">
+            <Entry.Behaviors>
+                <toolkit:UserStoppedTypingBehavior
+                    Command="{Binding ParseCommand}"
+                    StoppedTypingTimeThreshold="1500" />
+            </Entry.Behaviors>
+        </Entry>
+
+        <syncfusion:SfTreeView Grid.Row="1"
+                               x:Name="TreeView"
+                               ItemsSource="{Binding TreeViewNodes}"
+                               ChildPropertyName="Children"
+                               SelectionMode="Multiple"
+                               AutoExpandMode="AllNodesExpanded">
+
+            <syncfusion:SfTreeView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0"
+                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                  VerticalOptions="Center"/>
+
+                        <Label Grid.Column="1"
+                               Text="{Binding Title}"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </DataTemplate>
+            </syncfusion:SfTreeView.ItemTemplate>
+
+        </syncfusion:SfTreeView>
+
+    </Grid>
 </ContentPage>
