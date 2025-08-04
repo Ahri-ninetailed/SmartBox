@@ -41,7 +41,9 @@ namespace SmartBox.Mappers
                 Area = source.Area,
                 Value = source.Value,
                 Type = _partOfSpeechToUIParserMapper.Map(source.Type),
-                Children = new ObservableCollection<Models.Parser.Meaning>()
+                Children = new ObservableCollection<Models.Parser.Meaning>(),
+                OtherForms = source.OtherForms.ToArray(),
+                PluralForms = source.PluralForms.ToArray()
             };
 
             foreach (KeyValuePair<string, List<string>> meaningAndExamples in source.MeaningsAndExamples)

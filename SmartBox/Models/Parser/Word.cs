@@ -5,9 +5,25 @@ using System.Collections.ObjectModel;
 
 namespace SmartBox.Models.Parser
 {
+    // TODO: Не уверен, что большинство свойств должны быть ObservableProperty
     public partial class Word : ObservableObject
     {
-        public string Title => $"{Value} [{Type}]" + (string.IsNullOrEmpty(Area) ? "" : $" - {Area}");
+        public string Title
+        {
+            get
+            {
+                string? pluralForms = null;
+                if (PluralForms.Length != 0)
+                {
+                    pluralForms = $" ({string.Join(", ", PluralForms)})";
+                }
+
+                string area = string.IsNullOrWhiteSpace(Area) ? "" : $" ({Area})";
+                string otherForms = OtherForms.Length == 0 ? "" : $", {string.Join(", ", OtherForms)}";
+
+                return $"{Type}{area}\n{Value}{otherForms}{pluralForms}";
+            }
+        }
 
         internal bool SuppressIsSelectedChanged;
 
@@ -22,6 +38,12 @@ namespace SmartBox.Models.Parser
 
         [ObservableProperty]
         private string? area;
+
+        [ObservableProperty]
+        private string[] pluralForms = Array.Empty<string>();
+
+        [ObservableProperty]
+        private string[] otherForms = Array.Empty<string>();
 
         [ObservableProperty]
         private PartOfSpeech type;

@@ -3,9 +3,10 @@
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
-using SmartBox.Models.Parser;
 using Shared;
+using SmartBox.Models.Parser;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace SmartBox.ViewModels
 {
@@ -28,6 +29,9 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(ParseCommand))]
         private string entryText = string.Empty;
+
+        [ObservableProperty]
+        private string resultText = string.Empty;
         #endregion
 
         public ParserPageViewModel(IParserService parserService, IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper)
@@ -63,6 +67,93 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Event Handlers
+
+        partial void OnTreeViewNodesChanged(ObservableCollection<Word>? oldValue, ObservableCollection<Word> newValue)
+        {
+            if (oldValue != null)
+            {
+                foreach (var word in oldValue)
+                {
+                    word.PropertyChanged -= Word_PropertyChanged;
+                    foreach (var meaning in word.Children)
+                    {
+                        meaning.PropertyChanged -= Meaning_PropertyChanged;
+                        foreach (var example in meaning.Children)
+                        {
+                            example.PropertyChanged -= Example_PropertyChanged;
+                        }
+                    }
+                }
+            }
+
+            if (newValue != null)
+            {
+                foreach (var word in newValue)
+                {
+                    word.PropertyChanged += Word_PropertyChanged;
+                    foreach (var meaning in word.Children)
+                    {
+                        meaning.PropertyChanged += Meaning_PropertyChanged;
+                        foreach (var example in meaning.Children)
+                        {
+                            example.PropertyChanged += Example_PropertyChanged;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void Word_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Word.IsSelected))
+            {
+                OnAnyCheckboxChanged();
+            }
+        }
+
+        private void Meaning_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Meaning.IsSelected))
+            {
+                OnAnyCheckboxChanged();
+            }
+        }
+
+        private void Example_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Example.IsSelected))
+            {
+                OnAnyCheckboxChanged();
+            }
+        }
+        #endregion
+
+        #region Private Helper Methods
+        private void OnAnyCheckboxChanged()
+        {
+            var selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToArray();
+            var selectedMeanings = selectedWords.SelectMany(word => word.Children)
+                                                .Where(meaning => meaning.IsSelected)
+                                                .ToArray();
+            var selectedExamples = selectedMeanings.SelectMany(meaning => meaning.Children)
+                                                   .Where(example => example.IsSelected)
+                                                   .Select(example => example.Value);
+
+            var uniqueWords = selectedWords.Select(w => w.Value)
+                                           .Concat(selectedWords.SelectMany(w => w.OtherForms))
+                                           .Select(w => w.ToLower())
+                                           .Distinct();
+
+            string wordsPart = string.Join(", ", uniqueWords);
+
+            int meaningCount = selectedMeanings.Length;
+            string meaningCountPart = meaningCount > 0 ? $" ({meaningCount})" : "";
+
+            string meaningsPart = $"{string.Join(". ", selectedMeanings.Select(m => m.Value))}";
+            string examplesPart = selectedExamples.Any() ? $" ({string.Join(". ", selectedExamples)})" : "";
+
+            ResultText = $"{wordsPart}{meaningCountPart}{examplesPart} -> {meaningsPart}";
+        }
         #endregion
     }
 }
