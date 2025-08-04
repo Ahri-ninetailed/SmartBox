@@ -27,6 +27,8 @@ namespace SmartBox.Models.Parser
 
         internal bool SuppressIsSelectedChanged;
 
+        public bool IsBold => true;
+
         [ObservableProperty]
         private bool isSelected;
 
@@ -67,6 +69,7 @@ namespace SmartBox.Models.Parser
         public string Title => Value;
 
         internal bool SuppressIsSelectedChanged;
+        public bool IsBold => true;
 
         [ObservableProperty]
         private bool isSelected;
@@ -113,6 +116,8 @@ namespace SmartBox.Models.Parser
     public partial class Example : ObservableObject
     {
         public string Title => Value;
+
+        public bool IsBold => false;
 
         [ObservableProperty]
         private bool isSelected;

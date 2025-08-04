@@ -11,8 +11,7 @@
 
         <Entry Grid.Row="0" 
                Placeholder="Entry" 
-               Text="{Binding EntryText, Mode=TwoWay}"
-               Margin="0,0,0,20">
+               Text="{Binding EntryText, Mode=TwoWay}">
             <Entry.Behaviors>
                 <toolkit:UserStoppedTypingBehavior
                     Command="{Binding ParseCommand}"
@@ -41,7 +40,15 @@
 
                         <Label Grid.Column="1"
                                Text="{Binding Title}"
-                               VerticalOptions="Center"/>
+                               VerticalOptions="Center">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsBold}"
+                                             Value="True">
+                                    <Setter Property="FontAttributes" Value="Bold"/>
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
                     </Grid>
                 </DataTemplate>
             </syncfusion:SfTreeView.ItemTemplate>
