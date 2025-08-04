@@ -153,6 +153,13 @@ namespace SmartBox.ViewModels
         private void OnAnyCheckboxChanged()
         {
             var selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToArray();
+
+            string? preposition = null;
+            if (selectedWords.Any(el => el.Type == PartOfSpeech.Verb || el.Type == PartOfSpeech.PhrasalVerb))
+            {
+                preposition =  "to ";
+            }
+
             var selectedMeanings = selectedWords.SelectMany(word => word.Children)
                                                 .Where(meaning => meaning.IsSelected)
                                                 .ToArray();
@@ -173,7 +180,7 @@ namespace SmartBox.ViewModels
             string meaningsPart = $"{string.Join(". ", selectedMeanings.Select(m => m.Value))}";
             string examplesPart = selectedExamples.Any() ? $" ({string.Join(". ", selectedExamples)})" : "";
 
-            ResultText = $"{wordsPart}{meaningCountPart}{examplesPart} -> {meaningsPart}";
+            ResultText = $"{preposition}{wordsPart}{meaningCountPart}{examplesPart} -> {meaningsPart}";
         }
         #endregion
     }
