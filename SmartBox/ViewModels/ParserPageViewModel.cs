@@ -3,7 +3,9 @@
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Shared;
+using SmartBox.Interfaces;
 using SmartBox.Models.Parser;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -13,10 +15,14 @@ namespace SmartBox.ViewModels
     public partial class ParserPageViewModel : ObservableObject
     {
         #region Constants
+        private const string ParseErrorMessage = "An error occurred while parsing";
         #endregion
 
         #region Fields
+        private readonly ILogger<ParserPageViewModel> _logger;
+
         private readonly IParserService _parserService;
+        private readonly IAlertService _alertService;
 
         private readonly IMapper<Application.Models.Parser.Word, Word> _wordToUIParserMapper;
 
@@ -34,9 +40,15 @@ namespace SmartBox.ViewModels
         private string resultText = string.Empty;
         #endregion
 
-        public ParserPageViewModel(IParserService parserService, IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper)
+        public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
+                                   IParserService parserService, 
+                                   IAlertService alertService, 
+                                   IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper)
         {
+            _logger = logger;
+
             _parserService = parserService;
+            _alertService = alertService;
 
             _wordToUIParserMapper = wordToUIParserMapper;
         }
@@ -49,9 +61,18 @@ namespace SmartBox.ViewModels
         [RelayCommand(CanExecute = nameof(CanParse))]
         private async Task ParseAsync()
         {
-            var words = await _parserService.ExtractWordDataAsync(EntryText);
+            try
+            {
+                var words = await _parserService.ExtractWordDataAsync(EntryText);
 
-            TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
+                TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ParseErrorMessage);
+
+                await _alertService.DisplayAlertAsync($"{ParseErrorMessage}: {ex.Message}");
+            }
         }
         #endregion
 

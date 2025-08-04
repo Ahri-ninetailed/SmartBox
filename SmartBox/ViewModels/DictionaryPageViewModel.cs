@@ -16,7 +16,6 @@ namespace SmartBox.ViewModels
         #region Constants
         private readonly string[] Separators = [",", ", "];
 
-        private const string ErrorDialogTitle = "Error";
         private const string UpdateUIErrorMessage = "Operation completed, but failed to update the interface";
         private const string SearchWordsErrorMessage = "Failed to search words";
         private const string LearnWordsErrorMessage = "Failed to mark words as learned";
@@ -113,7 +112,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, SearchWordsErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{SearchWordsErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{SearchWordsErrorMessage}: {ex.Message}");
             }
         }
 
@@ -130,7 +129,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, LearnWordsErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{LearnWordsErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{LearnWordsErrorMessage}: {ex.Message}");
 
                 return;
             }
@@ -149,7 +148,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, UpdateUIErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{UpdateUIErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{UpdateUIErrorMessage}: {ex.Message}");
             }
         }
 
@@ -166,7 +165,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, MarkWordsErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{MarkWordsErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{MarkWordsErrorMessage}: {ex.Message}");
 
                 return;
             }
@@ -184,7 +183,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, UpdateUIErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{UpdateUIErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{UpdateUIErrorMessage}: {ex.Message}");
             }
         }
 
@@ -202,7 +201,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, AddWordErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{AddWordErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{AddWordErrorMessage}: {ex.Message}");
 
                 return;
             }
@@ -223,7 +222,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, UpdateUIErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{UpdateUIErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{UpdateUIErrorMessage}: {ex.Message}");
             }
         }
         #endregion
@@ -317,7 +316,7 @@ namespace SmartBox.ViewModels
             {
                 _logger.LogError(ex, LoadWordsErrorMessage);
 
-                await _alertService.DisplayAlertAsync(ErrorDialogTitle, $"{LoadWordsErrorMessage}: {ex.Message}");
+                await _alertService.DisplayAlertAsync($"{LoadWordsErrorMessage}: {ex.Message}");
             }
 
             return new ObservableCollection<Models.Dictionary.Word>();
