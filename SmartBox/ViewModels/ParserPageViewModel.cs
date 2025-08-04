@@ -42,16 +42,20 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanParse))]
         private async Task ParseAsync()
         {
-            var words = await _parserService.ExtractWordDataAsync("eve");
+            var words = await _parserService.ExtractWordDataAsync(EntryText);
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
         }
         #endregion
 
         #region CanExecute Methods
+        private bool CanParse()
+        {
+            return string.IsNullOrWhiteSpace(EntryText) == false;
+        }
         #endregion
 
         #region Property Changed Handlers
