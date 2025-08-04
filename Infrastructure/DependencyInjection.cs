@@ -30,6 +30,7 @@ namespace Infrastructure
 
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
+            services.AddSingleton<Domain.Interfaces.IExcelService, ExcelService>();
 
             services.AddSingleton<IParser, CambridgeDictionaryParser>();
 
