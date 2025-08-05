@@ -48,7 +48,7 @@ namespace Infrastructure
             services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
-                client.Timeout = TimeSpan.FromSeconds(5);
+                client.Timeout = TimeSpan.FromSeconds(10);
             })
             // TODO: Вынести в отдельный метод, когда появится другой парсер
             .AddPolicyHandler((serviceProvider, request) =>
@@ -58,18 +58,15 @@ namespace Infrastructure
             
                 return Policy
                     .Handle<HttpRequestException>()
-                    .Or<TaskCanceledException>()
-                    .Or<TimeoutException>()
                     .OrResult<HttpResponseMessage>(r => r.StatusCode != System.Net.HttpStatusCode.OK)
-                    .WaitAndRetryAsync(
-                        retryCount: 5,
-                        sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(2),
-                        onRetry: (result, timespan, retryCount, context) =>
+                    .WaitAndRetryForeverAsync(
+                        retryAttempt => TimeSpan.FromSeconds(2),
+                        (result, retryCount, timespan) =>
                         {
                             string statusCode = result.Result?.StatusCode.ToString() ?? NotAvailable;
                             string exceptionType = result.Exception?.GetType().Name ?? NotAvailable;
                             string errorMessage = result.Exception?.Message ?? result.Result?.ReasonPhrase ?? NotAvailable;
-
+            
                             logger.LogWarning(ParserRetryMessage,
                                 Models.Parser.Parser.CambridgeDictionary,
                                 retryCount,
