@@ -19,6 +19,11 @@ namespace SmartBox.Models.Parser
         public virtual string Title => Value;
         public virtual bool IsBold => true;
 
+        partial void OnValueChanged(string value)
+        {
+            OnPropertyChanged(nameof(Title));
+        }
+
         protected abstract void OnSelectionChangedCore(bool value);
 
         partial void OnIsSelectedChanged(bool value)

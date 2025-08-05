@@ -45,6 +45,7 @@ namespace Infrastructure
                 return GetRetryPolicy(logger);
             });
 
+            // TODO: Возникают проблемы с отправкой запросов, может быть стоит использовать Microsoft.Playwright
             services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");

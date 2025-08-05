@@ -24,6 +24,7 @@
                                ItemsSource="{Binding TreeViewNodes}"
                                ChildPropertyName="Children"
                                SelectionMode="Multiple"
+                               ItemTapped="TreeView_ItemTapped"
                                AutoExpandMode="AllNodesExpanded">
 
             <syncfusion:SfTreeView.ItemTemplate>
