@@ -23,6 +23,7 @@ namespace SmartBox.ViewModels
 
         private readonly IParserService _parserService;
         private readonly IAlertService _alertService;
+        public IPromptService? _promptService;
 
         private readonly IMapper<Application.Models.Parser.Word, Word> _wordToUIParserMapper;
 
@@ -72,6 +73,16 @@ namespace SmartBox.ViewModels
                 _logger.LogError(ex, ParseErrorMessage);
 
                 await _alertService.DisplayAlertAsync($"{ParseErrorMessage}: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task EditMeaningAsync(Meaning meaning)
+        {
+            var result = await _promptService!.ShowPromptAsync("Edit Meaning", "Enter new meaning:", meaning.Value);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                meaning.Value = result;
             }
         }
         #endregion

@@ -23,8 +23,8 @@
                                x:Name="TreeView"
                                ItemsSource="{Binding TreeViewNodes}"
                                ChildPropertyName="Children"
-                               SelectionMode="Multiple"
-                               ItemTapped="TreeView_ItemTapped"
+                               SelectionMode="None"
+                               ItemTapped="OnItemTapped"
                                AutoExpandMode="AllNodesExpanded">
 
             <syncfusion:SfTreeView.ItemTemplate>
