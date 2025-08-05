@@ -5,10 +5,68 @@ using System.Collections.ObjectModel;
 
 namespace SmartBox.Models.Parser
 {
-    // TODO: Не уверен, что большинство свойств должны быть ObservableProperty
-    public partial class Word : ObservableObject
+    // Базовый класс для иерархического выбора
+    public abstract partial class SelectableHierarchyNode : ObservableObject
     {
-        public string Title
+        internal bool SuppressIsSelectedChanged;
+
+        [ObservableProperty]
+        private bool isSelected;
+
+        [ObservableProperty]
+        private string value = string.Empty;
+
+        public virtual string Title => Value;
+        public virtual bool IsBold => true;
+
+        protected abstract void OnSelectionChangedCore(bool value);
+
+        partial void OnIsSelectedChanged(bool value)
+        {
+            if (SuppressIsSelectedChanged)
+            {
+                return;
+            }
+
+            OnSelectionChangedCore(value);
+        }
+
+        protected void SetParentSelection<T>(T parent, bool value, Func<T, IEnumerable<SelectableHierarchyNode>> getSiblings)
+            where T : SelectableHierarchyNode
+        {
+            if (parent == null) return;
+
+            if (value)
+            {
+                parent.SuppressIsSelectedChanged = true;
+                parent.IsSelected = value;
+                parent.SuppressIsSelectedChanged = false;
+            }
+            else
+            {
+                if (getSiblings(parent).All(el => el.IsSelected == value))
+                {
+                    parent.SuppressIsSelectedChanged = true;
+                    parent.IsSelected = value;
+                    parent.SuppressIsSelectedChanged = false;
+                }
+            }
+        }
+
+        protected void SetChildrenSelection<T>(IEnumerable<T> children, bool value)
+            where T : SelectableHierarchyNode
+        {
+            foreach (var child in children)
+            {
+                child.IsSelected = value;
+            }
+        }
+    }
+
+    // TODO: Не уверен, что большинство свойств должны быть ObservableProperty
+    public partial class Word : SelectableHierarchyNode
+    {
+        public override string Title
         {
             get
             {
@@ -25,18 +83,8 @@ namespace SmartBox.Models.Parser
             }
         }
 
-        internal bool SuppressIsSelectedChanged;
-
-        public bool IsBold => true;
-
-        [ObservableProperty]
-        private bool isSelected;
-
         [ObservableProperty]
         private ObservableCollection<Meaning> children = new();
-
-        [ObservableProperty]
-        private string value = string.Empty;
 
         [ObservableProperty]
         private string? area;
@@ -50,111 +98,41 @@ namespace SmartBox.Models.Parser
         [ObservableProperty]
         private PartOfSpeech type;
 
-        partial void OnIsSelectedChanged(bool value)
+        protected override void OnSelectionChangedCore(bool value)
         {
-            if (SuppressIsSelectedChanged)
-            {
-                return;
-            }
-
-            foreach (Meaning meaning in Children)
-            {
-                meaning.IsSelected = value;
-            }
+            SetChildrenSelection(Children, value);
         }
     }
 
-    public partial class Meaning : ObservableObject
+    public partial class Meaning : SelectableHierarchyNode
     {
-        public string Title => Value;
-
-        internal bool SuppressIsSelectedChanged;
-        public bool IsBold => true;
-
-        [ObservableProperty]
-        private bool isSelected;
-
         [ObservableProperty]
         private Word parent = new();
 
         [ObservableProperty]
         private ObservableCollection<Example> children = new();
 
-        [ObservableProperty]
-        private string value = string.Empty;
-
-        partial void OnIsSelectedChanged(bool value)
+        protected override void OnSelectionChangedCore(bool value)
         {
-            if (SuppressIsSelectedChanged)
-            {
-                return;
-            }
-
-            if (value)
-            {
-                Parent.SuppressIsSelectedChanged = true;
-                Parent.IsSelected = value;
-                Parent.SuppressIsSelectedChanged = false;
-            }
-            else
-            {
-                if (Parent.Children.All(el => el.IsSelected == value))
-                {
-                    Parent.SuppressIsSelectedChanged = true;
-                    Parent.IsSelected = value;
-                    Parent.SuppressIsSelectedChanged = false;
-                }
-            }
-
-            foreach (Example example in Children)
-            {
-                example.IsSelected = value;
-            }
+            SetParentSelection(Parent, value, p => p.Children);
+            SetChildrenSelection(Children, value);
         }
     }
 
-    public partial class Example : ObservableObject
+    public partial class Example : SelectableHierarchyNode
     {
-        public string Title => Value;
-
-        public bool IsBold => false;
-
-        [ObservableProperty]
-        private bool isSelected;
+        public override bool IsBold => false;
 
         [ObservableProperty]
         private Meaning parent = new();
 
-        [ObservableProperty]
-        private string value = string.Empty;
-
-        partial void OnIsSelectedChanged(bool value)
+        protected override void OnSelectionChangedCore(bool value)
         {
-            if (value)
-            {
-                Parent.SuppressIsSelectedChanged = true;
-                Parent.IsSelected = value;
-                Parent.SuppressIsSelectedChanged = false;
+            SetParentSelection(Parent, value, p => p.Children);
 
-                Parent.Parent.SuppressIsSelectedChanged = true;
-                Parent.Parent.IsSelected = value;
-                Parent.Parent.SuppressIsSelectedChanged = false;
-            }
-            else
+            if (Parent?.Parent != null)
             {
-                if (Parent.Children.All(el => el.IsSelected == value))
-                {
-                    Parent.SuppressIsSelectedChanged = true;
-                    Parent.IsSelected = value;
-                    Parent.SuppressIsSelectedChanged = false;
-
-                    if (Parent.Parent.Children.All(el => el.IsSelected == value))
-                    {
-                        Parent.Parent.SuppressIsSelectedChanged = true;
-                        Parent.Parent.IsSelected = value;
-                        Parent.Parent.SuppressIsSelectedChanged = false;
-                    }
-                }
+                SetParentSelection(Parent.Parent, value, p => p.Children);
             }
         }
     }
