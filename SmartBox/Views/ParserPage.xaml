@@ -7,17 +7,41 @@
     xmlns:syncfusion="clr-namespace:Syncfusion.Maui.TreeView;assembly=Syncfusion.Maui.TreeView"
     x:Class="SmartBox.Views.ParserPage">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+    <Grid RowDefinitions="Auto,*" Padding="20">
 
-        <Entry Grid.Row="0" 
-               Placeholder="Entry" 
-               Text="{Binding EntryText, Mode=TwoWay}">
-            <Entry.Behaviors>
-                <toolkit:UserStoppedTypingBehavior
-                    Command="{Binding ParseCommand}"
-                    StoppedTypingTimeThreshold="1000" />
-            </Entry.Behaviors>
-        </Entry>
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+            <Entry Grid.Column="0" 
+                   Placeholder="Entry" 
+                   Text="{Binding EntryText, Mode=TwoWay}">
+                <Entry.Behaviors>
+                    <toolkit:UserStoppedTypingBehavior
+                        Command="{Binding ParseCommand}"
+                        StoppedTypingTimeThreshold="1000" />
+                </Entry.Behaviors>
+            </Entry>
+
+            <Picker Grid.Column="1" 
+                    Title="To export"
+                    ItemsSource="{Binding WordsForExport}"
+                    SelectedItem="{Binding SelectedWordForExport, Mode=TwoWay}"
+                    ItemDisplayBinding="{Binding Value}"
+                    WidthRequest="120"
+                    VerticalOptions="Center" />
+
+            <Button Grid.Column="2"
+                    Text="+"
+                    Command="{Binding AddWordForExportCommand}"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    ToolTipProperties.Text="Add current text to saved queries" />
+
+            <Button Grid.Column="3"
+                    Text="−"
+                    Command="{Binding RemoveWordForExportCommand}"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    ToolTipProperties.Text="Remove selected query from list" />
+        </Grid>
 
         <syncfusion:SfTreeView Grid.Row="1"
                                x:Name="TreeView"
@@ -55,10 +79,5 @@
             </syncfusion:SfTreeView.ItemTemplate>
 
         </syncfusion:SfTreeView>
-        
-        <Editor Grid.Row="2"
-                Text="{Binding ResultText, Mode=TwoWay}"
-                HeightRequest="100"
-        />
     </Grid>
 </ContentPage>

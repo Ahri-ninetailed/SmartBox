@@ -2,6 +2,6 @@
 {
     public interface IPromptService
     {
-        Task<string?> ShowPromptAsync(string title, string message, string initialValue);
+        Task<string> ShowPromptAsync(string title, string message, string initialValue);
     }
 }

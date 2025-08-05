@@ -38,12 +38,18 @@ namespace SmartBox.ViewModels
         private string entryText = string.Empty;
 
         [ObservableProperty]
-        private string resultText = string.Empty;
+        private ObservableCollection<Word> wordsForExport = new();
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RemoveWordForExportCommand))]
+        private Word? selectedWordForExport;
+
+        private Word? CompiledSelectedWordForExport => GetCompiledSelectedWord();
         #endregion
 
         public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
-                                   IParserService parserService, 
-                                   IAlertService alertService, 
+                                   IParserService parserService,
+                                   IAlertService alertService,
                                    IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper)
         {
             _logger = logger;
@@ -79,11 +85,35 @@ namespace SmartBox.ViewModels
         [RelayCommand]
         private async Task EditMeaningAsync(Meaning meaning)
         {
-            var result = await _promptService!.ShowPromptAsync("Edit Meaning", "Enter new meaning:", meaning.Value);
+            string result = await _promptService!.ShowPromptAsync("Edit Meaning", "Enter new meaning:", meaning.Value);
             if (!string.IsNullOrWhiteSpace(result))
             {
                 meaning.Value = result;
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanAddWordForExport))]
+        private void AddWordForExport()
+        {
+            if (CompiledSelectedWordForExport == null)
+            {
+                return;
+            }
+
+            WordsForExport.Add(CompiledSelectedWordForExport);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRemoveWordForExport))]
+        private void RemoveWordForExport()
+        {
+            if (SelectedWordForExport == null)
+            {
+                return;
+            }
+
+            WordsForExport.Remove(SelectedWordForExport);
+
+            SelectedWordForExport = null;
         }
         #endregion
 
@@ -92,10 +122,23 @@ namespace SmartBox.ViewModels
         {
             return string.IsNullOrWhiteSpace(EntryText) == false;
         }
+
+        private bool CanRemoveWordForExport()
+        {
+            return SelectedWordForExport != null;
+        }
+
+        private bool CanAddWordForExport()
+        {
+            return CompiledSelectedWordForExport != null;
+        }
         #endregion
 
         #region Property Changed Handlers
+        partial void OnSelectedWordForExportChanged(Word? value)
+        {
 
+        }
         #endregion
 
         #region Event Handlers
@@ -139,7 +182,7 @@ namespace SmartBox.ViewModels
         {
             if (e.PropertyName == nameof(Word.IsSelected))
             {
-                OnAnyCheckboxChanged();
+                AddWordForExportCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -147,7 +190,7 @@ namespace SmartBox.ViewModels
         {
             if (e.PropertyName == nameof(Meaning.IsSelected))
             {
-                OnAnyCheckboxChanged();
+                AddWordForExportCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -155,43 +198,57 @@ namespace SmartBox.ViewModels
         {
             if (e.PropertyName == nameof(Example.IsSelected))
             {
-                OnAnyCheckboxChanged();
+                AddWordForExportCommand.NotifyCanExecuteChanged();
             }
         }
         #endregion
 
         #region Private Helper Methods
-        private void OnAnyCheckboxChanged()
-        {
-            var selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToArray();
 
-            string? preposition = null;
-            if (selectedWords.Any(el => el.Type == PartOfSpeech.Verb || el.Type == PartOfSpeech.PhrasalVerb))
+        private Word? GetCompiledSelectedWord()
+        {
+            var selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToList();
+
+            if (selectedWords.Count == 0)
             {
-                preposition =  "to ";
+                return null;
             }
 
-            var selectedMeanings = selectedWords.SelectMany(word => word.Children)
-                                                .Where(meaning => meaning.IsSelected)
-                                                .ToArray();
-            var selectedExamples = selectedMeanings.SelectMany(meaning => meaning.Children)
-                                                   .Where(example => example.IsSelected)
-                                                   .Select(example => example.Value);
+            PartOfSpeech partOfSpeech = selectedWords.Any(el => el.Type == PartOfSpeech.Verb || el.Type == PartOfSpeech.PhrasalVerb)
+                ? PartOfSpeech.Verb
+                : PartOfSpeech.Noun;
 
-            var uniqueWords = selectedWords.Select(w => w.Value)
-                                           .Concat(selectedWords.SelectMany(w => w.OtherForms))
-                                           .Select(w => w.ToLower())
-                                           .Distinct();
+            Word compiledWord = new Word
+            {
+                Value = selectedWords.First().Value.ToLower(),
+                Type = partOfSpeech,
+                Area = null,
+                OtherForms = selectedWords.SelectMany(el => el.OtherForms).ToArray(),
+                PluralForms = selectedWords.SelectMany(el => el.PluralForms).ToArray(),
+            };
 
-            string wordsPart = string.Join(", ", uniqueWords);
+            foreach (Word word in selectedWords)
+            {
+                foreach (Meaning meaning in word.Children.Where(m => m.IsSelected))
+                {
+                    Meaning newMeaning = new Meaning
+                    {
+                        Value = meaning.Value,
+                    };
 
-            int meaningCount = selectedMeanings.Length;
-            string meaningCountPart = meaningCount > 0 ? $" ({meaningCount})" : "";
+                    foreach (Example example in meaning.Children.Where(e => e.IsSelected))
+                    {
+                        newMeaning.Children.Add(new Example
+                        {
+                            Value = example.Value,
+                        });
+                    }
 
-            string meaningsPart = $"{string.Join(". ", selectedMeanings.Select(m => m.Value))}";
-            string examplesPart = selectedExamples.Any() ? $" ({string.Join(". ", selectedExamples)})" : "";
+                    compiledWord.Children.Add(newMeaning);
+                }
+            }
 
-            ResultText = $"{preposition}{wordsPart}{meaningCountPart}{examplesPart} -> {meaningsPart}";
+            return compiledWord;
         }
         #endregion
     }

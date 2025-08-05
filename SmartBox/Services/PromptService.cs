@@ -10,7 +10,7 @@ namespace SmartBox.Services
             _page = page;
         }
 
-        public Task<string?> ShowPromptAsync(string title, string message, string initialValue)
+        public Task<string> ShowPromptAsync(string title, string message, string initialValue)
         {
             return _page.DisplayPromptAsync(title, message, initialValue: initialValue);
         }
