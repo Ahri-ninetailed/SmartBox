@@ -15,7 +15,7 @@
             <Entry.Behaviors>
                 <toolkit:UserStoppedTypingBehavior
                     Command="{Binding ParseCommand}"
-                    StoppedTypingTimeThreshold="1500" />
+                    StoppedTypingTimeThreshold="1000" />
             </Entry.Behaviors>
         </Entry>
 

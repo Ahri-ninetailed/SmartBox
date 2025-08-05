@@ -8,6 +8,7 @@ using Shared;
 using Infrastructure.Services;
 using Infrastructure.Interfaces;
 using Infrastructure.Services.Internal;
+using Microsoft.Playwright;
 
 namespace Infrastructure
 {
@@ -45,7 +46,19 @@ namespace Infrastructure
                 return GetRetryPolicy(logger);
             });
 
-            // TODO: Возникают проблемы с отправкой запросов, может быть стоит использовать Microsoft.Playwright
+            services.AddSingleton(async provider =>
+            {
+                var playwright = await Playwright.CreateAsync();
+                return await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+            });
+
+            services.AddTransient(async provider =>
+            {
+                var browser = await provider.GetRequiredService<Task<IBrowser>>();
+                return await browser.NewPageAsync();
+            });//https://dictionary.cambridge.org/dictionary/english/
+
+            /*// TODO: Возникают проблемы с отправкой запросов, может быть стоит использовать Microsoft.Playwright
             services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
@@ -76,7 +89,7 @@ namespace Infrastructure
                                 exceptionType,
                                 errorMessage);
                         });
-            });
+            });*/
 
             string sqlConnectionString = Environment.GetEnvironmentVariable("ENGLISH_WORDS_STORAGE")!;
             services.AddDbContextFactory<MyDbContext>(options =>
