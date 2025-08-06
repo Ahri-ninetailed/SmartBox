@@ -93,27 +93,37 @@ namespace Infrastructure.Services
             return result;
         }
 
-        public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string entry)
+        public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
         {
-            if (string.IsNullOrWhiteSpace(entry))
+            if (entries == null || entries.Length == 0 || entries.Any(string.IsNullOrWhiteSpace))
             {
-                throw new ArgumentException(EmptyEntryError);
+                throw new ArgumentException("Entries array cannot be null, empty, or contain null/whitespace elements.");
             }
 
             using MyDbContext _db = _dbFactory.CreateDbContext();
 
+            List<string> permutations = GetAllPermutations(entries).ToList();
+
             Word[] words = await _db.EnglishWords
-                .Where(el => el.Value.Contains(entry))
-                .Select(el => new // TODO: сортировку можно в бизнес логику вынести
+                .Where(el => permutations.Any(perm => el.Value.Contains(perm)))
+                .Select(el => new
                 {
                     Word = el,
-                    StartsWith = el.Value.StartsWith(entry),
-                    IndexOf = el.Value.IndexOf(entry),
+                    // Находим наиболее подходящую пермутацию для сортировки
+                    BestMatch = permutations
+                        .Where(perm => el.Value.Contains(perm))
+                        .OrderByDescending(perm => perm.Length)
+                        .ThenBy(perm => el.Value.IndexOf(perm))
+                        .First(),
+                    StartsWith = permutations.Any(perm => el.Value.StartsWith(perm)),
+                    MinIndexOf = permutations
+                        .Where(perm => el.Value.Contains(perm))
+                        .Min(perm => el.Value.IndexOf(perm)),
                     Length = el.Value.Length
                 })
-                .OrderByDescending(x => x.StartsWith)// Сначала те, что начинаются на value
-                .ThenBy(x => x.IndexOf)              // Затем те, где value ближе к началу
-                .ThenBy(x => x.Length)               // Потом более короткие
+                .OrderByDescending(x => x.StartsWith)    // Сначала те, что начинаются с любой пермутации
+                .ThenBy(x => x.MinIndexOf)               // Затем те, где пермутация ближе к началу
+                .ThenBy(x => x.Length)                   // Потом более короткие
                 .ThenBy(x => x.Word.Value)
                 .Select(x => x.Word)
                 .ToArrayAsync();

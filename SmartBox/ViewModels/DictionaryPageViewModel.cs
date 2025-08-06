@@ -51,6 +51,8 @@ namespace SmartBox.ViewModels
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private string searchText = string.Empty;
 
+        public string[] SearchWords => SearchText.Split(Separators, StringSplitOptions.TrimEntries);
+
         [ObservableProperty]
         private string commentText = string.Empty;
 
@@ -104,7 +106,7 @@ namespace SmartBox.ViewModels
                     return;
                 }
 
-                Application.Models.Dictionary.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchText);
+                Application.Models.Dictionary.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchWords);
 
                 Models.Dictionary.Word[] words = _wordMapper.MapToArray(appWords);
 
@@ -200,7 +202,7 @@ namespace SmartBox.ViewModels
             {
                 Application.Models.Dictionary.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
-                addedWord = await _dictionaryService.AddWordAsync(SearchText.Split(Separators, StringSplitOptions.TrimEntries), partOfSpeech, CommentText);
+                addedWord = await _dictionaryService.AddWordAsync(SearchWords, partOfSpeech, CommentText);
             }
             catch (Exception ex)
             {
@@ -282,7 +284,7 @@ namespace SmartBox.ViewModels
                 return false;
             }
 
-            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && el.Values.Contains(SearchText))) 
+            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && SearchWords.Any(searchWord => el.Values.Contains(searchWord))))
             {
                 return false;
             }

@@ -217,7 +217,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Models.Dictionary.Word[]> SearchWordsAsync(string entry)
+        public async Task<Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchWordsAsync));
 
@@ -225,7 +225,7 @@ namespace Application.Services
             {
                 return await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.SearchWordsAsync(entry);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.SearchWordsAsync(entries);
 
                     return _wordToAppMapper.MapToArray(words);
                 }, context);

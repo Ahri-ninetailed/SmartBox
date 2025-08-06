@@ -6,7 +6,7 @@ namespace Application.Interfaces
     {
         Task<Models.Dictionary.Word[]> GetWordsForLearningAsync();
 
-        Task<Models.Dictionary.Word[]> SearchWordsAsync(string entry);
+        Task<Models.Dictionary.Word[]> SearchWordsAsync(string[] entries);
 
         Task LearnWordsAsync(IEnumerable<int> ids);
 
