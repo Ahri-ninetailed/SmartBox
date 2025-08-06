@@ -36,7 +36,13 @@ namespace Application.Services
 
         public async Task<List<Word>> ExtractWordDataAsync(string[] entries)
         {
-            List<Domain.Models.Parser.Word> wordData = await _parserService.ParseWordDataAsync(entries[0]);
+            List<Task<List<Domain.Models.Parser.Word>>> parseTasks = entries
+                .Select(entry => _parserService.ParseWordDataAsync(entry))
+                .ToList();
+
+            List<Domain.Models.Parser.Word>[] parsedResults = await Task.WhenAll(parseTasks);
+
+            List<Domain.Models.Parser.Word> wordData = parsedResults.SelectMany(x => x).ToList();
 
             string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
 

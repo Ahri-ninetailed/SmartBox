@@ -8,7 +8,7 @@ namespace Infrastructure.Services
     {
         public void GenerateLexilizeExcel(string directoryPath, Word[] source)
         {
-            string fileName = $"Pack{DateTime.Now:yyMMddHHmm}.xlsx";
+            string fileName = $"Pack{DateTime.Now:yyMMddHHmmss}.xlsx";
 
             string fullPath = Path.Combine(directoryPath, fileName);
 
@@ -40,7 +40,7 @@ namespace Infrastructure.Services
             string[] examples = word.MeaningsAndExamples.SelectMany(el => el.Value).ToArray();
             string examplesStr = examples.Length > 0 ? $" ({string.Join(". ", examples)})" : "";
 
-            return $"{preposition}{word.Value}{countOfMeaningsStr}{examplesStr}";
+            return $"{preposition}{string.Join(", ", new[] { word.Value }.Concat(word.OtherForms))}{countOfMeaningsStr}{examplesStr}";
         }
 
         private string MapMeanings(Word word)
