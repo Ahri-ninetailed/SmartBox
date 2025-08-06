@@ -5,6 +5,7 @@
         private const string WordAlreadyLearnedError = "Word '{0}' is already learned";
         private const string WordAlreadyMarkedForStudyError = "Word '{0}' is already marked for study";
         private const string ValuesNullOrEmptyError = "Values array cannot be null, empty, or contain null/whitespace elements.";
+        private const string PartOfSpeechUnknownError = "Part of speech cannot be unknown";
 
         public int Id { get; set; }
 
@@ -22,7 +23,7 @@
                 _values = value;
             }
         }
-       
+
         public decimal? Popularity { get; set; }
         public PartOfSpeech PartOfSpeech { get; set; }
         public bool ShouldStudy { get; set; }
@@ -54,6 +55,16 @@
             }
 
             ShouldStudy = true;
+        }
+
+        public void ChangePartOfSpeech(PartOfSpeech newPartOfSpeech)
+        {
+            if (newPartOfSpeech == PartOfSpeech.Unknown)
+            {
+                throw new ArgumentException(PartOfSpeechUnknownError, nameof(newPartOfSpeech));
+            }
+
+            PartOfSpeech = newPartOfSpeech;
         }
     }
 }

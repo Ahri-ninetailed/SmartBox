@@ -22,7 +22,9 @@ namespace SmartBox.Models.Dictionary
         }
 
         public decimal? Popularity { get; set; }
-        public PartOfSpeech PartOfSpeech { get; set; }
+
+        [ObservableProperty]
+        private PartOfSpeech partOfSpeech;
 
         [ObservableProperty]
         private bool shouldStudy;

@@ -13,5 +13,7 @@ namespace Application.Interfaces
         Task MarkWordsAsync(IEnumerable<int> ids);
 
         Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment);
+
+        Task ChangeWordPartOfSpeech(int id, Models.Dictionary.PartOfSpeech partOfSpeech);
     }
 }

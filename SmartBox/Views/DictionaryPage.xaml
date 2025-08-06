@@ -66,6 +66,7 @@
             <Button Text="Mark" Command="{Binding MarkCommand}" />
             <Button Text="Learn" Command="{Binding LearnCommand}" />
             <Button Text="Add" Command="{Binding AddCommand}" />
+            <Button Text="Change" Command="{Binding ChangeCommand}" />
         </HorizontalStackLayout>
     </Grid>
 </ContentPage>

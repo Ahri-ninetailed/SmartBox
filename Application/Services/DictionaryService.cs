@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Models;
+using Application.Models.Dictionary;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -17,6 +18,8 @@ namespace Application.Services
         private const string WordAlreadyExistsError = "Word '{0}' with part of speech '{1}' already exists in the dictionary";
         private const string GetWordPopularityErrorMessage = "Failed to get word popularity for '{WordValue}'";
         private const string AddedWordMessage = "Added word '{Word}' (Id: {Id}, PartOfSpeech: {PartOfSpeech}) to the database.";
+        private const string WordNotFoundError = "Word with ID '{0}' was not found in the dictionary";
+        private const string ChangedPartOfSpeechMessage = "Changed part of speech for word '{WordValues}' (Id: {WordId}) from '{OldPartOfSpeech}' to '{NewPartOfSpeech}'";
 
         private readonly ResiliencePipeline _retryPipeline;
         private readonly ILogger<DictionaryService> _logger;
@@ -100,6 +103,42 @@ namespace Application.Services
                 Models.Dictionary.Word result = _wordToAppMapper.Map(word);
 
                 return result;
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
+        }
+
+        public async Task ChangeWordPartOfSpeech(int id, PartOfSpeech partOfSpeech)
+        {
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(ChangeWordPartOfSpeech));
+
+            try
+            {
+                await _retryPipeline.ExecuteAsync(async _ =>
+                {
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync([id]);
+
+                    if (words.Length == 0)
+                    {
+                        throw new InvalidOperationException(string.Format(WordNotFoundError, id));
+                    }
+
+                    Domain.Models.Dictionary.PartOfSpeech newPartOfSpeech = _partOfSpeechToDomMapper.Map(partOfSpeech);
+
+                    Domain.Models.Dictionary.PartOfSpeech oldPartOfSpeech = words[0].PartOfSpeech;
+
+                    words[0].ChangePartOfSpeech(newPartOfSpeech);
+
+                    await _wordRepository.SaveWordsAsync(words);
+
+                    _logger.LogInformation(ChangedPartOfSpeechMessage,
+                        string.Join(Separator, words[0].Values),
+                        words[0].Id,
+                        oldPartOfSpeech,
+                        newPartOfSpeech);
+                }, context);
             }
             finally
             {

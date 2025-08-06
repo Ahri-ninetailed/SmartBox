@@ -22,6 +22,9 @@ namespace SmartBox.ViewModels
         private const string MarkWordsErrorMessage = "Failed to mark words for further study";
         private const string LoadWordsErrorMessage = "Failed to get words for learning";
         private const string AddWordErrorMessage = "Failed to add new word";
+        private const string ChangePartOfSpeechErrorMessage = "Failed to change word part of speech";
+        private const string InvalidWordSelectionForChangeError = "Please select exactly one word to change its part of speech";
+
         #endregion
 
         #region Fields
@@ -41,6 +44,7 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(LearnCommand))]
         [NotifyCanExecuteChangedFor(nameof(MarkCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ChangeCommand))]
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
@@ -52,6 +56,7 @@ namespace SmartBox.ViewModels
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ChangeCommand))]
         private Models.Dictionary.PartOfSpeech selectedPartOfSpeech;
 
         [ObservableProperty]
@@ -225,6 +230,29 @@ namespace SmartBox.ViewModels
                 await _alertService.DisplayAlertAsync($"{UpdateUIErrorMessage}: {ex.Message}");
             }
         }
+
+        [RelayCommand(CanExecute = nameof(CanChangeWord))]
+        private async Task ChangeAsync()
+        {
+            try
+            {
+                if (SelectedWords.Length != 1)
+                {
+                    throw new InvalidOperationException(InvalidWordSelectionForChangeError);
+                }
+
+                Application.Models.Dictionary.PartOfSpeech newPartOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
+
+                await _dictionaryService.ChangeWordPartOfSpeech(SelectedWords[0].Id, newPartOfSpeech);
+
+                SelectedWords[0].PartOfSpeech = SelectedPartOfSpeech;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ChangePartOfSpeechErrorMessage);
+                await _alertService.DisplayAlertAsync($"{ChangePartOfSpeechErrorMessage}: {ex.Message}");
+            }
+        }
         #endregion
 
         #region CanExecute Methods
@@ -238,6 +266,13 @@ namespace SmartBox.ViewModels
         {
             return SelectedWords.Any() &&
                    SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
+        }
+
+        private bool CanChangeWord()
+        {
+            return SelectedWords.Length == 1 &&
+                   SelectedWords[0].PartOfSpeech == Models.Dictionary.PartOfSpeech.Unknown &&
+                   SelectedPartOfSpeech != Models.Dictionary.PartOfSpeech.Unknown;
         }
 
         private bool CanAddWord()
@@ -279,6 +314,7 @@ namespace SmartBox.ViewModels
         {
             LearnCommand.NotifyCanExecuteChanged();
             MarkCommand.NotifyCanExecuteChanged();
+            ChangeCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnWordsChanged(ObservableCollection<Models.Dictionary.Word>? oldValue, ObservableCollection<Models.Dictionary.Word> newValue)
