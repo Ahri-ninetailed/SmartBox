@@ -23,21 +23,21 @@
             <Picker Grid.Column="1" 
                     Title="To export"
                     ItemsSource="{Binding WordsForExport}"
-                    SelectedItem="{Binding SelectedWordForExport, Mode=TwoWay}"
+                    SelectedItem="{Binding SelectedWordsForExport, Mode=TwoWay}"
                     ItemDisplayBinding="{Binding Value}"
                     WidthRequest="120"
                     VerticalOptions="Center" />
 
             <Button Grid.Column="2"
                     Text="+"
-                    Command="{Binding AddWordForExportCommand}"
+                    Command="{Binding AddWordsForExportCommand}"
                     WidthRequest="40"
                     HeightRequest="40"
                     ToolTipProperties.Text="Add current text to saved queries" />
 
             <Button Grid.Column="3"
                     Text="−"
-                    Command="{Binding RemoveWordForExportCommand}"
+                    Command="{Binding RemoveWordsForExportCommand}"
                     WidthRequest="40"
                     HeightRequest="40"
                     ToolTipProperties.Text="Remove selected query from list" />

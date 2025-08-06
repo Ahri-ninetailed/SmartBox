@@ -68,6 +68,19 @@ namespace SmartBox.Models.Parser
         }
     }
 
+    public class WordPack
+    {
+        public List<Word> Words { get; set; } = new List<Word>();
+
+        public string? Value
+        {
+            get
+            {
+                return Words.MinBy(el => el.Value.Length)?.Value?.ToLower();
+            }
+        }
+    }
+
     // TODO: Не уверен, что большинство свойств должны быть ObservableProperty
     public partial class Word : SelectableHierarchyNode
     {

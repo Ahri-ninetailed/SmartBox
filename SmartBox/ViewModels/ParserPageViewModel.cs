@@ -38,13 +38,13 @@ namespace SmartBox.ViewModels
         private string entryText = string.Empty;
 
         [ObservableProperty]
-        private ObservableCollection<Word> wordsForExport = new();
+        private ObservableCollection<WordPack> wordsForExport = new();
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(RemoveWordForExportCommand))]
-        private Word? selectedWordForExport;
+        [NotifyCanExecuteChangedFor(nameof(RemoveWordsForExportCommand))]
+        private WordPack? selectedWordsForExport;
 
-        private Word? CompiledSelectedWordForExport => GetCompiledSelectedWord();
+        private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
         #endregion
 
         public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
@@ -92,28 +92,28 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanAddWordForExport))]
-        private void AddWordForExport()
+        [RelayCommand(CanExecute = nameof(CanAddWordsForExport))]
+        private void AddWordsForExport()
         {
-            if (CompiledSelectedWordForExport == null)
+            if (CompiledSelectedWordsForExport == null)
             {
                 return;
             }
 
-            WordsForExport.Add(CompiledSelectedWordForExport);
+            WordsForExport.Add(CompiledSelectedWordsForExport);
         }
 
-        [RelayCommand(CanExecute = nameof(CanRemoveWordForExport))]
-        private void RemoveWordForExport()
+        [RelayCommand(CanExecute = nameof(CanRemoveWordsForExport))]
+        private void RemoveWordsForExport()
         {
-            if (SelectedWordForExport == null)
+            if (SelectedWordsForExport == null)
             {
                 return;
             }
 
-            WordsForExport.Remove(SelectedWordForExport);
+            WordsForExport.Remove(SelectedWordsForExport);
 
-            SelectedWordForExport = null;
+            SelectedWordsForExport = null;
         }
         #endregion
 
@@ -123,22 +123,19 @@ namespace SmartBox.ViewModels
             return string.IsNullOrWhiteSpace(EntryText) == false;
         }
 
-        private bool CanRemoveWordForExport()
+        private bool CanRemoveWordsForExport()
         {
-            return SelectedWordForExport != null;
+            return SelectedWordsForExport != null;
         }
 
-        private bool CanAddWordForExport()
+        private bool CanAddWordsForExport()
         {
-            return CompiledSelectedWordForExport != null;
+            return CompiledSelectedWordsForExport != null;
         }
         #endregion
 
         #region Property Changed Handlers
-        partial void OnSelectedWordForExportChanged(Word? value)
-        {
 
-        }
         #endregion
 
         #region Event Handlers
@@ -182,7 +179,7 @@ namespace SmartBox.ViewModels
         {
             if (e.PropertyName == nameof(Word.IsSelected))
             {
-                AddWordForExportCommand.NotifyCanExecuteChanged();
+                AddWordsForExportCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -190,7 +187,7 @@ namespace SmartBox.ViewModels
         {
             if (e.PropertyName == nameof(Meaning.IsSelected))
             {
-                AddWordForExportCommand.NotifyCanExecuteChanged();
+                AddWordsForExportCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -198,57 +195,69 @@ namespace SmartBox.ViewModels
         {
             if (e.PropertyName == nameof(Example.IsSelected))
             {
-                AddWordForExportCommand.NotifyCanExecuteChanged();
+                AddWordsForExportCommand.NotifyCanExecuteChanged();
             }
         }
         #endregion
 
         #region Private Helper Methods
 
-        private Word? GetCompiledSelectedWord()
+        private WordPack? GetCompiledSelectedWords()
         {
-            var selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToList();
+            List<Word> selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToList();
 
             if (selectedWords.Count == 0)
             {
                 return null;
             }
+            
+            WordPack wordsForExport = new WordPack();
 
-            PartOfSpeech partOfSpeech = selectedWords.Any(el => el.Type == PartOfSpeech.Verb || el.Type == PartOfSpeech.PhrasalVerb)
-                ? PartOfSpeech.Verb
-                : PartOfSpeech.Noun;
-
-            Word compiledWord = new Word
+            foreach (Word selectedWord in selectedWords)
             {
-                Value = selectedWords.First().Value.ToLower(),
-                Type = partOfSpeech,
-                Area = null,
-                OtherForms = selectedWords.SelectMany(el => el.OtherForms).ToArray(),
-                PluralForms = selectedWords.SelectMany(el => el.PluralForms).ToArray(),
-            };
-
-            foreach (Word word in selectedWords)
-            {
-                foreach (Meaning meaning in word.Children.Where(m => m.IsSelected))
+                Word wordForExport = new Word()
                 {
-                    Meaning newMeaning = new Meaning
+                    Area = selectedWord.Area,
+                    OtherForms = selectedWord.OtherForms,
+                    PluralForms = selectedWord.PluralForms,
+                    Type = selectedWord.Type,
+                    Value = selectedWord.Value,
+                };
+
+                foreach (Meaning meaning in selectedWord.Children)
+                {
+                    if (meaning.IsSelected == false)
+                    {
+                        continue;
+                    }
+
+                    Meaning meaningForExport = new Meaning()
                     {
                         Value = meaning.Value,
                     };
 
-                    foreach (Example example in meaning.Children.Where(e => e.IsSelected))
+                    foreach (Example example in meaning.Children)
                     {
-                        newMeaning.Children.Add(new Example
+                        if (example.IsSelected == false)
+                        {
+                            continue;
+                        }
+
+                        Example exampleForExport = new Example()
                         {
                             Value = example.Value,
-                        });
+                        };
+
+                        meaningForExport.Children.Add(exampleForExport);
                     }
 
-                    compiledWord.Children.Add(newMeaning);
+                    wordForExport.Children.Add(meaningForExport);
                 }
+
+                wordsForExport.Words.Add(wordForExport);
             }
 
-            return compiledWord;
+            return wordsForExport;
         }
         #endregion
     }
