@@ -22,9 +22,7 @@ namespace SmartBox
                 });
 
             #region Logging Configuration
-            string appName = AppInfo.Name;
-
-            string logsPath = Path.Combine(FileSystem.AppDataDirectory, $"{appName}_Logs", $"{appName.ToLowerInvariant()}-.log");
+            string logsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppInfo.Name, "Logs", ".log");
 
             string logsDirectory = Path.GetDirectoryName(logsPath)!;
             if (!Directory.Exists(logsDirectory))

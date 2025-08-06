@@ -4,18 +4,22 @@ using System.Collections.ObjectModel;
 namespace SmartBox.Mappers
 {
     public class WordMapper : IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word>,
-                              IMapper<Application.Models.Parser.Word, Models.Parser.Word>
+                              IMapper<Application.Models.Parser.Word, Models.Parser.Word>,
+                              IMapper<Models.Parser.WordPack, Application.Models.Parser.Word>
     {
         private const string Separator = ", ";
 
         private readonly IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> _partOfSpeechToUIDictionaryMapper;
         private readonly IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> _partOfSpeechToUIParserMapper;
+        private readonly IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech> _partOfSpeechToAppParserMapper;
 
         public WordMapper(IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> partOfSpeechToUIDictionaryMapper,
-                          IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> partOfSpeechToUIParserMapper)
+                          IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> partOfSpeechToUIParserMapper,
+                          IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech> partOfSpeechToAppParserMapper)
         {
             _partOfSpeechToUIDictionaryMapper = partOfSpeechToUIDictionaryMapper;
             _partOfSpeechToUIParserMapper = partOfSpeechToUIParserMapper;
+            _partOfSpeechToAppParserMapper = partOfSpeechToAppParserMapper;
         }
 
         public Models.Dictionary.Word Map(Application.Models.Dictionary.Word source)
@@ -68,6 +72,45 @@ namespace SmartBox.Mappers
             }
 
             return word;
+        }
+
+        public Application.Models.Parser.Word Map(Models.Parser.WordPack source)
+        {
+            Dictionary<string, List<string>> meaningsAndExamples = new();
+
+            foreach (Models.Parser.Word word in source.Words)
+            {
+                foreach (Models.Parser.Meaning meaning in word.Children)
+                {
+                    List<string> examples = meaning.Children
+                        .Select(example => example.Value)
+                        .ToList();
+
+                    if (meaningsAndExamples.ContainsKey(meaning.Value))
+                    {
+                        meaningsAndExamples[meaning.Value].AddRange(examples);
+                    }
+                    else
+                    {
+                        meaningsAndExamples[meaning.Value] = examples;
+                    }
+                }
+            }
+
+            return new Application.Models.Parser.Word()
+            {
+                Value = string.Join(", ", source.Words.Select(el => el.Value.ToLower()).Distinct()),
+                Area = null,
+                Type = source.Words.Any(el => el.Type == Models.Parser.PartOfSpeech.Verb || el.Type == Models.Parser.PartOfSpeech.PhrasalVerb) ?
+                    Application.Models.Parser.PartOfSpeech.Verb :
+                    Application.Models.Parser.PartOfSpeech.Other,
+                OtherForms = source.Words
+                    .SelectMany(el => el.OtherForms)
+                    .ToHashSet(),
+                PluralForms = source.Words.SelectMany(el => el.PluralForms)
+                    .ToHashSet(),
+                MeaningsAndExamples = meaningsAndExamples,
+            };
         }
     }
 }

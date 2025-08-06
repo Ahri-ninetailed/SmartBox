@@ -4,7 +4,8 @@ namespace SmartBox.Mappers
 {
     public class PartOfSpeechMapper : IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech>,
                                       IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech>,
-                                      IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>
+                                      IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>,
+                                      IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech>
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 
@@ -41,6 +42,21 @@ namespace SmartBox.Mappers
                 Application.Models.Parser.PartOfSpeech.Idiom => Models.Parser.PartOfSpeech.Idiom,
                 Application.Models.Parser.PartOfSpeech.BlueRectangle => Models.Parser.PartOfSpeech.BlueRectangle,
                 Application.Models.Parser.PartOfSpeech.Other => Models.Parser.PartOfSpeech.Other,
+                _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
+            };
+        }
+
+        public Application.Models.Parser.PartOfSpeech Map(Models.Parser.PartOfSpeech source)
+        {
+            return source switch
+            {
+                Models.Parser.PartOfSpeech.Unknown => Application.Models.Parser.PartOfSpeech.Unknown,
+                Models.Parser.PartOfSpeech.Noun => Application.Models.Parser.PartOfSpeech.Noun,
+                Models.Parser.PartOfSpeech.Verb => Application.Models.Parser.PartOfSpeech.Verb,
+                Models.Parser.PartOfSpeech.PhrasalVerb => Application.Models.Parser.PartOfSpeech.PhrasalVerb,
+                Models.Parser.PartOfSpeech.Idiom => Application.Models.Parser.PartOfSpeech.Idiom,
+                Models.Parser.PartOfSpeech.BlueRectangle => Application.Models.Parser.PartOfSpeech.BlueRectangle,
+                Models.Parser.PartOfSpeech.Other => Application.Models.Parser.PartOfSpeech.Other,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }

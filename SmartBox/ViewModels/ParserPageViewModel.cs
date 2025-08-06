@@ -18,6 +18,8 @@ namespace SmartBox.ViewModels
         #region Constants
         private const string ParseErrorMessage = "An error occurred while parsing";
         private const string ExportPlaceholderFormat = "To export: {0}";
+        private const string ExportErrorMessage = "An error occurred while exporting";
+
         #endregion
 
         #region Fields
@@ -28,6 +30,7 @@ namespace SmartBox.ViewModels
         public IPromptService? _promptService;
 
         private readonly IMapper<Application.Models.Parser.Word, Word> _wordToUIParserMapper;
+        private readonly IMapper<WordPack, Application.Models.Parser.Word> _wordpackToAppParserMapper;
 
         #endregion
 
@@ -43,19 +46,19 @@ namespace SmartBox.ViewModels
         private ObservableCollection<WordPack> wordsForExport = new();
 
         [ObservableProperty]
-        private string exportPlaceholder = string.Format(ExportPlaceholderFormat, 0);
-
-        [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(RemoveWordsForExportCommand))]
         private WordPack? selectedWordsForExport;
 
         private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
+
+        public string ExportPlaceholder => string.Format(ExportPlaceholderFormat, WordsForExport.Count);
         #endregion
 
         public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
                                    IParserService parserService,
                                    IAlertService alertService,
-                                   IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper)
+                                   IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper,
+                                   IMapper<WordPack, Application.Models.Parser.Word> wordpackToAppParserMapper)
         {
             _logger = logger;
 
@@ -63,6 +66,7 @@ namespace SmartBox.ViewModels
             _alertService = alertService;
 
             _wordToUIParserMapper = wordToUIParserMapper;
+            _wordpackToAppParserMapper = wordpackToAppParserMapper;
 
             WordsForExport.CollectionChanged += OnWordsForExportCollectionChanged;
         }
@@ -108,7 +112,6 @@ namespace SmartBox.ViewModels
             }
 
             WordsForExport.Add(CompiledSelectedWordsForExport);
-            UpdateExportPlaceholder();
         }
 
         [RelayCommand(CanExecute = nameof(CanRemoveWordsForExport))]
@@ -121,13 +124,28 @@ namespace SmartBox.ViewModels
 
             WordsForExport.Remove(SelectedWordsForExport);
             SelectedWordsForExport = null;
-            UpdateExportPlaceholder();
         }
 
         [RelayCommand(CanExecute = nameof(CanExport))]
         private async Task ExportAsync()
         {
+            try
+            {
+                Application.Models.Parser.Word[] wordsforExport = _wordpackToAppParserMapper.MapToArray(WordsForExport);
+                
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string exportDirectory = Path.Combine(documentsPath, AppInfo.Name);
 
+                _parserService.ExportWords(exportDirectory, wordsforExport);
+
+                WordsForExport.Clear();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ExportErrorMessage);
+
+                await _alertService.DisplayAlertAsync($"{ExportErrorMessage}: {ex.Message}");
+            }
         }
         #endregion
 
@@ -175,6 +193,7 @@ namespace SmartBox.ViewModels
         private void OnWordsForExportCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             ExportCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(ExportPlaceholder));
         }
 
         partial void OnTreeViewNodesChanged(ObservableCollection<Word>? oldValue, ObservableCollection<Word> newValue)
@@ -243,10 +262,6 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Private Helper Methods
-        private void UpdateExportPlaceholder()
-        {
-            ExportPlaceholder = string.Format(ExportPlaceholderFormat, WordsForExport.Count);
-        }
         private WordPack? GetCompiledSelectedWords()
         {
             List<Word> selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToList();

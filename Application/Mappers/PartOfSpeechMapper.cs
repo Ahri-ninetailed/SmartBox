@@ -5,7 +5,9 @@ namespace Application.Mappers
 {
     public class PartOfSpeechMapper : IMapper<PartOfSpeech, Models.Dictionary.PartOfSpeech>,
                                       IMapper<Models.Dictionary.PartOfSpeech, PartOfSpeech>,
-                                      IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>
+                                      IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>,
+                                      IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>
+
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 
@@ -42,6 +44,21 @@ namespace Application.Mappers
                 Domain.Models.Parser.PartOfSpeech.PhrasalVerb => Models.Parser.PartOfSpeech.PhrasalVerb,
                 Domain.Models.Parser.PartOfSpeech.Unknown => Models.Parser.PartOfSpeech.Unknown,
                 Domain.Models.Parser.PartOfSpeech.Verb => Models.Parser.PartOfSpeech.Verb,
+                _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
+            };
+        }
+
+        public Domain.Models.Parser.PartOfSpeech Map(Models.Parser.PartOfSpeech source)
+        {
+            return source switch
+            {
+                Models.Parser.PartOfSpeech.Other => Domain.Models.Parser.PartOfSpeech.Other,
+                Models.Parser.PartOfSpeech.BlueRectangle => Domain.Models.Parser.PartOfSpeech.BlueRectangle,
+                Models.Parser.PartOfSpeech.Idiom => Domain.Models.Parser.PartOfSpeech.Idiom,
+                Models.Parser.PartOfSpeech.Noun => Domain.Models.Parser.PartOfSpeech.Noun,
+                Models.Parser.PartOfSpeech.PhrasalVerb => Domain.Models.Parser.PartOfSpeech.PhrasalVerb,
+                Models.Parser.PartOfSpeech.Unknown => Domain.Models.Parser.PartOfSpeech.Unknown,
+                Models.Parser.PartOfSpeech.Verb => Domain.Models.Parser.PartOfSpeech.Verb,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }

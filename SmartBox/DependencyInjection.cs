@@ -16,9 +16,11 @@ namespace SmartBox
             services.AddSingleton<IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
             services.AddSingleton<IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
             services.AddSingleton<IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
 
             services.AddSingleton<IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word>, WordMapper>();
             services.AddSingleton<IMapper<Application.Models.Parser.Word, Models.Parser.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Models.Parser.WordPack, Application.Models.Parser.Word>, WordMapper>();
 
             services.AddSingleton<AppShell>();
             services.AddSingleton<App>();

@@ -1,13 +1,14 @@
 ﻿using ClosedXML.Excel;
 using Domain.Interfaces;
+using Domain.Models.Parser;
 
 namespace Infrastructure.Services
 {
     public class ExcelService : IExcelService
     {
-        public void GenerateLexilizeExcel(string directoryPath, (string wordsAndExamples, string meanings)[] source)
+        public void GenerateLexilizeExcel(string directoryPath, Word[] source)
         {
-            string fileName = $"Pack{DateTime.Now:ddMMyyHHmm}.xlsx";
+            string fileName = $"Pack{DateTime.Now:yyMMddHHmm}.xlsx";
 
             string fullPath = Path.Combine(directoryPath, fileName);
 
@@ -17,12 +18,34 @@ namespace Infrastructure.Services
 
                 for (int i = 0; i < source.Length; i++)
                 {
-                    worksheet.Cell(i + 1, 1).Value = source[i].meanings;        
-                    worksheet.Cell(i + 1, 2).Value = source[i].wordsAndExamples;
+                    string meanings = MapMeanings(source[i]);
+                    string wordAndExamples = MapWordAndExamples(source[i]);
+
+                    worksheet.Cell(i + 1, 1).Value = meanings;
+                    worksheet.Cell(i + 1, 2).Value = wordAndExamples;
                 }
 
                 workbook.SaveAs(fullPath);
             }
+        }
+
+        private string MapWordAndExamples(Word word)
+        {
+            string preposition = (word.Type == PartOfSpeech.Verb || word.Type == PartOfSpeech.PhrasalVerb) ? 
+                "to " : "";
+
+            int countOfMeanings = word.MeaningsAndExamples.Count;
+            string countOfMeaningsStr = countOfMeanings > 1 ? $" ({countOfMeanings})" : "";
+
+            string[] examples = word.MeaningsAndExamples.SelectMany(el => el.Value).ToArray();
+            string examplesStr = examples.Length > 0 ? $" ({string.Join(". ", examples)})" : "";
+
+            return $"{preposition}{word.Value}{countOfMeaningsStr}{examplesStr}";
+        }
+
+        private string MapMeanings(Word word)
+        {
+            return string.Join(". ", word.MeaningsAndExamples.Select(el => el.Key));
         }
     }
 }

@@ -1,7 +1,9 @@
-﻿namespace Domain.Interfaces
+﻿using Domain.Models.Parser;
+
+namespace Domain.Interfaces
 {
     public interface IExcelService
     {
-        void GenerateLexilizeExcel(string directoryPath, (string wordsAndExamples, string meanings)[] source);
+        void GenerateLexilizeExcel(string directoryPath, Word[] source);
     }
 }
