@@ -5,6 +5,7 @@
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:syncfusion="clr-namespace:Syncfusion.Maui.TreeView;assembly=Syncfusion.Maui.TreeView"
+    xmlns:inputs="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
     x:Class="SmartBox.Views.ParserPage">
 
     <Grid RowDefinitions="Auto,*" Padding="20">
@@ -20,13 +21,17 @@
                 </Entry.Behaviors>
             </Entry>
 
-            <Picker Grid.Column="1" 
-                    Title="To export"
-                    ItemsSource="{Binding WordsForExport}"
-                    SelectedItem="{Binding SelectedWordsForExport, Mode=TwoWay}"
-                    ItemDisplayBinding="{Binding Value}"
-                    WidthRequest="120"
-                    VerticalOptions="Center" />
+            <inputs:SfComboBox Grid.Column="1"
+                               MinimumWidthRequest="125"
+                               x:Name="ExportComboBox"
+                               ItemsSource="{Binding WordsForExport}"
+                               SelectedItem="{Binding SelectedWordsForExport, Mode=TwoWay}"
+                               DisplayMemberPath="Value"
+                               Placeholder="{Binding ExportPlaceholder}"
+                               WidthRequest="120"
+                               VerticalOptions="Center"
+                               IsEditable="False"
+                               ShowBorder="True" />
 
             <Button Grid.Column="2"
                     Text="+"

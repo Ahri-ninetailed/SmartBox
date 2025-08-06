@@ -16,6 +16,7 @@ namespace SmartBox.ViewModels
     {
         #region Constants
         private const string ParseErrorMessage = "An error occurred while parsing";
+        private const string ExportPlaceholderFormat = "To export: {0}";
         #endregion
 
         #region Fields
@@ -39,6 +40,9 @@ namespace SmartBox.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<WordPack> wordsForExport = new();
+
+        [ObservableProperty]
+        private string exportPlaceholder = string.Format(ExportPlaceholderFormat, 0);
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(RemoveWordsForExportCommand))]
@@ -101,6 +105,7 @@ namespace SmartBox.ViewModels
             }
 
             WordsForExport.Add(CompiledSelectedWordsForExport);
+            UpdateExportPlaceholder();
         }
 
         [RelayCommand(CanExecute = nameof(CanRemoveWordsForExport))]
@@ -114,6 +119,7 @@ namespace SmartBox.ViewModels
             WordsForExport.Remove(SelectedWordsForExport);
 
             SelectedWordsForExport = null;
+            UpdateExportPlaceholder();
         }
         #endregion
 
@@ -201,7 +207,10 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Private Helper Methods
-
+        private void UpdateExportPlaceholder()
+        {
+            ExportPlaceholder = string.Format(ExportPlaceholderFormat, WordsForExport.Count);
+        }
         private WordPack? GetCompiledSelectedWords()
         {
             List<Word> selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToList();
