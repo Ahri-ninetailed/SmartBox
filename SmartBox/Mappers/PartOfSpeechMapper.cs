@@ -42,6 +42,7 @@ namespace SmartBox.Mappers
                 Application.Models.Parser.PartOfSpeech.Idiom => Models.Parser.PartOfSpeech.Idiom,
                 Application.Models.Parser.PartOfSpeech.BlueRectangle => Models.Parser.PartOfSpeech.BlueRectangle,
                 Application.Models.Parser.PartOfSpeech.Other => Models.Parser.PartOfSpeech.Other,
+                Application.Models.Parser.PartOfSpeech.Adjective => Models.Parser.PartOfSpeech.Adjective,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }
@@ -57,6 +58,7 @@ namespace SmartBox.Mappers
                 Models.Parser.PartOfSpeech.Idiom => Application.Models.Parser.PartOfSpeech.Idiom,
                 Models.Parser.PartOfSpeech.BlueRectangle => Application.Models.Parser.PartOfSpeech.BlueRectangle,
                 Models.Parser.PartOfSpeech.Other => Application.Models.Parser.PartOfSpeech.Other,
+                Models.Parser.PartOfSpeech.Adjective => Application.Models.Parser.PartOfSpeech.Adjective,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }

@@ -69,6 +69,11 @@ namespace Infrastructure.Services
                 return PartOfSpeech.Verb;
             }
 
+            if (key.Contains("noun", StringComparison.OrdinalIgnoreCase))
+            {
+                return PartOfSpeech.Noun;
+            }
+
             return PartOfSpeech.Other;
         }
 

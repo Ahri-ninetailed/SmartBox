@@ -9,5 +9,6 @@
         Idiom,
         BlueRectangle,
         Other,
+        Adjective,
     }
 }

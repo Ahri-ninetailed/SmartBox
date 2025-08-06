@@ -44,6 +44,7 @@ namespace Application.Mappers
                 Domain.Models.Parser.PartOfSpeech.PhrasalVerb => Models.Parser.PartOfSpeech.PhrasalVerb,
                 Domain.Models.Parser.PartOfSpeech.Unknown => Models.Parser.PartOfSpeech.Unknown,
                 Domain.Models.Parser.PartOfSpeech.Verb => Models.Parser.PartOfSpeech.Verb,
+                Domain.Models.Parser.PartOfSpeech.Adjective => Models.Parser.PartOfSpeech.Adjective,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }
@@ -59,6 +60,7 @@ namespace Application.Mappers
                 Models.Parser.PartOfSpeech.PhrasalVerb => Domain.Models.Parser.PartOfSpeech.PhrasalVerb,
                 Models.Parser.PartOfSpeech.Unknown => Domain.Models.Parser.PartOfSpeech.Unknown,
                 Models.Parser.PartOfSpeech.Verb => Domain.Models.Parser.PartOfSpeech.Verb,
+                Models.Parser.PartOfSpeech.Adjective => Domain.Models.Parser.PartOfSpeech.Adjective,
                 _ => throw new InvalidOperationException(string.Format(UnknownEnumValueError, source)),
             };
         }
