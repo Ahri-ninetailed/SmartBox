@@ -10,7 +10,7 @@
 
     <Grid RowDefinitions="Auto,*" Padding="20">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="10">
             <Entry Grid.Column="0" 
                    Placeholder="Entry" 
                    Text="{Binding EntryText, Mode=TwoWay}">
@@ -38,14 +38,21 @@
                     Command="{Binding AddWordsForExportCommand}"
                     WidthRequest="40"
                     HeightRequest="40"
-                    ToolTipProperties.Text="Add current text to saved queries" />
+                    ToolTipProperties.Text="Add selected word pack to export list" />
 
             <Button Grid.Column="3"
                     Text="−"
                     Command="{Binding RemoveWordsForExportCommand}"
                     WidthRequest="40"
                     HeightRequest="40"
-                    ToolTipProperties.Text="Remove selected query from list" />
+                    ToolTipProperties.Text="Remove selected word pack from export list" />
+
+            <Button Grid.Column="4"
+                    Text="Export"
+                    Command="{Binding ExportCommand}"
+                    WidthRequest="70"
+                    HeightRequest="40"
+                    ToolTipProperties.Text="Export selected word pack" />
         </Grid>
 
         <syncfusion:SfTreeView Grid.Row="1"

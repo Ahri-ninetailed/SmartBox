@@ -8,6 +8,7 @@ using Shared;
 using SmartBox.Interfaces;
 using SmartBox.Models.Parser;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 
 namespace SmartBox.ViewModels
@@ -62,6 +63,8 @@ namespace SmartBox.ViewModels
             _alertService = alertService;
 
             _wordToUIParserMapper = wordToUIParserMapper;
+
+            WordsForExport.CollectionChanged += OnWordsForExportCollectionChanged;
         }
 
         #region Public Methods
@@ -74,7 +77,7 @@ namespace SmartBox.ViewModels
         {
             try
             {
-                var words = await _parserService.ExtractWordDataAsync(EntryText);
+                List<Application.Models.Parser.Word> words = await _parserService.ExtractWordDataAsync(EntryText);
 
                 TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
             }
@@ -117,9 +120,14 @@ namespace SmartBox.ViewModels
             }
 
             WordsForExport.Remove(SelectedWordsForExport);
-
             SelectedWordsForExport = null;
             UpdateExportPlaceholder();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanExport))]
+        private async Task ExportAsync()
+        {
+
         }
         #endregion
 
@@ -138,6 +146,11 @@ namespace SmartBox.ViewModels
         {
             return CompiledSelectedWordsForExport != null;
         }
+
+        private bool CanExport()
+        {
+            return WordsForExport.Any();
+        }
         #endregion
 
         #region Property Changed Handlers
@@ -145,6 +158,24 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Event Handlers
+
+        partial void OnWordsForExportChanged(ObservableCollection<WordPack>? oldValue, ObservableCollection<WordPack> newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.CollectionChanged -= OnWordsForExportCollectionChanged;
+            }
+
+            if (newValue != null)
+            {
+                newValue.CollectionChanged += OnWordsForExportCollectionChanged;
+            }
+        }
+
+        private void OnWordsForExportCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            ExportCommand.NotifyCanExecuteChanged();
+        }
 
         partial void OnTreeViewNodesChanged(ObservableCollection<Word>? oldValue, ObservableCollection<Word> newValue)
         {
@@ -219,7 +250,7 @@ namespace SmartBox.ViewModels
             {
                 return null;
             }
-            
+
             WordPack wordsForExport = new WordPack();
 
             foreach (Word selectedWord in selectedWords)
