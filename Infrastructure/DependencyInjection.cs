@@ -1,14 +1,15 @@
-﻿using Infrastructure.Mappers;
+﻿using Infrastructure.Interfaces;
+using Infrastructure.Mappers;
+using Infrastructure.Services;
+using Infrastructure.Services.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Playwright;
+using OpenAI.Chat;
 using Polly;
 using Polly.Extensions.Http;
 using Shared;
-using Infrastructure.Services;
-using Infrastructure.Interfaces;
-using Infrastructure.Services.Internal;
-using Microsoft.Playwright;
 
 namespace Infrastructure
 {
@@ -32,7 +33,19 @@ namespace Infrastructure
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
             services.AddSingleton<Domain.Interfaces.IExcelService, ExcelService>();
+            services.AddSingleton<Domain.Interfaces.IAiService, AiService>();
 
+            services.AddSingleton<ChatClient>(provider =>
+            {
+                string? key = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+                if (key == null)
+                {
+                    throw new Exception("OPENAI_API_KEY is not set");
+                }
+                return new ChatClient("gpt-4.1", key);
+            });
+
+            services.AddSingleton<AiModel, OpenAi>();
             services.AddSingleton<IParser, CambridgeDictionaryParser>();
 
             services.AddHttpClient<Domain.Interfaces.IWordPopularityService, WordPopularityService>(client =>

@@ -81,7 +81,9 @@ namespace SmartBox.ViewModels
         {
             try
             {
-                List<Application.Models.Parser.Word> words = await _parserService.ExtractWordDataAsync(EntryText);
+               string[] entries = EntryText.Split(new[] { ",", ", " }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+
+                List<Application.Models.Parser.Word> words = await _parserService.ExtractWordDataAsync(entries);
 
                 TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
             }

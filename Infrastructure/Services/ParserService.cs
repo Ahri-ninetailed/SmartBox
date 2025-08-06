@@ -26,7 +26,7 @@ namespace Infrastructure.Services
         }
 
         // HACK: спасибо CambridgeDictionary за вечные запросы к серверу
-        public async Task<List<Domain.Models.Parser.Word>> ExtractWordDataAsync(string entry)
+        public async Task<List<Domain.Models.Parser.Word>> ParseWordDataAsync(string entry)
         {
             if (string.IsNullOrWhiteSpace(entry))
             {
@@ -43,7 +43,7 @@ namespace Infrastructure.Services
         }
 
         /*
-         public async Task<List<Domain.Models.Parser.Word>> ExtractWordDataAsync(string entry)
+         public async Task<List<Domain.Models.Parser.Word>> ParseWordDataAsync(string entry)
         {
             if (string.IsNullOrWhiteSpace(entry))
             {
@@ -56,7 +56,7 @@ namespace Infrastructure.Services
 
             string html = await cambridgeDictionaryResponse.Content.ReadAsStringAsync();
 
-            List<Models.Parser.Word> parsedWords = await _cambridgeDictionaryParser.ExtractWordDataAsync(html);
+            List<Models.Parser.Word> parsedWords = await _cambridgeDictionaryParser.ParseWordDataAsync(html);
 
             List<Domain.Models.Parser.Word> result = _wordToDomParserMapper.MapToList(parsedWords);
 

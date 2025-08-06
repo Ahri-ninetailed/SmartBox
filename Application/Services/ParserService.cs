@@ -8,17 +8,20 @@ namespace Application.Services
     {
         private readonly Domain.Interfaces.IParserService _parserService;
         private readonly Domain.Interfaces.IExcelService _excelService;
+        private readonly Domain.Interfaces.IAiService _aiService;
 
         private readonly IMapper<Domain.Models.Parser.Word, Word> _wordToAppParserMapper;
         private readonly IMapper<Word, Domain.Models.Parser.Word> _wordToDomainParserMapper;
 
         public ParserService(Domain.Interfaces.IParserService parserService,
                              Domain.Interfaces.IExcelService excelService,
+                             Domain.Interfaces.IAiService aiService,
                              IMapper<Domain.Models.Parser.Word, Word> wordToAppParserMapper,
                              IMapper<Word, Domain.Models.Parser.Word> wordToDomainParserMapper)
         {
             _parserService = parserService;
             _excelService = excelService;
+            _aiService = aiService;
 
             _wordToAppParserMapper = wordToAppParserMapper;
             _wordToDomainParserMapper = wordToDomainParserMapper;
@@ -31,9 +34,21 @@ namespace Application.Services
             _excelService.GenerateLexilizeExcel(directoryPath, domainWords);
         }
 
-        public async Task<List<Word>> ExtractWordDataAsync(string entry)
+        public async Task<List<Word>> ExtractWordDataAsync(string[] entries)
         {
-            List<Domain.Models.Parser.Word> wordData = await _parserService.ExtractWordDataAsync(entry);
+            List<Domain.Models.Parser.Word> wordData = await _parserService.ParseWordDataAsync(entries[0]);
+
+            string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
+
+            Task<List<Domain.Models.Parser.Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
+
+            Task fillMissingExamplesTask = _aiService.FillMissingExamplesAsync(wordData);
+
+            await Task.WhenAll(aiWordsTask, fillMissingExamplesTask);
+
+            List<Domain.Models.Parser.Word> aiWords = await aiWordsTask;
+
+            wordData.AddRange(aiWords);
 
             List<Word> result = _wordToAppParserMapper.MapToList(wordData);
 

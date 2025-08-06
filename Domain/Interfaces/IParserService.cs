@@ -4,6 +4,6 @@ namespace Domain.Interfaces
 {
     public interface IParserService
     {
-        Task<List<Word>> ExtractWordDataAsync(string entry);
+        Task<List<Word>> ParseWordDataAsync(string entry);
     }
 }
