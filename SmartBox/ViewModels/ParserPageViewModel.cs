@@ -144,7 +144,7 @@ namespace SmartBox.ViewModels
 
         private bool CanAddWordsForExport()
         {
-            return CompiledSelectedWordsForExport != null;
+            return TreeViewNodes.Any(el => el.IsSelected);
         }
 
         private bool CanExport()
@@ -210,6 +210,11 @@ namespace SmartBox.ViewModels
                     }
                 }
             }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                AddWordsForExportCommand.NotifyCanExecuteChanged();
+            });
         }
 
         private void Word_PropertyChanged(object? sender, PropertyChangedEventArgs e)
