@@ -10,7 +10,7 @@
 
     <Grid RowDefinitions="Auto,*" Padding="20">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="10">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10">
             <Entry Grid.Column="0" 
                    Placeholder="Entry" 
                    Text="{Binding EntryText, Mode=TwoWay}">
@@ -53,6 +53,13 @@
                     WidthRequest="70"
                     HeightRequest="40"
                     ToolTipProperties.Text="Export selected word pack" />
+            
+            <Button Grid.Column="5"
+                    Text="Enrich"
+                    Command="{Binding EnrichCommand}"
+                    WidthRequest="70"
+                    HeightRequest="40"
+                    ToolTipProperties.Text="Enrich word with another definitions and examples" />
         </Grid>
 
         <syncfusion:SfTreeView Grid.Row="1"

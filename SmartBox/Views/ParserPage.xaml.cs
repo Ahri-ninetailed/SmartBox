@@ -24,5 +24,15 @@ namespace SmartBox.Views
                 (BindingContext as ParserPageViewModel)?.EditMeaningCommand.Execute(meaning);
             }
         }
+
+        protected override async void OnNavigatedTo(NavigatedToEventArgs args)
+        {
+            base.OnNavigatedTo(args);
+
+            if (BindingContext is ParserPageViewModel viewModel)
+            {
+                await viewModel.OnNavigatedToAsync();
+            }
+        }
     }
 }

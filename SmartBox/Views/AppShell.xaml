@@ -11,7 +11,7 @@
 
             <HorizontalStackLayout Grid.Column="0" Spacing="5">
                 <Button Text="Dictionary" Command="{Binding GoToDictionaryCommand}" />
-                <Button Text="Parser" Command="{Binding GoToParserCommand}" />
+                <Button Text="Definitions" Command="{Binding GoToParserCommand}" />
             </HorizontalStackLayout>
 
             <Grid Grid.Column="1" />
@@ -25,4 +25,6 @@
 
     <ShellContent ContentTemplate="{DataTemplate views:DictionaryPage}" Route="dictionary" />
     <ShellContent ContentTemplate="{DataTemplate views:ParserPage}" Route="parser" />
+
+    <ShellContent Route="parserpage" ContentTemplate="{DataTemplate views:ParserPage}" />
 </Shell>

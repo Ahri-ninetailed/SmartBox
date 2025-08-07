@@ -3,6 +3,7 @@
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Extensions.Logging;
 using Shared;
 using SmartBox.Interfaces;
@@ -13,6 +14,7 @@ using System.ComponentModel;
 
 namespace SmartBox.ViewModels
 {
+    [QueryProperty(nameof(WordId), "wordId")]
     public partial class ParserPageViewModel : ObservableObject
     {
         #region Constants
@@ -49,6 +51,9 @@ namespace SmartBox.ViewModels
         [NotifyCanExecuteChangedFor(nameof(RemoveWordsForExportCommand))]
         private WordPack? selectedWordsForExport;
 
+        [ObservableProperty]
+        private int wordId;
+
         private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
 
         public string ExportPlaceholder => string.Format(ExportPlaceholderFormat, WordsForExport.Count);
@@ -76,6 +81,12 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
+        [RelayCommand]
+        private async Task EnrichAsync()
+        {
+
+        }
+
         // TODO: переименовать, поправить текст ошибки
         [RelayCommand(CanExecute = nameof(CanParse))]
         private async Task ParseAsync()
@@ -84,24 +95,14 @@ namespace SmartBox.ViewModels
             {
                 string[] entries = EntryText.Split(new[] { ",", ", " }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 
-                List<Application.Models.Parser.Word> words;
-
                 if (entries.Length == 1 && entries[0].All(char.IsDigit) && Int32.TryParse(entries[0], out int id))
                 {
-                    Application.Models.Parser.Word appWord = await _parserService.GetWordFromDb(id);
-
-                    Word word = _wordToUIParserMapper.Map(appWord);
-                    word.DisableAll();
-                    word.IsSelected = true;
-
-                    TreeViewNodes = new ObservableCollection<Word>() { word };
+                    await ShowWordFromDb(id);
 
                     return;
                 }
 
-                words = await _parserService.GetDefinitionsAndExamples(entries);
-
-                TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
+                await ShowDefinitionsAndExamples(entries);
             }
             catch (Exception ex)
             {
@@ -280,6 +281,25 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Private Helper Methods
+
+        private async Task ShowDefinitionsAndExamples(string[] entries)
+        {
+            List<Application.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries);
+
+            TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
+        }
+
+        private async Task ShowWordFromDb(int id)
+        {
+            Application.Models.Parser.Word appWord = await _parserService.GetWordFromDb(id);
+
+            Word word = _wordToUIParserMapper.Map(appWord);
+            word.DisableAll();
+            word.IsSelected = true;
+
+            TreeViewNodes = new ObservableCollection<Word>() { word };
+        }
+
         private WordPack? GetCompiledSelectedWords()
         {
             List<Word> selectedWords = TreeViewNodes.Where(node => node.IsSelected).ToList();
@@ -338,5 +358,26 @@ namespace SmartBox.ViewModels
             return wordsForExport;
         }
         #endregion
+
+        public async Task OnNavigatedToAsync()
+        {
+            if (WordId <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await ShowWordFromDb(WordId);
+
+                WordId = 0;
+            }
+            catch (Exception ex)
+            {
+                // TODO: вынести текст ошибки
+                _logger.LogError(ex, "Error loading word from database with ID {WordId}", WordId);
+                await _alertService.DisplayAlertAsync($"Error loading word: {ex.Message}");
+            }   
+        }
     }
 }
