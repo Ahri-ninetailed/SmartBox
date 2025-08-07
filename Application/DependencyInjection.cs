@@ -23,6 +23,8 @@ namespace Application
             services.AddSingleton<IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
             services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
 
+            services.AddSingleton<IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition>, DefinitionMapper>();
+
             services.AddSingleton<IDictionaryService, DictionaryService>();
             services.AddSingleton<IParserService, ParserService>();
 

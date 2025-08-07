@@ -22,6 +22,8 @@ namespace SmartBox
             services.AddSingleton<IMapper<Application.Models.Parser.Word, Models.Parser.Word>, WordMapper>();
             services.AddSingleton<IMapper<Models.Parser.WordPack, Application.Models.Parser.Word>, WordMapper>();
 
+            services.AddSingleton<IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition>, DefinitionMapper>();
+
             services.AddSingleton<AppShell>();
             services.AddSingleton<App>();
 

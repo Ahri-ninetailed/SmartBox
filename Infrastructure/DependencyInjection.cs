@@ -30,6 +30,8 @@ namespace Infrastructure
             services.AddSingleton<IMapper<Domain.Models.Dictionary.Word, Models.DataBase.Word>, WordMapper>();
             services.AddSingleton<IMapper<Models.Parser.Word, Domain.Models.Parser.Word>, WordMapper>();
 
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.Definition, Infrastructure.Models.DataBase.Definition>, DefinitionMapper>();
+
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
             services.AddSingleton<Domain.Interfaces.IExcelService, ExcelService>();

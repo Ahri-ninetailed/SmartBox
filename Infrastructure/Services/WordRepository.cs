@@ -14,22 +14,29 @@ namespace Infrastructure.Services
         private const string EmptyEntryError = "The entry cannot be null or whitespace";
         private const string NullWordError = "The new word cannot be null";
         private const string WordValuesNullOrEmptyError = "Word values array cannot be null, empty, or contain null/whitespace elements.";
+        private const string WordIdMustBeGreaterThanZeroError = "Word ID must be greater than zero.";
+        private const string DefinitionsArrayInvalidError = "Definitions array must not be null, empty, or contain null elements.";
+        private const string WordNotFoundError = "Word with ID {0} was not found in the database.";
+
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
         private readonly IMapper<Infrastructure.Models.DataBase.Word, Domain.Models.Dictionary.Word> _wordToDomMapper;
         private readonly IMapper<Domain.Models.Dictionary.Word, Infrastructure.Models.DataBase.Word> _wordToInfsMapper;
         private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Infrastructure.Models.DataBase.PartOfSpeech?> _partOfSpeechToInfsMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Definition, Infrastructure.Models.DataBase.Definition> _definitionToInfsMapper;
 
         public WordRepository(IDbContextFactory<MyDbContext> dbFactory,
                               IMapper<Word, Domain.Models.Dictionary.Word> wordToDomMapper,
                               IMapper<Domain.Models.Dictionary.Word, Word> wordToInfsMapper,
-                              IMapper<Domain.Models.Dictionary.PartOfSpeech, PartOfSpeech?> partOfSpeechToInfsMapper)
+                              IMapper<Domain.Models.Dictionary.PartOfSpeech, PartOfSpeech?> partOfSpeechToInfsMapper,
+                              IMapper<Domain.Models.Dictionary.Definition, Infrastructure.Models.DataBase.Definition> definitionToInfsMapper)
         {
             _dbFactory = dbFactory;
 
             _wordToDomMapper = wordToDomMapper;
             _wordToInfsMapper = wordToInfsMapper;
             _partOfSpeechToInfsMapper = partOfSpeechToInfsMapper;
+            _definitionToInfsMapper = definitionToInfsMapper;
         }
 
         public async Task<Domain.Models.Dictionary.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids, bool includeRelatedData = false)
@@ -194,6 +201,37 @@ namespace Infrastructure.Services
             return GetPermutations(list, length - 1)
                 .SelectMany(t => list.Where(e => !t.Contains(e)),
                     (t1, t2) => t1.Concat(new T[] { t2 }));
+        }
+
+        public async Task AddDefinitionsAsync(int wordId, Domain.Models.Dictionary.Definition[] definitions)
+        {
+            if (wordId <= 0)
+            {
+                throw new ArgumentException(WordIdMustBeGreaterThanZeroError, nameof(wordId));
+            }
+
+            if (definitions == null || definitions.Length == 0 || definitions.Any(el => el == null))
+            {
+                throw new ArgumentException(DefinitionsArrayInvalidError, nameof(definitions));
+            }
+
+            Definition[] newDefinitions = _definitionToInfsMapper.MapToArray(definitions);
+
+            using MyDbContext db = _dbFactory.CreateDbContext();
+
+            Word? word = db.EnglishWords.Find(wordId);
+
+            if (word == null)
+            {
+                throw new InvalidOperationException(string.Format(WordNotFoundError, wordId));
+            }
+
+            foreach (Definition definition in newDefinitions)
+            {
+                word.Definitions.Add(definition);
+            }
+
+            await db.SaveChangesAsync();
         }
     }
 }

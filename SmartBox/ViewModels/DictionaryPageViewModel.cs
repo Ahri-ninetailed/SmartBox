@@ -108,6 +108,8 @@ namespace SmartBox.ViewModels
 
             Models.Dictionary.Word selectedWord = SelectedWords.First();
 
+            RawSelectedWords = new ObservableCollection<object>();
+
             await Shell.Current.GoToAsync($"///parserpage?wordId={selectedWord.Id}");
         }
 

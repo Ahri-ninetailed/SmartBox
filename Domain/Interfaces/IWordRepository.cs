@@ -15,5 +15,7 @@ namespace Domain.Interfaces
         Task<Word> AddWordAsync(Word newWord);
 
         Task<bool> IsWordExistedAsync(string[] wordValues, PartOfSpeech partOfSpeech);
+
+        Task AddDefinitionsAsync(int wordId, Definition[] definitions);
     }
 }

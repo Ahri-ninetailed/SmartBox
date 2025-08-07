@@ -16,6 +16,7 @@ namespace Application.Services
         private readonly IMapper<Domain.Models.Parser.Word, Application.Models.Parser.Word> _wordToAppParserMapper;
         private readonly IMapper<Application.Models.Parser.Word, Domain.Models.Parser.Word> _wordToDomainParserMapper;
         private readonly IMapper<Domain.Models.Dictionary.Word, Application.Models.Parser.Word> _wordDomDictionaryToAppParserMapper;
+        private readonly IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition> _definitionToDomainMapper;
 
         public ParserService(Domain.Interfaces.IParserService parserService,
                              Domain.Interfaces.IExcelService excelService,
@@ -23,7 +24,8 @@ namespace Application.Services
                              Domain.Interfaces.IWordRepository wordRepository,
                              IMapper<Domain.Models.Parser.Word, Word> wordToAppParserMapper,
                              IMapper<Word, Domain.Models.Parser.Word> wordToDomainParserMapper,
-                             IMapper<Domain.Models.Dictionary.Word, Word> wordDomDictionaryToAppParserMapper)
+                             IMapper<Domain.Models.Dictionary.Word, Word> wordDomDictionaryToAppParserMapper,
+                             IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition> definitionToDomainMapper)
         {
             _parserService = parserService;
             _excelService = excelService;
@@ -33,6 +35,14 @@ namespace Application.Services
             _wordToAppParserMapper = wordToAppParserMapper;
             _wordToDomainParserMapper = wordToDomainParserMapper;
             _wordDomDictionaryToAppParserMapper = wordDomDictionaryToAppParserMapper;
+            _definitionToDomainMapper = definitionToDomainMapper;
+        }
+
+        public async Task AddNewDefinitions(int wordId, IEnumerable<Definition> newDefinitions)
+        {
+            Domain.Models.Dictionary.Definition[] domainDefinitions = _definitionToDomainMapper.MapToArray(newDefinitions);
+
+            await _wordRepository.AddDefinitionsAsync(wordId, domainDefinitions);
         }
 
         public void ExportWords(string directoryPath, Word[] source)
@@ -52,7 +62,7 @@ namespace Application.Services
 
             List<Domain.Models.Parser.Word> wordData = parsedResults.SelectMany(x => x).ToList();
 
-            /*string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
+            string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
 
             Task<List<Domain.Models.Parser.Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
 
@@ -62,7 +72,7 @@ namespace Application.Services
 
             List<Domain.Models.Parser.Word> aiWords = await aiWordsTask;
 
-            wordData.AddRange(aiWords);*/
+            wordData.AddRange(aiWords);
 
             List<Word> result = _wordToAppParserMapper.MapToList(wordData);
 

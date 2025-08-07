@@ -22,6 +22,10 @@ namespace SmartBox.ViewModels
         private const string ExportPlaceholderFormat = "To export: {0}";
         private const string ExportErrorMessage = "An error occurred while exporting";
         private const string LoadWordFromDbErrorMessageFormat = "Error loading word from database with ID {0}";
+        private const string EnrichErrorMessage = "An error occurred while enriching definitions";
+        private const string AddErrorMessage = "An error occurred while adding a word";
+        private const string NoNonDbWordSelectedError = "No words selected for addition";
+        private const string InvalidDbWordSelectionError = "Definitions can be added only for a single word from the database";
 
         #endregion
 
@@ -34,6 +38,7 @@ namespace SmartBox.ViewModels
 
         private readonly IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
         private readonly IMapper<SmartBox.Models.Parser.WordPack, Application.Models.Parser.Word> _wordpackToAppParserMapper;
+        private readonly IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition> _definitionToAppMapper;
 
         #endregion
 
@@ -65,7 +70,8 @@ namespace SmartBox.ViewModels
                                    IParserService parserService,
                                    IAlertService alertService,
                                    IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper,
-                                   IMapper<WordPack, Application.Models.Parser.Word> wordpackToAppParserMapper)
+                                   IMapper<WordPack, Application.Models.Parser.Word> wordpackToAppParserMapper,
+                                   IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition> definitionToAppMapper)
         {
             _logger = logger;
 
@@ -74,6 +80,7 @@ namespace SmartBox.ViewModels
 
             _wordToUIParserMapper = wordToUIParserMapper;
             _wordpackToAppParserMapper = wordpackToAppParserMapper;
+            _definitionToAppMapper = definitionToAppMapper;
 
             WordsForExport.CollectionChanged += OnWordsForExportCollectionChanged;
         }
@@ -83,19 +90,77 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
+        [RelayCommand(CanExecute = nameof(CanAdd))]
+        private async Task AddAsync()
+        {
+            try
+            {
+                IEnumerable<Word> nonDbWord = TreeViewNodes
+                    .Where(word => word.Id == 0 && word.IsSelected && word.IsEnabled);
+
+                if (nonDbWord.Any() == false)
+                {
+                    await _alertService.DisplayAlertAsync(NoNonDbWordSelectedError);
+                    return;
+                }
+
+                if (TreeViewNodes.Where(word => word.Id != 0).Count() != 1)
+                {
+                    await _alertService.DisplayAlertAsync(InvalidDbWordSelectionError);
+                    return;
+                }
+
+                int wordId = TreeViewNodes.First(el => el.Id != 0).Id;
+
+                IEnumerable<Meaning> definitionsForAddition = nonDbWord
+                    .SelectMany(w => w.Children)
+                    .Where(m => m.IsSelected)
+                    .Select(m => new Meaning
+                    {
+                        Value = m.Value,
+                        Children = new ObservableCollection<Example>(m.Children.Where(e => e.IsSelected))
+                    });
+
+                Application.Models.Parser.Definition[] appDefinitions = _definitionToAppMapper.MapToArray(definitionsForAddition);
+
+                await _parserService.AddNewDefinitions(wordId, appDefinitions);
+
+                Application.Models.Parser.Word updatedWord = await _parserService.GetWordFromDb(wordId);
+
+                Word uiUpdatedWord = _wordToUIParserMapper.Map(updatedWord);
+                uiUpdatedWord.DisableAll();
+                uiUpdatedWord.IsSelected = true;
+
+                TreeViewNodes = new ObservableCollection<Word>() { uiUpdatedWord };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, AddErrorMessage);
+                await _alertService.DisplayAlertAsync($"{AddErrorMessage}: {ex.Message}");
+            }
+        }
+
         [RelayCommand(CanExecute = nameof(CanEncrich))]
         private async Task EnrichAsync()
         {
-            string[] entries = TreeViewNodes.Where(el => el.Id != 0)
-                                            .SelectMany(el => el.Value.Split(Separators, StringSplitOptions.None))
-                                            .Distinct()
-                                            .ToArray();
+            try
+            {
+                string[] entries = TreeViewNodes.Where(el => el.Id != 0)
+                                                .SelectMany(el => el.Value.Split(Separators, StringSplitOptions.None))
+                                                .Distinct()
+                                                .ToArray();
 
-            List<Application.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries);
+                List<Application.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries);
 
-            List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
+                List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
-            TreeViewNodes = new ObservableCollection<Word>(TreeViewNodes.Where(el => el.Id != 0).Concat(additionalDefinitions));
+                TreeViewNodes = new ObservableCollection<Word>(TreeViewNodes.Where(el => el.Id != 0).Concat(additionalDefinitions));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, EnrichErrorMessage);
+                await _alertService.DisplayAlertAsync($"{EnrichErrorMessage}: {ex.Message}");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanProcessInput))]
@@ -168,6 +233,8 @@ namespace SmartBox.ViewModels
                 _parserService.ExportWords(exportDirectory, wordsforExport);
 
                 WordsForExport.Clear();
+
+                SelectedWordsForExport = null;
             }
             catch (Exception ex)
             {
@@ -187,6 +254,18 @@ namespace SmartBox.ViewModels
         private bool CanEncrich()
         {
             return TreeViewNodes.Any(el => el.Id != 0);
+        }
+
+        private bool CanAdd()
+        {
+            if (TreeViewNodes.Any(el => el.Id != 0) == false)
+            {
+                return false;
+            }
+
+            IEnumerable<Word> nonDbWord = TreeViewNodes.Where(el => el.Id == 0);
+
+            return nonDbWord.Any(el => el.IsSelected);
         }
 
         private bool CanRemoveWordsForExport()
@@ -276,6 +355,7 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Word.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                AddCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -284,6 +364,7 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Meaning.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                AddCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -292,6 +373,7 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Example.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                AddCommand.NotifyCanExecuteChanged();
             }
         }
         #endregion
