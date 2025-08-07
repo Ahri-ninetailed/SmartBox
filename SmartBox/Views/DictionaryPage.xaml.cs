@@ -9,11 +9,13 @@ namespace SmartBox.Views
             InitializeComponent();
 
             BindingContext = viewModel;
+
+            Loaded += OnPageLoaded;
         }
 
-        protected override async void OnAppearing()
+        private async void OnPageLoaded(object? sender, EventArgs e)
         {
-            base.OnAppearing();
+            Loaded -= OnPageLoaded;
 
             await ((DictionaryPageViewModel)BindingContext).InitializeAsync();
         }
