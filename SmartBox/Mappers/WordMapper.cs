@@ -42,6 +42,7 @@ namespace SmartBox.Mappers
         {
             Models.Parser.Word word = new()
             {
+                Id = source.Id,
                 Area = source.Area,
                 Value = source.Value,
                 Type = _partOfSpeechToUIParserMapper.Map(source.Type),

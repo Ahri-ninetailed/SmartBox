@@ -101,6 +101,7 @@ namespace Application.Mapper
         {
             return new Models.Parser.Word()
             {
+                Id = source.Id,
                 Value = string.Join(", ", source.Values),
                 Area = null,
                 PluralForms = [],

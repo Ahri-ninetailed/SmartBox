@@ -17,6 +17,7 @@ namespace SmartBox.ViewModels
     public partial class ParserPageViewModel : ObservableObject
     {
         #region Constants
+        private readonly string[] Separators = [", ", ","];
         private const string ParseErrorMessage = "An error occurred while parsing";
         private const string ExportPlaceholderFormat = "To export: {0}";
         private const string ExportErrorMessage = "An error occurred while exporting";
@@ -57,6 +58,7 @@ namespace SmartBox.ViewModels
         private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
 
         public string ExportPlaceholder => string.Format(ExportPlaceholderFormat, WordsForExport.Count);
+
         #endregion
 
         public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
@@ -81,10 +83,19 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanEncrich))]
         private async Task EnrichAsync()
         {
+            string[] entries = TreeViewNodes.Where(el => el.Id != 0)
+                                            .SelectMany(el => el.Value.Split(Separators, StringSplitOptions.None))
+                                            .Distinct()
+                                            .ToArray();
 
+            List<Application.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries);
+
+            List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
+
+            TreeViewNodes = new ObservableCollection<Word>(TreeViewNodes.Where(el => el.Id != 0).Concat(additionalDefinitions));
         }
 
         [RelayCommand(CanExecute = nameof(CanProcessInput))]
@@ -92,7 +103,7 @@ namespace SmartBox.ViewModels
         {
             try
             {
-                string[] entries = EntryText.Split(new[] { ",", ", " }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+                string[] entries = EntryText.Split(Separators, StringSplitOptions.RemoveEmptyEntries).ToArray();
 
                 if (entries.Length == 1 && entries[0].All(char.IsDigit) && Int32.TryParse(entries[0], out int id))
                 {
@@ -173,6 +184,11 @@ namespace SmartBox.ViewModels
             return string.IsNullOrWhiteSpace(EntryText) == false;
         }
 
+        private bool CanEncrich()
+        {
+            return TreeViewNodes.Any(el => el.Id != 0);
+        }
+
         private bool CanRemoveWordsForExport()
         {
             return SelectedWordsForExport != null;
@@ -251,6 +267,7 @@ namespace SmartBox.ViewModels
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                EnrichCommand.NotifyCanExecuteChanged();
             });
         }
 
