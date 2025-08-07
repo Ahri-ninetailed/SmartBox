@@ -3,9 +3,9 @@ using System.Collections.ObjectModel;
 
 namespace SmartBox.Mappers
 {
-    public class WordMapper : IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word>,
-                              IMapper<Application.Models.Parser.Word, Models.Parser.Word>,
-                              IMapper<Models.Parser.WordPack, Application.Models.Parser.Word>
+    public class WordMapper : IMapper<Application.Models.Dictionary.Word, SmartBox.Models.Dictionary.Word>,
+                              IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word>,
+                              IMapper<SmartBox.Models.Parser.WordPack, Application.Models.Parser.Word>
     {
         private const string Separator = ", ";
 
@@ -50,21 +50,23 @@ namespace SmartBox.Mappers
                 PluralForms = source.PluralForms.ToArray()
             };
 
-            foreach (KeyValuePair<string, List<string>> meaningAndExamples in source.MeaningsAndExamples)
+            foreach (Application.Models.Parser.Definition definition in source.Definitions)
             {
                 Models.Parser.Meaning meaning = new Models.Parser.Meaning
                 {
                     Parent = word,
-                    Value = meaningAndExamples.Key,
+                    Value = definition.Value,
+                    Id = definition.Id,
                     Children = new ObservableCollection<Models.Parser.Example>()
                 };
 
-                foreach (string example in meaningAndExamples.Value)
+                foreach (Application.Models.Parser.Example example in definition.Examples)
                 {
                     meaning.Children.Add(new Models.Parser.Example
                     {
-                        Value = example,
-                        Parent = meaning
+                        Value = example.Value,
+                        Id = example.Id,
+                        Parent = meaning,
                     });
                 }
 
@@ -76,24 +78,26 @@ namespace SmartBox.Mappers
 
         public Application.Models.Parser.Word Map(Models.Parser.WordPack source)
         {
-            Dictionary<string, List<string>> meaningsAndExamples = new();
+            List<Application.Models.Parser.Definition> definitions = new List<Application.Models.Parser.Definition>();
 
             foreach (Models.Parser.Word word in source.Words)
             {
                 foreach (Models.Parser.Meaning meaning in word.Children)
                 {
-                    List<string> examples = meaning.Children
-                        .Select(example => example.Value)
+                    List<Application.Models.Parser.Example> examples = meaning.Children
+                        .Select(example => new Application.Models.Parser.Example
+                        {
+                            Id = example.Id,
+                            Value = example.Value
+                        })
                         .ToList();
 
-                    if (meaningsAndExamples.ContainsKey(meaning.Value))
+                    definitions.Add(new Application.Models.Parser.Definition
                     {
-                        meaningsAndExamples[meaning.Value].AddRange(examples);
-                    }
-                    else
-                    {
-                        meaningsAndExamples[meaning.Value] = examples;
-                    }
+                        Id = meaning.Id,
+                        Value = meaning.Value,
+                        Examples = examples
+                    });
                 }
             }
 
@@ -109,7 +113,7 @@ namespace SmartBox.Mappers
                     .ToHashSet(),
                 PluralForms = source.Words.SelectMany(el => el.PluralForms)
                     .ToHashSet(),
-                MeaningsAndExamples = meaningsAndExamples,
+                Definitions = definitions
             };
         }
     }

@@ -72,6 +72,7 @@
                         </Grid.ColumnDefinitions>
 
                         <CheckBox Grid.Column="0"
+                                  IsEnabled="{Binding IsEnabled}"
                                   IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                   VerticalOptions="Center"/>
 

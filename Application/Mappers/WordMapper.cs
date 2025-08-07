@@ -1,33 +1,36 @@
-﻿using Application.Models;
-using Shared;
+﻿using Shared;
 
 namespace Application.Mapper
 {
-    public class WordMapper : IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word>,
-                              IMapper<Models.Dictionary.Word, Domain.Models.Dictionary.Word>,
+    public class WordMapper : IMapper<Domain.Models.Dictionary.Word, Application.Models.Dictionary.Word>,
+                              IMapper<Application.Models.Dictionary.Word, Domain.Models.Dictionary.Word>,
                               IMapper<Domain.Models.Parser.Word, Models.Parser.Word>,
-                              IMapper<Models.Parser.Word, Domain.Models.Parser.Word>
+                              IMapper<Application.Models.Parser.Word, Domain.Models.Parser.Word>,
+                              IMapper<Domain.Models.Dictionary.Word, Application.Models.Parser.Word>
     {
-        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> _partOfSpeechToAppDictionaryMapper;
-        private readonly IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomDictionaryMapper;
-        private readonly IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> _partOfSpeechToAppParserMapper;
-        private readonly IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> _partOfSpeechToDomainParserMapper;
+        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> _partOfSpeechToAppDictionaryMapper;
+        private readonly IMapper<Application.Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomDictionaryMapper;
+        private readonly IMapper<Domain.Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech> _partOfSpeechToAppParserMapper;
+        private readonly IMapper<Application.Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> _partOfSpeechToDomainParserMapper;
+        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Application.Models.Parser.PartOfSpeech> _partOfSpeechDictionaryDomainToAppParserMapper;
 
 
-        public WordMapper(IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> partOfSpeechToAppDictionaryMapper,
-                          IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomDictionaryMapper,
-                          IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> partOfSpeechToAppParserMapper,
-                          IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> partOfSpeechToDomainParserMapper)
+        public WordMapper(IMapper<Domain.Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> partOfSpeechToAppDictionaryMapper,
+                          IMapper<Application.Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomDictionaryMapper,
+                          IMapper<Domain.Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech> partOfSpeechToAppParserMapper,
+                          IMapper<Application.Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> partOfSpeechToDomainParserMapper,
+                          IMapper<Domain.Models.Dictionary.PartOfSpeech, Application.Models.Parser.PartOfSpeech> partOfSpeechDictionaryDomainToAppParserMapper)
         {
             _partOfSpeechToDomDictionaryMapper = partOfSpeechToDomDictionaryMapper;
             _partOfSpeechToAppDictionaryMapper = partOfSpeechToAppDictionaryMapper;
             _partOfSpeechToAppParserMapper = partOfSpeechToAppParserMapper;
             _partOfSpeechToDomainParserMapper = partOfSpeechToDomainParserMapper;
+            _partOfSpeechDictionaryDomainToAppParserMapper = partOfSpeechDictionaryDomainToAppParserMapper;
         }
 
-        public Models.Dictionary.Word Map(Domain.Models.Dictionary.Word source)
+        public Application.Models.Dictionary.Word Map(Domain.Models.Dictionary.Word source)
         {
-            return new Models.Dictionary.Word()
+            return new Application.Models.Dictionary.Word()
             {
                 Id = source.Id,
                 Values = source.Values,
@@ -39,7 +42,7 @@ namespace Application.Mapper
             };
         }
 
-        public Domain.Models.Dictionary.Word Map(Models.Dictionary.Word source)
+        public Domain.Models.Dictionary.Word Map(Application.Models.Dictionary.Word source)
         {
             return new Domain.Models.Dictionary.Word()
             {
@@ -53,7 +56,7 @@ namespace Application.Mapper
             };
         }
 
-        public Models.Parser.Word Map(Domain.Models.Parser.Word source)
+        public Application.Models.Parser.Word Map(Domain.Models.Parser.Word source)
         {
             return new Models.Parser.Word()
             {
@@ -61,12 +64,24 @@ namespace Application.Mapper
                 Area = source.Area,
                 OtherForms = source.OtherForms,
                 PluralForms = source.PluralForms,
-                MeaningsAndExamples = source.MeaningsAndExamples,
+                Definitions = source.MeaningsAndExamples.Select(el => 
+                {
+                    return new Models.Parser.Definition()
+                    {
+                        Id = 0,
+                        Value = el.Key,
+                        Examples = el.Value.Select(example => new Models.Parser.Example() 
+                        { 
+                            Id = 0,
+                            Value = example,
+                        }).ToList()
+                    };  
+                }).ToList(),
                 Type = _partOfSpeechToAppParserMapper.Map(source.Type),
             };
         }
 
-        public Domain.Models.Parser.Word Map(Models.Parser.Word source)
+        public Domain.Models.Parser.Word Map(Application.Models.Parser.Word source)
         {
             return new Domain.Models.Parser.Word()
             {
@@ -74,8 +89,36 @@ namespace Application.Mapper
                 Area = source.Area,
                 OtherForms = source.OtherForms,
                 PluralForms = source.PluralForms,
-                MeaningsAndExamples = source.MeaningsAndExamples,
+                MeaningsAndExamples = source.Definitions.ToDictionary(
+                    def => def.Value,
+                    def => def.Examples.Select(ex => ex.Value).ToList()
+                ),
                 Type = _partOfSpeechToDomainParserMapper.Map(source.Type),
+            };
+        }
+
+        Application.Models.Parser.Word IMapper<Domain.Models.Dictionary.Word, Application.Models.Parser.Word>.Map(Domain.Models.Dictionary.Word source)
+        {
+            return new Models.Parser.Word()
+            {
+                Value = string.Join(", ", source.Values),
+                Area = null,
+                PluralForms = [],
+                OtherForms = [],
+                Type = _partOfSpeechDictionaryDomainToAppParserMapper.Map(source.PartOfSpeech),
+                Definitions = source.Definitions.Select(definition =>
+                {
+                    return new Models.Parser.Definition()
+                    {
+                        Id = definition.Id,
+                        Value = definition.Value,
+                        Examples = definition.Examples.Select(example => new Models.Parser.Example()
+                        {
+                            Id = example.Id,
+                            Value = example.Value,
+                        }).ToList(),
+                    };
+                }).ToList(),
             };
         }
     }

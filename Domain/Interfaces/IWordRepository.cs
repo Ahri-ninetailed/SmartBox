@@ -8,7 +8,7 @@ namespace Domain.Interfaces
 
         Task<Word[]> SearchWordsAsync(string[] entries);
 
-        Task<Word[]> GetWordsByIdsAsync(IEnumerable<int> ids);
+        Task<Word[]> GetWordsByIdsAsync(IEnumerable<int> ids, bool includeRelatedData);
 
         Task SaveWordsAsync(Word[] words);
 

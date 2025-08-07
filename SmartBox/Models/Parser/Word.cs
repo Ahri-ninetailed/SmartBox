@@ -19,6 +19,10 @@ namespace SmartBox.Models.Parser
         public virtual string Title => Value;
         public virtual bool IsBold => true;
 
+        public bool IsEnabled { get; set; } = true;
+
+        public int Id { get; set; }
+
         partial void OnValueChanged(string value)
         {
             OnPropertyChanged(nameof(Title));
@@ -119,6 +123,32 @@ namespace SmartBox.Models.Parser
         protected override void OnSelectionChangedCore(bool value)
         {
             SetChildrenSelection(Children, value);
+        }
+
+        public void EnableAll()
+        {
+            IsEnabled = true;
+            foreach (var meaning in Children)
+            {
+                meaning.IsEnabled = true;
+                foreach (var example in meaning.Children)
+                {
+                    example.IsEnabled = true;
+                }
+            }
+        }
+
+        public void DisableAll()
+        {
+            IsEnabled = false;
+            foreach (var meaning in Children)
+            {
+                meaning.IsEnabled = false;
+                foreach (var example in meaning.Children)
+                {
+                    example.IsEnabled = false;
+                }
+            }
         }
     }
 

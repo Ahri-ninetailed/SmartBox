@@ -29,8 +29,8 @@ namespace SmartBox.ViewModels
         private readonly IAlertService _alertService;
         public IPromptService? _promptService;
 
-        private readonly IMapper<Application.Models.Parser.Word, Word> _wordToUIParserMapper;
-        private readonly IMapper<WordPack, Application.Models.Parser.Word> _wordpackToAppParserMapper;
+        private readonly IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
+        private readonly IMapper<SmartBox.Models.Parser.WordPack, Application.Models.Parser.Word> _wordpackToAppParserMapper;
 
         #endregion
 
@@ -76,14 +76,30 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
+        // TODO: переименовать, поправить текст ошибки
         [RelayCommand(CanExecute = nameof(CanParse))]
         private async Task ParseAsync()
         {
             try
             {
-               string[] entries = EntryText.Split(new[] { ",", ", " }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+                string[] entries = EntryText.Split(new[] { ",", ", " }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 
-                List<Application.Models.Parser.Word> words = await _parserService.ExtractWordDataAsync(entries);
+                List<Application.Models.Parser.Word> words;
+
+                if (entries.Length == 1 && entries[0].All(char.IsDigit) && Int32.TryParse(entries[0], out int id))
+                {
+                    Application.Models.Parser.Word appWord = await _parserService.GetWordFromDb(id);
+
+                    Word word = _wordToUIParserMapper.Map(appWord);
+                    word.DisableAll();
+                    word.IsSelected = true;
+
+                    TreeViewNodes = new ObservableCollection<Word>() { word };
+
+                    return;
+                }
+
+                words = await _parserService.GetDefinitionsAndExamples(entries);
 
                 TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
             }

@@ -30,6 +30,8 @@
         public bool Learned { get; set; }
         public string Comments { get; set; } = string.Empty;
 
+        public List<Definition> Definitions { get; set; } = [];
+
         public void Learn()
         {
             if (Learned)

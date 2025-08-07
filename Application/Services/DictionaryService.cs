@@ -26,8 +26,8 @@ namespace Application.Services
         private readonly IWordRepository _wordRepository;
         private readonly IWordPopularityService _wordPopularityService;
 
-        private readonly IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomMapper;
-        private readonly IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word> _wordToAppMapper;
+        private readonly IMapper<Application.Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, Application.Models.Dictionary.Word> _wordToAppMapper;
 
         public DictionaryService(ILogger<DictionaryService> logger,
                                  IWordRepository wordRepository,
@@ -118,7 +118,7 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync([id]);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync([id], false);
 
                     if (words.Length == 0)
                     {
@@ -173,7 +173,7 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids, false);
 
                     foreach (Domain.Models.Dictionary.Word word in words)
                     {
@@ -199,7 +199,7 @@ namespace Application.Services
             {
                 await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids);
+                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids, false);
 
                     foreach (Domain.Models.Dictionary.Word word in words)
                     {

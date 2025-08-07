@@ -2,9 +2,9 @@
 
 namespace Infrastructure.Mappers
 {
-    public class WordMapper : IMapper<Models.DataBase.Word, Domain.Models.Dictionary.Word>, 
-                              IMapper<Domain.Models.Dictionary.Word, Models.DataBase.Word>,
-                              IMapper<Models.Parser.Word, Domain.Models.Parser.Word>
+    public class WordMapper : IMapper<Infrastructure.Models.DataBase.Word, Domain.Models.Dictionary.Word>, 
+                              IMapper<Domain.Models.Dictionary.Word, Infrastructure.Models.DataBase.Word>,
+                              IMapper<Infrastructure.Models.Parser.Word, Domain.Models.Parser.Word>
     {
         private const string ValueSeparator = ", ";
 
@@ -30,7 +30,25 @@ namespace Infrastructure.Mappers
                 PartOfSpeech = _partOfSpeechToDomDictionaryMapper.Map(source.PartOfSpeech),
                 ShouldStudy = source.ShouldStudy,
                 Learned = source.Learned,
-                Comments = source.Comments ?? string.Empty
+                Comments = source.Comments ?? string.Empty,
+                Definitions = source.Definitions.Select(definition =>
+                {
+                    return new Domain.Models.Dictionary.Definition()
+                    {
+                        Id = definition.Id,
+                        Value = definition.Value,
+                        WordId = definition.WordId,
+                        Examples = definition.Examples.Select(example =>
+                        {
+                            return new Domain.Models.Dictionary.Example()
+                            {
+                                Id = example.Id,
+                                Value = example.Value,
+                                DefinitionId = example.DefinitionId,
+                            };
+                        }).ToList()
+                    };
+                }).ToList()
             };
         }
 

@@ -2,10 +2,10 @@
 
 namespace SmartBox.Mappers
 {
-    public class PartOfSpeechMapper : IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech>,
-                                      IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech>,
-                                      IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>,
-                                      IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech>
+    public class PartOfSpeechMapper : IMapper<Application.Models.Dictionary.PartOfSpeech, SmartBox.Models.Dictionary.PartOfSpeech>,
+                                      IMapper<SmartBox.Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech>,
+                                      IMapper<Application.Models.Parser.PartOfSpeech, SmartBox.Models.Parser.PartOfSpeech>,
+                                      IMapper<SmartBox.Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech>
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 

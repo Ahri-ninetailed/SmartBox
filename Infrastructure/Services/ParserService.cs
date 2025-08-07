@@ -13,7 +13,7 @@ namespace Infrastructure.Services
         private readonly Task<IBrowser> _browserTask;
         private readonly IParser _cambridgeDictionaryParser;
 
-        private readonly IMapper<Models.Parser.Word, Domain.Models.Parser.Word> _wordToDomParserMapper;
+        private readonly IMapper<Infrastructure.Models.Parser.Word, Domain.Models.Parser.Word> _wordToDomParserMapper;
 
         public ParserService(Task<IBrowser> browserTask, 
                              IParser cambridgeDictionaryParser,

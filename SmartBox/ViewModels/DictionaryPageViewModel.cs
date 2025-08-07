@@ -32,8 +32,8 @@ namespace SmartBox.ViewModels
         private readonly IDictionaryService _dictionaryService;
         private readonly IAlertService _alertService;
 
-        private readonly IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word> _wordMapper;
-        private readonly IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> _partOfSpeechMapper;
+        private readonly IMapper<Application.Models.Dictionary.Word, SmartBox.Models.Dictionary.Word> _wordMapper;
+        private readonly IMapper<SmartBox.Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> _partOfSpeechMapper;
         #endregion
 
         #region Properties

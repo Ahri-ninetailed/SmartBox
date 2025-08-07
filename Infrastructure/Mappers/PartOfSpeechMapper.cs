@@ -2,9 +2,9 @@
 
 namespace Infrastructure.Mappers
 {
-    public class PartOfSpeechMapper : IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>,
-                                      IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?>,
-                                      IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>
+    public class PartOfSpeechMapper : IMapper<Infrastructure.Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>,
+                                      IMapper<Domain.Models.Dictionary.PartOfSpeech, Infrastructure.Models.DataBase.PartOfSpeech?>,
+                                      IMapper<Infrastructure.Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>
     {
         private const string UnknownEnumValueError = "Unknown enum value: {0}";
 

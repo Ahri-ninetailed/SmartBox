@@ -19,7 +19,7 @@ namespace SmartBox.Views
 
         private void OnItemTapped(object sender, Syncfusion.Maui.TreeView.ItemTappedEventArgs e)
         {
-            if (e.Node?.Content is Meaning meaning)
+            if ((e.Node?.Content is Meaning meaning) && meaning.IsEnabled)
             {
                 (BindingContext as ParserPageViewModel)?.EditMeaningCommand.Execute(meaning);
             }

@@ -16,9 +16,9 @@ namespace Infrastructure.Services
         private const string WordValuesNullOrEmptyError = "Word values array cannot be null, empty, or contain null/whitespace elements.";
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
-        private readonly IMapper<Word, Domain.Models.Dictionary.Word> _wordToDomMapper;
-        private readonly IMapper<Domain.Models.Dictionary.Word, Word> _wordToInfsMapper;
-        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, PartOfSpeech?> _partOfSpeechToInfsMapper;
+        private readonly IMapper<Infrastructure.Models.DataBase.Word, Domain.Models.Dictionary.Word> _wordToDomMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, Infrastructure.Models.DataBase.Word> _wordToInfsMapper;
+        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Infrastructure.Models.DataBase.PartOfSpeech?> _partOfSpeechToInfsMapper;
 
         public WordRepository(IDbContextFactory<MyDbContext> dbFactory,
                               IMapper<Word, Domain.Models.Dictionary.Word> wordToDomMapper,
@@ -32,7 +32,7 @@ namespace Infrastructure.Services
             _partOfSpeechToInfsMapper = partOfSpeechToInfsMapper;
         }
 
-        public async Task<Domain.Models.Dictionary.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids)
+        public async Task<Domain.Models.Dictionary.Word[]> GetWordsByIdsAsync(IEnumerable<int> ids, bool includeRelatedData = false)
         {
             if (ids == null || ids.Any() == false || ids.Any(el => el == 0))
             {
@@ -41,7 +41,16 @@ namespace Infrastructure.Services
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
-            Word[] words  = await db.EnglishWords.Where(el => ids.Contains(el.Id)).ToArrayAsync();
+            IQueryable<Word> query = db.EnglishWords.Where(el => ids.Contains(el.Id));
+
+            if (includeRelatedData)
+            {
+                query = query
+                    .Include(w => w.Definitions)
+                    .ThenInclude(d => d.Examples);
+            }
+
+            Word[] words = await query.ToArrayAsync();
 
             return _wordToDomMapper.MapToArray(words);
         }
