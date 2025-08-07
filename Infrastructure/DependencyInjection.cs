@@ -5,11 +5,11 @@ using Infrastructure.Services.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Playwright;
 using OpenAI.Chat;
 using Polly;
 using Polly.Extensions.Http;
 using Shared;
+using System.Net;
 
 namespace Infrastructure
 {
@@ -61,30 +61,25 @@ namespace Infrastructure
                 return GetRetryPolicy(logger);
             });
 
-            services.AddSingleton(async provider =>
-            {
-                var playwright = await Playwright.CreateAsync();
-                return await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-            });
+            services.AddKeyedSingleton<CookieContainer>(Models.Parser.Parser.CambridgeDictionary.ToString());
 
-            services.AddTransient(async provider =>
-            {
-                var browser = await provider.GetRequiredService<Task<IBrowser>>();
-                return await browser.NewPageAsync();
-            });//https://dictionary.cambridge.org/dictionary/english/
-
-            /*// TODO: Возникают проблемы с отправкой запросов, может быть стоит использовать Microsoft.Playwright
+            // TODO: Возникают проблемы с отправкой запросов, может быть стоит использовать Microsoft.Playwright
             services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
                 client.Timeout = TimeSpan.FromSeconds(10);
+            })
+            .ConfigurePrimaryHttpMessageHandler(serviceProvider => new HttpClientHandler()
+            {
+                CookieContainer = serviceProvider.GetRequiredKeyedService<CookieContainer>(Models.Parser.Parser.CambridgeDictionary.ToString()),
+                UseCookies = true,
             })
             // TODO: Вынести в отдельный метод, когда появится другой парсер
             .AddPolicyHandler((serviceProvider, request) =>
             {
                 ILogger logger = serviceProvider.GetService<ILoggerFactory>()!
                     .CreateLogger(Models.Parser.Parser.CambridgeDictionary.ToString());
-            
+
                 return Policy
                     .Handle<HttpRequestException>()
                     .OrResult<HttpResponseMessage>(r => r.StatusCode != System.Net.HttpStatusCode.OK)
@@ -95,7 +90,7 @@ namespace Infrastructure
                             string statusCode = result.Result?.StatusCode.ToString() ?? NotAvailable;
                             string exceptionType = result.Exception?.GetType().Name ?? NotAvailable;
                             string errorMessage = result.Exception?.Message ?? result.Result?.ReasonPhrase ?? NotAvailable;
-            
+
                             logger.LogWarning(ParserRetryMessage,
                                 Models.Parser.Parser.CambridgeDictionary,
                                 retryCount,
@@ -104,7 +99,7 @@ namespace Infrastructure
                                 exceptionType,
                                 errorMessage);
                         });
-            });*/
+            });
 
             string sqlConnectionString = Environment.GetEnvironmentVariable("ENGLISH_WORDS_STORAGE")!;
             services.AddDbContextFactory<MyDbContext>(options =>
