@@ -12,7 +12,6 @@ namespace Infrastructure.Mappers
         {
             switch (source)
             {
-                case Models.DataBase.PartOfSpeech.Noun:
                 case Models.DataBase.PartOfSpeech.Other:
                     return Domain.Models.Dictionary.PartOfSpeech.Other;
                 case Models.DataBase.PartOfSpeech.Verb:
@@ -33,7 +32,7 @@ namespace Infrastructure.Mappers
                 case Domain.Models.Dictionary.PartOfSpeech.Other:
                     return Models.DataBase.PartOfSpeech.Other;
                 case Domain.Models.Dictionary.PartOfSpeech.Unknown:
-                    return null;// TODO: сделать в бд такой же тип частей речей как и в Domain
+                    return null;
                 default:
                     throw new InvalidOperationException(string.Format(UnknownEnumValueError, source));
             }
