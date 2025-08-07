@@ -67,7 +67,7 @@
             <Button Text="Learn" Command="{Binding LearnCommand}" />
             <Button Text="Add" Command="{Binding AddCommand}" />
             <Button Text="Change" Command="{Binding ChangeCommand}" />
-            <Button Text="Definitions" Command="{Binding ShowDefinitionsCommand}" />
+            <Button Text="View Definitions" Command="{Binding ShowDefinitionsCommand}" />
         </HorizontalStackLayout>
     </Grid>
 </ContentPage>

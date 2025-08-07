@@ -12,11 +12,11 @@
 
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10">
             <Entry Grid.Column="0" 
-                   Placeholder="Entry" 
+                   Placeholder="Enter word or ID" 
                    Text="{Binding EntryText, Mode=TwoWay}">
                 <Entry.Behaviors>
                     <toolkit:UserStoppedTypingBehavior
-                        Command="{Binding ParseCommand}"
+                        Command="{Binding ProcessInputCommand}"
                         StoppedTypingTimeThreshold="1000" />
                 </Entry.Behaviors>
             </Entry>

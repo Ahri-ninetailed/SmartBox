@@ -6,6 +6,8 @@ namespace Application.Services
 {
     public class ParserService : IParserService
     {
+        const string WordNotFoundError = "Word with ID {0} not found in the database.";
+
         private readonly Domain.Interfaces.IParserService _parserService;
         private readonly Domain.Interfaces.IExcelService _excelService;
         private readonly Domain.Interfaces.IAiService _aiService;
@@ -73,8 +75,7 @@ namespace Application.Services
 
             if (word.Length == 0)
             {
-                // TODO: вынести в конснанту
-                throw new KeyNotFoundException($"Word with ID {wordId} not found in the database.");
+                throw new InvalidOperationException(string.Format(WordNotFoundError, wordId));
             }
 
             Word result = _wordDomDictionaryToAppParserMapper.Map(word[0]);

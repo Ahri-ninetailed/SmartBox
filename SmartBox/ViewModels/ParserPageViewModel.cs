@@ -3,7 +3,6 @@
 using Application.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Extensions.Logging;
 using Shared;
 using SmartBox.Interfaces;
@@ -21,6 +20,7 @@ namespace SmartBox.ViewModels
         private const string ParseErrorMessage = "An error occurred while parsing";
         private const string ExportPlaceholderFormat = "To export: {0}";
         private const string ExportErrorMessage = "An error occurred while exporting";
+        private const string LoadWordFromDbErrorMessageFormat = "Error loading word from database with ID {0}";
 
         #endregion
 
@@ -41,7 +41,7 @@ namespace SmartBox.ViewModels
         private ObservableCollection<Word> treeViewNodes = new();
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(ParseCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ProcessInputCommand))]
         private string entryText = string.Empty;
 
         [ObservableProperty]
@@ -87,9 +87,8 @@ namespace SmartBox.ViewModels
 
         }
 
-        // TODO: переименовать, поправить текст ошибки
-        [RelayCommand(CanExecute = nameof(CanParse))]
-        private async Task ParseAsync()
+        [RelayCommand(CanExecute = nameof(CanProcessInput))]
+        private async Task ProcessInputAsync()
         {
             try
             {
@@ -169,7 +168,7 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region CanExecute Methods
-        private bool CanParse()
+        private bool CanProcessInput()
         {
             return string.IsNullOrWhiteSpace(EntryText) == false;
         }
@@ -374,10 +373,12 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
-                // TODO: вынести текст ошибки
-                _logger.LogError(ex, "Error loading word from database with ID {WordId}", WordId);
-                await _alertService.DisplayAlertAsync($"Error loading word: {ex.Message}");
-            }   
+                string formattedError = string.Format(LoadWordFromDbErrorMessageFormat, WordId);
+
+                _logger.LogError(ex, formattedError);
+
+                await _alertService.DisplayAlertAsync($"{formattedError}: {ex.Message}");
+            }
         }
     }
 }

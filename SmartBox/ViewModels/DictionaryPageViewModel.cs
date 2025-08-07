@@ -24,6 +24,7 @@ namespace SmartBox.ViewModels
         private const string AddWordErrorMessage = "Failed to add new word";
         private const string ChangePartOfSpeechErrorMessage = "Failed to change word part of speech";
         private const string InvalidWordSelectionForChangeError = "Please select exactly one word to change its part of speech";
+        private const string NoSelectedWordForDefinitionsError = "No selected word selected.";
 
         #endregion
 
@@ -100,8 +101,8 @@ namespace SmartBox.ViewModels
         {
             if (SelectedWords.Length != 1)
             {
-                // TODO: вынести ошибку
-                await _alertService.DisplayAlertAsync("No selectedWord selected.");
+                await _alertService.DisplayAlertAsync(NoSelectedWordForDefinitionsError);
+
                 return;
             }
 

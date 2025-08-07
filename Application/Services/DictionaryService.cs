@@ -98,7 +98,7 @@ namespace Application.Services
 
                 Domain.Models.Dictionary.Word word = await _wordRepository.AddWordAsync(newWord);
 
-                _logger.LogInformation(AddedWordMessage, word.Values, word.Id, word.PartOfSpeech);
+                _logger.LogInformation(AddedWordMessage, string.Join(Separator,word.Values), word.Id, word.PartOfSpeech);
 
                 Models.Dictionary.Word result = _wordToAppMapper.Map(word);
 
