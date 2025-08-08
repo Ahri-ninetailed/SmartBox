@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using Domain.Interfaces;
 using Domain.Models.Parser;
+using Shared;
 
 namespace Infrastructure.Services
 {
@@ -37,7 +38,7 @@ namespace Infrastructure.Services
             int countOfMeanings = word.MeaningsAndExamples.Count;
             string countOfMeaningsStr = countOfMeanings > 1 ? $" ({countOfMeanings})" : "";
 
-            string[] examples = word.MeaningsAndExamples.SelectMany(el => el.Value).ToArray();
+            string[] examples = word.MeaningsAndExamples.SelectMany(el => el.Value).Select(el => el.ToUpperFirstChar()).ToArray();
             string examplesStr = examples.Length > 0 ? $" ({string.Join(". ", examples)})" : "";
 
             return $"{preposition}{string.Join(", ", new[] { word.Value }.Concat(word.OtherForms))}{countOfMeaningsStr}{examplesStr}";
@@ -45,7 +46,7 @@ namespace Infrastructure.Services
 
         private string MapMeanings(Word word)
         {
-            return string.Join(". ", word.MeaningsAndExamples.Select(el => el.Key));
+            return string.Join(". ", word.MeaningsAndExamples.Select(el => el.Key.ToUpperFirstChar()));
         }
     }
 }

@@ -56,7 +56,7 @@ namespace SmartBox.Mappers
                 Models.Parser.Meaning meaning = new Models.Parser.Meaning
                 {
                     Parent = word,
-                    Value = definition.Value,
+                    Value = definition.Value.ToUpperFirstChar(),
                     Id = definition.Id,
                     Children = new ObservableCollection<Models.Parser.Example>()
                 };
@@ -65,7 +65,7 @@ namespace SmartBox.Mappers
                 {
                     meaning.Children.Add(new Models.Parser.Example
                     {
-                        Value = example.Value,
+                        Value = example.Value.ToUpperFirstChar(),
                         Id = example.Id,
                         Parent = meaning,
                     });
@@ -89,14 +89,14 @@ namespace SmartBox.Mappers
                         .Select(example => new Application.Models.Parser.Example
                         {
                             Id = example.Id,
-                            Value = example.Value
+                            Value = example.Value.ToLowerFirstChar(),
                         })
                         .ToList();
 
                     definitions.Add(new Application.Models.Parser.Definition
                     {
                         Id = meaning.Id,
-                        Value = meaning.Value,
+                        Value = meaning.Value.ToLowerFirstChar(),
                         Examples = examples
                     });
                 }

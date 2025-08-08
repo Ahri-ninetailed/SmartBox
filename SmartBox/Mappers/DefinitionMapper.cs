@@ -10,14 +10,14 @@ namespace SmartBox.Mappers
         {
             return new Definition()
             {
-                Value = source.Value,
+                Value = source.Value.ToLowerFirstChar(),
                 Id = source.Id,
                 Examples = source.Children.Select(example =>
                 {
                     return new Application.Models.Parser.Example()
                     {
                         Id = example.Id,
-                        Value = example.Value
+                        Value = example.Value.ToLowerFirstChar(),
                     };
                 }).ToList()
             };

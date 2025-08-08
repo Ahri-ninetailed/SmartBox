@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Serilog.Context;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Shared;
 
 namespace Infrastructure.Services.Internal
 {
@@ -138,14 +139,14 @@ namespace Infrastructure.Services.Internal
 
             string meaning = meaningTag.TextContent.Trim();
             meaning = Regex.Replace(meaning, @"\s+", " ");
-            meaning = CapitalizeFirstLetter(meaning);
+            meaning = meaning.ToLowerFirstChar();
             meaning = RemoveEndingDotsAndColonsAndSpaces(meaning);
 
             IHtmlCollection<IElement> examplesTags = meaningAndExamplesTag.QuerySelectorAll(EXAMPLES_TAGS);
             string[] examples = examplesTags.Select(el => el.TextContent.Trim()).Where(el => string.IsNullOrEmpty(el) == false).ToArray();
             for (int i = 0; i < examples.Length; i++)
             {
-                examples[i] = CapitalizeFirstLetter(examples[i]);
+                examples[i] = examples[i].ToLowerFirstChar();
                 examples[i] = RemoveEndingDotsAndColonsAndSpaces(examples[i]);
             }
             if (dictionary.ContainsKey(meaning))
@@ -364,16 +365,6 @@ namespace Infrastructure.Services.Internal
             }
             target.PluralForms.UnionWith(source.PluralForms);
             target.OtherForms.UnionWith(source.OtherForms);
-        }
-
-        private string CapitalizeFirstLetter(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                return input;
-            }
-
-            return char.ToUpper(input[0]) + input.Substring(1);
         }
 
         private string RemoveEndingDotsAndColonsAndSpaces(string input)
