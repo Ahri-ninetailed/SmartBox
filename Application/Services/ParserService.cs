@@ -52,27 +52,29 @@ namespace Application.Services
             _excelService.GenerateLexilizeExcel(directoryPath, domainWords);
         }
 
-        public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries)
+        public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled)
         {
             List<Task<List<Domain.Models.Parser.Word>>> parseTasks = entries
                 .Select(entry => _parserService.ParseWordDataAsync(entry))
                 .ToList();
 
             List<Domain.Models.Parser.Word>[] parsedResults = await Task.WhenAll(parseTasks);
-
             List<Domain.Models.Parser.Word> wordData = parsedResults.SelectMany(x => x).ToList();
 
-            string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
+            if (isAiEnabled)
+            {
+                string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
 
-            Task<List<Domain.Models.Parser.Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
+                Task<List<Domain.Models.Parser.Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
 
-            Task fillMissingExamplesTask = _aiService.FillMissingExamplesAsync(wordData);
+                Task fillMissingExamplesTask = _aiService.FillMissingExamplesAsync(wordData);
 
-            await Task.WhenAll(aiWordsTask, fillMissingExamplesTask);
+                await Task.WhenAll(aiWordsTask, fillMissingExamplesTask);
 
-            List<Domain.Models.Parser.Word> aiWords = await aiWordsTask;
+                List<Domain.Models.Parser.Word> aiWords = await aiWordsTask;
 
-            wordData.AddRange(aiWords);
+                wordData.AddRange(aiWords);
+            }
 
             List<Word> result = _wordToAppParserMapper.MapToList(wordData);
 

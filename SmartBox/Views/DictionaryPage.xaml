@@ -40,25 +40,25 @@
             NavigationMode="Row"
             Margin="10">
             <syncfusion:SfDataGrid.Columns>
-                <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" />
-                <syncfusion:DataGridTextColumn MappingName="Value" HeaderText="Word" />
-                <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" Format="0.##########" />
-                <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" />
-                <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study">
+                <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" Width="70"/>
+                <syncfusion:DataGridTextColumn MappingName="Value" HeaderText="Word" Width="150" />
+                <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" CellTextAlignment="Start"  HeaderTextAlignment="Start" Format="0.##########" Width="120" />
+                <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" Width="100" CellTextAlignment="Center" HeaderTextAlignment="Center"/>
+                <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study" Width="100" CellTextAlignment="Center" HeaderTextAlignment="Center">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding ShouldStudy, Mode=OneWay}" IsEnabled="False" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>
                 </syncfusion:DataGridTemplateColumn>
-                <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned">
+                <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned" CellTextAlignment="Center" HeaderTextAlignment="Center">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding Learned, Mode=OneWay}" IsEnabled="False" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>
                 </syncfusion:DataGridTemplateColumn>
-                <syncfusion:DataGridTextColumn MappingName="Comments" HeaderText="Comments" />
+                <syncfusion:DataGridTextColumn MappingName="Comments" HeaderText="Comments" CellTextAlignment="Center" />
             </syncfusion:SfDataGrid.Columns>
         </syncfusion:SfDataGrid>
 

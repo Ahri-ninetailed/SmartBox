@@ -2,6 +2,7 @@
 using CommunityToolkit.Maui;
 using Infrastructure;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 using Serilog;
 using Syncfusion.Maui.Core.Hosting;
 
@@ -20,6 +21,36 @@ namespace SmartBox
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
+            builder.ConfigureLifecycleEvents(events =>
+            {
+#if WINDOWS
+                events.AddWindows(windowsLifecycleBuilder =>
+                {
+                    windowsLifecycleBuilder.OnWindowCreated(window =>
+                    {
+                        window.ExtendsContentIntoTitleBar = false;
+                        var handle = WinRT.Interop.WindowNative.GetWindowHandle(window);
+                        var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+                        var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
+
+                        const int width = 900;
+                        const int height = 700;
+
+                        appWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
+
+                        // Опционально: установить позицию окна по центру экрана
+                        var displayArea = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(id, Microsoft.UI.Windowing.DisplayAreaFallback.Nearest);
+                        if (displayArea != null)
+                        {
+                            var centerX = (displayArea.WorkArea.Width - width) / 2;
+                            var centerY = (displayArea.WorkArea.Height - height) / 2;
+                            appWindow.Move(new Windows.Graphics.PointInt32(centerX, centerY));
+                        }
+                    });
+                });
+#endif
+            });
 
             #region Logging Configuration
             string logsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppInfo.Name, "Logs", ".log");

@@ -60,6 +60,9 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         private int wordId;
 
+        [ObservableProperty]
+        private bool isAiEnabled = false;
+
         private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
 
         public string ExportPlaceholder => string.Format(ExportPlaceholderFormat, WordsForExport.Count);
@@ -150,7 +153,7 @@ namespace SmartBox.ViewModels
                                                 .Distinct()
                                                 .ToArray();
 
-                List<Application.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries);
+                List<Application.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, IsAiEnabled);
 
                 List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
@@ -177,7 +180,7 @@ namespace SmartBox.ViewModels
                     return;
                 }
 
-                await ShowDefinitionsAndExamples(entries);
+                await ShowDefinitionsAndExamples(entries, IsAiEnabled);
             }
             catch (Exception ex)
             {
@@ -226,7 +229,7 @@ namespace SmartBox.ViewModels
             try
             {
                 Application.Models.Parser.Word[] wordsforExport = _wordpackToAppParserMapper.MapToArray(WordsForExport);
-                
+
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string exportDirectory = Path.Combine(documentsPath, AppInfo.Name);
 
@@ -380,9 +383,9 @@ namespace SmartBox.ViewModels
 
         #region Private Helper Methods
 
-        private async Task ShowDefinitionsAndExamples(string[] entries)
+        private async Task ShowDefinitionsAndExamples(string[] entries, bool isAiEnabled)
         {
-            List<Application.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries);
+            List<Application.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, isAiEnabled);
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
         }
