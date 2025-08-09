@@ -61,10 +61,14 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         [NotifyCanExecuteChangedFor(nameof(ChangeCommand))]
-        private Models.Dictionary.PartOfSpeech selectedPartOfSpeech;
+        private Models.Dictionary.PartOfSpeech selectedPartOfSpeech = Models.Dictionary.PartOfSpeech.Other;
 
         [ObservableProperty]
-        private ObservableCollection<Models.Dictionary.PartOfSpeech> partOfSpeechOptions = new(Enum.GetValues<Models.Dictionary.PartOfSpeech>());
+        private ObservableCollection<Models.Dictionary.PartOfSpeech> partOfSpeechOptions = new() 
+        { 
+            Models.Dictionary.PartOfSpeech.Other, 
+            Models.Dictionary.PartOfSpeech.Verb 
+        };
 
         private Models.Dictionary.Word[] SelectedWords => RawSelectedWords.OfType<Models.Dictionary.Word>().ToArray();
         #endregion
@@ -242,7 +246,7 @@ namespace SmartBox.ViewModels
                 });
 
                 CommentText = string.Empty;
-                SelectedPartOfSpeech = default;
+                SelectedPartOfSpeech = Models.Dictionary.PartOfSpeech.Other;
             }
             catch (Exception ex)
             {
