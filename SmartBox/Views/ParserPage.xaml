@@ -6,6 +6,7 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:syncfusion="clr-namespace:Syncfusion.Maui.TreeView;assembly=Syncfusion.Maui.TreeView"
     xmlns:inputs="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
+    xmlns:behaviors="clr-namespace:SmartBox.Behaviors"
     x:Class="SmartBox.Views.ParserPage">
 
     <Grid RowDefinitions="Auto,*" Padding="20">
@@ -18,6 +19,7 @@
                     <toolkit:UserStoppedTypingBehavior
                         Command="{Binding ProcessInputCommand}"
                         StoppedTypingTimeThreshold="1000" />
+                    <behaviors:SelectAllOnFocusBehavior />
                 </Entry.Behaviors>
             </Entry>
 

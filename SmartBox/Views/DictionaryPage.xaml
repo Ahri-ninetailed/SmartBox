@@ -6,6 +6,8 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:SmartBox.ViewModels"
+    xmlns:behaviors="clr-namespace:SmartBox.Behaviors"
+    
     x:Class="SmartBox.Views.DictionaryPage">
 
     <Grid Padding="30,0" RowDefinitions="Auto,*,Auto">
@@ -16,6 +18,7 @@
                     <toolkit:UserStoppedTypingBehavior
                         Command="{Binding SearchCommand}"
                         StoppedTypingTimeThreshold="1000" />
+                    <behaviors:SelectAllOnFocusBehavior />
                 </Entry.Behaviors>
             </Entry>
             <Entry x:Name="CommentEntry" Placeholder="Comment" Text="{Binding CommentText, Mode=TwoWay}"/>
@@ -41,9 +44,9 @@
             Margin="10"
             RowHeight="40">
             <syncfusion:SfDataGrid.Columns>
-                <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" Width="70" />
+                <syncfusion:DataGridTextColumn MappingName="Id" HeaderText="ID" Width="75" />
                 <syncfusion:DataGridTextColumn MappingName="Value" HeaderText="Word" Width="150" />
-                <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" CellTextAlignment="Start" HeaderTextAlignment="Start" Format="0.##########" Width="120" />
+                <syncfusion:DataGridNumericColumn MappingName="Popularity" HeaderText="Popularity" CellTextAlignment="Start" HeaderTextAlignment="Start" Format="0.##########" Width="125" />
                 <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" Width="100" CellTextAlignment="Center" HeaderTextAlignment="Center"/>
                 <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study" Width="100" CellTextAlignment="Center" HeaderTextAlignment="Center">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
@@ -64,11 +67,11 @@
         </syncfusion:SfDataGrid>
 
         <HorizontalStackLayout Grid.Row="2" Spacing="10">
+            <Button Text="View Definitions" Command="{Binding ShowDefinitionsCommand}" />
             <Button Text="Mark" Command="{Binding MarkCommand}" />
             <Button Text="Learn" Command="{Binding LearnCommand}" />
-            <Button Text="Add" Command="{Binding AddCommand}" />
             <Button Text="Change" Command="{Binding ChangeCommand}" />
-            <Button Text="View Definitions" Command="{Binding ShowDefinitionsCommand}" />
+            <Button Text="Add" Command="{Binding AddCommand}" />
         </HorizontalStackLayout>
     </Grid>
 </ContentPage>
