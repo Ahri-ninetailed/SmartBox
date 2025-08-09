@@ -34,7 +34,7 @@ namespace SmartBox
                         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
                         var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
 
-                        const int width = 900;
+                        const int width = 1050;
                         const int height = 700;
 
                         appWindow.Resize(new Windows.Graphics.SizeInt32(width, height));

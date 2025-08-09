@@ -63,7 +63,7 @@ namespace Application.Services
 
             if (isAiEnabled)
             {
-                string[] uniqueWords = wordData.Count == 0 ? entries : wordData.Select(w => w.Value).Distinct().ToArray();
+                string[] uniqueWords = entries.Concat(wordData.Select(w => w.Value)).Distinct().ToArray();
 
                 Task<List<Domain.Models.Parser.Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
 
