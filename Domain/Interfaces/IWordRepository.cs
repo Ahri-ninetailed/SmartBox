@@ -6,7 +6,7 @@ namespace Domain.Interfaces
     {
         Task<Word[]> GetWordsForLearningAsync(int count = 40);
 
-        Task<Word[]> SearchWordsAsync(string[] entries);
+        Task<Word[]> SearchWordsAsync(string[] entries, int count = 100);
 
         Task<Word[]> GetWordsByIdsAsync(IEnumerable<int> ids, bool includeRelatedData);
 

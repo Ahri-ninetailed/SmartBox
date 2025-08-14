@@ -109,7 +109,7 @@ namespace Infrastructure.Services
             return result;
         }
 
-        public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
+        public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries, int count = 100)
         {
             if (entries == null || entries.Length == 0 || entries.Any(string.IsNullOrWhiteSpace))
             {
@@ -141,6 +141,7 @@ namespace Infrastructure.Services
                 .ThenBy(x => x.MinIndexOf)               // Затем те, где пермутация ближе к началу
                 .ThenBy(x => x.Length)                   // Потом более короткие
                 .ThenBy(x => x.Word.Value)
+                .Take(count)
                 .Select(x => x.Word)
                 .ToArrayAsync();
 

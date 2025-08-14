@@ -13,8 +13,8 @@ namespace Application.Services
         private const string Separator = ", ";
 
         private const string RetryAttemptMessage = "Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}";
-        private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds}";
-        private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds}";
+        private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds} and values: {WordValues}";
+        private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds} and values: {WordValues}";
         private const string WordAlreadyExistsError = "Word '{0}' with part of speech '{1}' already exists in the dictionary";
         private const string GetWordPopularityErrorMessage = "Failed to get word popularity for '{WordValue}'";
         private const string AddedWordMessage = "Added word '{Word}' (Id: {Id}, PartOfSpeech: {PartOfSpeech}) to the database.";
@@ -66,6 +66,8 @@ namespace Application.Services
         public async Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(AddWordAsync));
+
+            wordValues = wordValues.Select(el => el.ToLower().Trim()).ToArray();
 
             try
             {
@@ -182,7 +184,10 @@ namespace Application.Services
 
                     await _wordRepository.SaveWordsAsync(words);
 
-                    _logger.LogInformation(LearnedWordsMessage, words.Length, string.Join(Separator, words.Select(w => w.Id)));
+                    _logger.LogInformation(LearnedWordsMessage,
+                        words.Length,
+                        string.Join(Separator, words.Select(w => w.Id)),
+                        string.Join("; ", words.Select(w => string.Join(Separator, w.Values))));
                 }, context);
             }
             finally
@@ -208,7 +213,11 @@ namespace Application.Services
 
                     await _wordRepository.SaveWordsAsync(words);
 
-                    _logger.LogInformation(MarkedWordsMessage, words.Length, string.Join(Separator, words.Select(w => w.Id)));
+                    _logger.LogInformation(
+                        MarkedWordsMessage,
+                        words.Length,
+                        string.Join(Separator, words.Select(w => w.Id)),
+                        string.Join("; ", words.Select(w => string.Join(Separator, w.Values))));
                 }, context);
             }
             finally
@@ -220,6 +229,8 @@ namespace Application.Services
         public async Task<Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchWordsAsync));
+
+            entries = entries.Select(el => el.ToLower().Trim()).ToArray();
 
             try
             {

@@ -64,6 +64,11 @@ namespace Infrastructure.Services
                 return result;
             }
 
+            if (key.Contains("adverb", StringComparison.OrdinalIgnoreCase))
+            {
+                return PartOfSpeech.Other;
+            }
+
             if (key.Contains("verb", StringComparison.OrdinalIgnoreCase))
             {
                 return PartOfSpeech.Verb;

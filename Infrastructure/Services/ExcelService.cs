@@ -38,7 +38,13 @@ namespace Infrastructure.Services
             int countOfMeanings = word.MeaningsAndExamples.Count;
             string countOfMeaningsStr = countOfMeanings > 1 ? $" ({countOfMeanings})" : "";
 
-            string[] examples = word.MeaningsAndExamples.SelectMany(el => el.Value).Select(el => el.ToUpperFirstChar()).ToArray();
+            string[] examples = word.MeaningsAndExamples
+                .SelectMany(el => el.Value)
+                .Select(el => 
+                    el.ToUpperFirstChar()
+                      .Replace('(', '[')
+                      .Replace(')', ']'))
+                .ToArray();
             string examplesStr = examples.Length > 0 ? $" ({string.Join(". ", examples)})" : "";
 
             return $"{preposition}{string.Join(", ", new[] { word.Value }.Concat(word.OtherForms))}{countOfMeaningsStr}{examplesStr}";
