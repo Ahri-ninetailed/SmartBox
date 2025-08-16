@@ -20,6 +20,7 @@ namespace Application.Services
         private const string AddedWordMessage = "Added word '{Word}' (Id: {Id}, PartOfSpeech: {PartOfSpeech}) to the database.";
         private const string WordNotFoundError = "Word with ID '{0}' was not found in the dictionary";
         private const string ChangedPartOfSpeechMessage = "Changed part of speech for word '{WordValues}' (Id: {WordId}) from '{OldPartOfSpeech}' to '{NewPartOfSpeech}'";
+        private const string ValuesNullOrEmptyError = "Values array cannot be null, empty, or contain null/whitespace elements.";
 
         private readonly ResiliencePipeline _retryPipeline;
         private readonly ILogger<DictionaryService> _logger;
@@ -65,6 +66,11 @@ namespace Application.Services
 
         public async Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment)
         {
+            if (wordValues.Length == 0 || wordValues.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException(ValuesNullOrEmptyError, nameof(wordValues));
+            }
+
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(AddWordAsync));
 
             wordValues = wordValues.Select(el => el.ToLower().Trim()).ToArray();
