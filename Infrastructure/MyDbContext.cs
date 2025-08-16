@@ -102,6 +102,10 @@ namespace Infrastructure
                       .WithOne(d => d.Word)
                       .HasForeignKey(d => d.WordId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.Value, e.PartOfSpeech })
+                      .IsUnique()
+                      .HasDatabaseName("unique_speechpart_and_word");
             });
         }
     }
