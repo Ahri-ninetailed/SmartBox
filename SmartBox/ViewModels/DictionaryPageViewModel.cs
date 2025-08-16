@@ -39,6 +39,7 @@ namespace SmartBox.ViewModels
 
         #region Properties
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private ObservableCollection<Models.Dictionary.Word> words = new();
 
         [ObservableProperty]
@@ -49,6 +50,7 @@ namespace SmartBox.ViewModels
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         private string searchText = string.Empty;
 
         public string[] SearchWords => SearchText.Split(Separators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -57,6 +59,7 @@ namespace SmartBox.ViewModels
         private string commentText = string.Empty;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddCommand))]
         [NotifyCanExecuteChangedFor(nameof(ChangeCommand))]
         private Models.Dictionary.PartOfSpeech selectedPartOfSpeech = Models.Dictionary.PartOfSpeech.Other;
 
@@ -85,6 +88,8 @@ namespace SmartBox.ViewModels
             _partOfSpeechMapper = partOfSpeechMapper;
 
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
+
+            Words.CollectionChanged += OnWordsCollectionChanged;
         }
 
         #region Public Methods
@@ -212,7 +217,7 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanAddWord))]
         private async Task AddAsync()
         {
             Application.Models.Dictionary.Word addedWord;
@@ -299,6 +304,21 @@ namespace SmartBox.ViewModels
                    SelectedWords[0].PartOfSpeech == Models.Dictionary.PartOfSpeech.Unknown &&
                    SelectedPartOfSpeech != Models.Dictionary.PartOfSpeech.Unknown;
         }
+
+        private bool CanAddWord()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                return false;
+            }
+
+            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && SearchWords.Any(searchWord => el.Values.Contains(searchWord))))
+            {
+                return false;
+            }
+
+            return true;
+        }
         #endregion
 
         #region Property Changed Handlers
@@ -326,6 +346,24 @@ namespace SmartBox.ViewModels
             MarkCommand.NotifyCanExecuteChanged();
             ChangeCommand.NotifyCanExecuteChanged();
             ShowDefinitionsCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnWordsChanged(ObservableCollection<Models.Dictionary.Word>? oldValue, ObservableCollection<Models.Dictionary.Word> newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.CollectionChanged -= OnWordsCollectionChanged;
+            }
+
+            if (newValue != null)
+            {
+                newValue.CollectionChanged += OnWordsCollectionChanged;
+            }
+        }
+
+        private void OnWordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            AddCommand.NotifyCanExecuteChanged();
         }
 
         #endregion
