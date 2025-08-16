@@ -126,7 +126,9 @@ namespace SmartBox.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(SearchText))
                 {
+                    _logger.LogInformation("Search text is empty, loading words for learning");
                     Words = await GetWordsForLearningAsync();
+                    _logger.LogInformation("Words for learning loaded successfully");
 
                     return;
                 }
