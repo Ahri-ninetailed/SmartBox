@@ -34,5 +34,19 @@ namespace SmartBox.Views
                 await viewModel.OnNavigatedToAsync();
             }
         }
+
+        protected override void OnBindingContextChanged()
+        {
+            base.OnBindingContextChanged();
+
+            if (BindingContext is ParserPageViewModel viewModel)
+            {
+                var behavior = WordEntry.Behaviors.OfType<CommunityToolkit.Maui.Behaviors.UserStoppedTypingBehavior>().FirstOrDefault();
+                if (behavior != null)
+                {
+                    behavior.Command = viewModel.ProcessInputCommand;
+                }
+            }
+        }
     }
 }

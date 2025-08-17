@@ -5,9 +5,11 @@
     xmlns:inputs="clr-namespace:Syncfusion.Maui.Inputs;assembly=Syncfusion.Maui.Inputs"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:SmartBox.ViewModels"
+    xmlns:viewmodels="clr-namespace:SmartBox.ViewModels"
     xmlns:behaviors="clr-namespace:SmartBox.Behaviors"
+    xmlns:models="clr-namespace:SmartBox.Models.Dictionary"
     
+    x:DataType="viewmodels:DictionaryPageViewModel"
     x:Class="SmartBox.Views.DictionaryPage">
 
     <Grid Padding="30,0" RowDefinitions="Auto,*,Auto">
@@ -15,9 +17,7 @@
         <HorizontalStackLayout Grid.Row="0" Spacing="10">
             <Entry x:Name="WordEntry" Placeholder="Word" Text="{Binding SearchText, Mode=TwoWay}">
                 <Entry.Behaviors>
-                    <toolkit:UserStoppedTypingBehavior
-                        Command="{Binding SearchCommand}"
-                        StoppedTypingTimeThreshold="1000" />
+                    <toolkit:UserStoppedTypingBehavior StoppedTypingTimeThreshold="1000" />
                     <behaviors:SelectAllOnFocusBehavior />
                 </Entry.Behaviors>
             </Entry>
@@ -50,14 +50,14 @@
                 <syncfusion:DataGridTextColumn MappingName="PartOfSpeech" HeaderText="Type" Width="100" CellTextAlignment="Center" HeaderTextAlignment="Center"/>
                 <syncfusion:DataGridTemplateColumn MappingName="ShouldStudy" HeaderText="Should Study" Width="100" CellTextAlignment="Center" HeaderTextAlignment="Center">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="models:Word">
                             <CheckBox IsChecked="{Binding ShouldStudy, Mode=OneWay}" IsEnabled="False" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>
                 </syncfusion:DataGridTemplateColumn>
                 <syncfusion:DataGridTemplateColumn MappingName="Learned" HeaderText="Learned" CellTextAlignment="Center" HeaderTextAlignment="Center">
                     <syncfusion:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="models:Word">
                             <CheckBox IsChecked="{Binding Learned, Mode=OneWay}" IsEnabled="False" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </DataTemplate>
                     </syncfusion:DataGridTemplateColumn.CellTemplate>

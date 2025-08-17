@@ -8,18 +8,18 @@ namespace SmartBox.Services
         {
             if (MainThread.IsMainThread)
             {
-                if (Microsoft.Maui.Controls.Application.Current?.MainPage != null)
+                if (Microsoft.Maui.Controls.Application.Current?.Windows[0]?.Page != null)
                 {
-                    await Microsoft.Maui.Controls.Application.Current.MainPage.DisplayAlert(title, message, cancel);
+                    await Microsoft.Maui.Controls.Application.Current.Windows[0].Page!.DisplayAlert(title, message, cancel);
                 }
             }
             else
             {
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    if (Microsoft.Maui.Controls.Application.Current?.MainPage != null)
+                    if (Microsoft.Maui.Controls.Application.Current?.Windows[0]?.Page != null)
                     {
-                        await Microsoft.Maui.Controls.Application.Current.MainPage.DisplayAlert(title, message, cancel);
+                        await Microsoft.Maui.Controls.Application.Current.Windows[0].Page!.DisplayAlert(title, message, cancel);
                     }
                 });
             }

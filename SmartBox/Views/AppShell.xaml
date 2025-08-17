@@ -2,7 +2,10 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:SmartBox.Views"
+    xmlns:viewmodels="clr-namespace:SmartBox.ViewModels"
+    
     x:Class="SmartBox.Views.AppShell"
+    x:DataType="viewmodels:AppShellViewModel"
     FlyoutBehavior="Disabled"
     Shell.NavBarHasShadow="False">
 

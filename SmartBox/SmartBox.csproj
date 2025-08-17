@@ -5,7 +5,7 @@
 		<WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
 		<!--На MAUI 9 не перейти без этого-->
 		<CETCompat>false</CETCompat>
-		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework><!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
+		<TargetFramework>net9.0-windows10.0.19041.0</TargetFramework><!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
 
 		<!-- Note for MacCatalyst:
@@ -68,17 +68,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.100" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
 		<PackageReference Include="Serilog" Version="4.3.0" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
 		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-		<PackageReference Include="Syncfusion.Maui.Core" Version="30.1.42" />
-		<PackageReference Include="Syncfusion.Maui.DataGrid" Version="30.1.41" />
-		<PackageReference Include="Syncfusion.Maui.TreeView" Version="30.1.42" />
+		<PackageReference Include="Syncfusion.Maui.Core" Version="30.2.5" />
+		<PackageReference Include="Syncfusion.Maui.DataGrid" Version="30.2.5" />
+		<PackageReference Include="Syncfusion.Maui.TreeView" Version="30.2.5" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -2,6 +2,7 @@
 {
     public static class IMapperExtensions
     {
+        // TODO: выбрасывать исключение, если mapper == null
         public static IEnumerable<TDestination> Map<TSource, TDestination>(
             this IMapper<TSource, TDestination> mapper,
             IEnumerable<TSource> sources)
