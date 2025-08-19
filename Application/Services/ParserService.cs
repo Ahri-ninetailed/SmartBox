@@ -9,7 +9,7 @@ namespace Application.Services
         const string WordNotFoundError = "Word with ID {0} not found in the database.";
 
         private readonly Domain.Interfaces.IParserService _parserService;
-        private readonly Domain.Interfaces.IExcelService _excelService;
+        private readonly Domain.Interfaces.IExportService _exportService;
         private readonly Domain.Interfaces.IAiService _aiService;
         private readonly Domain.Interfaces.IWordRepository _wordRepository;
 
@@ -19,7 +19,7 @@ namespace Application.Services
         private readonly IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition> _definitionToDomainMapper;
 
         public ParserService(Domain.Interfaces.IParserService parserService,
-                             Domain.Interfaces.IExcelService excelService,
+                             Domain.Interfaces.IExportService excelService,
                              Domain.Interfaces.IAiService aiService,
                              Domain.Interfaces.IWordRepository wordRepository,
                              IMapper<Domain.Models.Parser.Word, Word> wordToAppParserMapper,
@@ -28,7 +28,7 @@ namespace Application.Services
                              IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition> definitionToDomainMapper)
         {
             _parserService = parserService;
-            _excelService = excelService;
+            _exportService = excelService;
             _aiService = aiService;
             _wordRepository = wordRepository;
 
@@ -45,11 +45,18 @@ namespace Application.Services
             await _wordRepository.SyncDefinitionsAndExamplesAsync(wordId, domainDefinitions);
         }
 
+        public string GetStringForCopyToBuffer(Word word)
+        {
+            Domain.Models.Parser.Word domainWord = _wordToDomainParserMapper.Map(word);
+
+            return _exportService.GetStringForCopyToBuffer(domainWord);
+        }
+
         public void ExportWords(string directoryPath, Word[] source)
         {
             Domain.Models.Parser.Word[] domainWords = _wordToDomainParserMapper.MapToArray(source);
 
-            _excelService.GenerateLexilizeExcel(directoryPath, domainWords);
+            _exportService.GenerateLexilizeExcel(directoryPath, domainWords);
         }
 
         public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled)

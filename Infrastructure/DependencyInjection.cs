@@ -34,7 +34,7 @@ namespace Infrastructure
 
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
-            services.AddSingleton<Domain.Interfaces.IExcelService, ExcelService>();
+            services.AddSingleton<Domain.Interfaces.IExportService, ExportService>();
             services.AddSingleton<Domain.Interfaces.IAiService, AiService>();
 
             services.AddSingleton<ChatClient>(provider =>

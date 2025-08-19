@@ -1,4 +1,6 @@
-﻿namespace Application.Interfaces
+﻿using Application.Models.Parser;
+
+namespace Application.Interfaces
 {
     public interface IParserService
     {
@@ -9,5 +11,6 @@
         void ExportWords(string directoryPath, Models.Parser.Word[] source);
 
         Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Models.Parser.Definition> newDefinitions);
+        string GetStringForCopyToBuffer(Word word);
     }
 }

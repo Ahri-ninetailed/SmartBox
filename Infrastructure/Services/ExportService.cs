@@ -5,7 +5,7 @@ using Shared;
 
 namespace Infrastructure.Services
 {
-    public class ExcelService : IExcelService
+    public class ExportService : IExportService
     {
         public void GenerateLexilizeExcel(string directoryPath, Word[] source)
         {
@@ -53,6 +53,11 @@ namespace Infrastructure.Services
         private string MapMeanings(Word word)
         {
             return string.Join(". ", word.MeaningsAndExamples.Select(el => el.Key.ToUpperFirstChar()));
+        }
+
+        public string GetStringForCopyToBuffer(Word word)
+        {
+            return $"{MapWordAndExamples(word)} -> {MapMeanings(word)}";
         }
     }
 }

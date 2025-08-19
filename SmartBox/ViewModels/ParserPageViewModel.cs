@@ -25,6 +25,8 @@ namespace SmartBox.ViewModels
         private const string EnrichErrorMessage = "An error occurred while enriching definitions";
         private const string SyncErrorMessage = "An error occurred while syncing a word";
         private const string InvalidDbWordSelectionError = "Definitions can be added only for a single word from the database";
+        private const string CopyErrorMessage = "An error occurred while copying to clipboard";
+        private const string NoWordsSelectedForCopyError = "No words selected for copying";
 
         #endregion
 
@@ -235,6 +237,29 @@ namespace SmartBox.ViewModels
             SelectedWordsForExport = null;
         }
 
+        [RelayCommand(CanExecute = nameof(CanCopy))]
+        private async Task CopyAsync()
+        {
+            try
+            {
+                if (CompiledSelectedWordsForExport == null)
+                {
+                    throw new InvalidOperationException(NoWordsSelectedForCopyError);
+                }
+
+                Application.Models.Parser.Word word = _wordpackToAppParserMapper.Map(CompiledSelectedWordsForExport);
+
+                string stringToCopy = _parserService.GetStringForCopyToBuffer(word);
+
+                await Clipboard.Default.SetTextAsync(stringToCopy);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, CopyErrorMessage);
+                await _alertService.DisplayAlertAsync($"{CopyErrorMessage}: {ex.Message}");
+            }
+        }
+
         [RelayCommand(CanExecute = nameof(CanExport))]
         private async Task ExportAsync()
         {
@@ -298,6 +323,11 @@ namespace SmartBox.ViewModels
         private bool CanExport()
         {
             return WordsForExport.Any();
+        }
+
+        private bool CanCopy()
+        {
+            return TreeViewNodes.Any(el => el.IsSelected);
         }
         #endregion
 
@@ -366,6 +396,7 @@ namespace SmartBox.ViewModels
                 EnrichCommand.NotifyCanExecuteChanged();
                 SyncCommand.NotifyCanExecuteChanged();
                 UnlockCommand.NotifyCanExecuteChanged();
+                CopyCommand.NotifyCanExecuteChanged();
             });
         }
 
@@ -374,6 +405,7 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Word.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                CopyCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -382,6 +414,7 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Meaning.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                CopyCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -390,6 +423,7 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Example.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
+                CopyCommand.NotifyCanExecuteChanged();
             }
         }
         #endregion

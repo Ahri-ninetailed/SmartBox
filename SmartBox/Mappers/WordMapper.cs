@@ -77,7 +77,7 @@ namespace SmartBox.Mappers
             return word;
         }
 
-        public Application.Models.Parser.Word Map(Models.Parser.WordPack source)
+        public Application.Models.Parser.Word Map(SmartBox.Models.Parser.WordPack source)
         {
             List<Application.Models.Parser.Definition> definitions = new List<Application.Models.Parser.Definition>();
 
