@@ -8,6 +8,6 @@
 
         void ExportWords(string directoryPath, Models.Parser.Word[] source);
 
-        Task AddNewDefinitions(int wordId, IEnumerable<Models.Parser.Definition> newDefinitions);
+        Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Models.Parser.Definition> newDefinitions);
     }
 }

@@ -19,7 +19,8 @@ namespace SmartBox.Models.Parser
         public virtual string Title => Value;
         public virtual bool IsBold => true;
 
-        public bool IsEnabled { get; set; } = true;
+        [ObservableProperty]
+        private bool isEnabled = true;
 
         public int Id { get; set; }
 

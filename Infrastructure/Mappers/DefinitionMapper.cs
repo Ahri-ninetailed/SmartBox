@@ -8,11 +8,14 @@ namespace Infrastructure.Mappers
         {
             return new Models.DataBase.Definition()
             {
+                Id = source.Id,
                 Value = source.Value,
                 Examples = source.Examples.Select(example =>
                 {
                     return new Models.DataBase.Example()
                     {
+                        Id = example.Id,
+                        DefinitionId = example.DefinitionId,
                         Value = example.Value
                     };
                 }).ToList(),

@@ -120,15 +120,11 @@ namespace SmartBox.ViewModels
         [RelayCommand]
         private async Task SearchAsync()
         {
-            _logger.LogInformation("Searching for words with text: {SearchText}", SearchText);
-
             try
             {
                 if (string.IsNullOrWhiteSpace(SearchText))
                 {
-                    _logger.LogInformation("Search text is empty, loading words for learning");
                     Words = await GetWordsForLearningAsync();
-                    _logger.LogInformation("Words for learning loaded successfully");
 
                     return;
                 }
@@ -137,15 +133,10 @@ namespace SmartBox.ViewModels
 
                 Models.Dictionary.Word[] words = _wordMapper.MapToArray(appWords);
 
-                _logger.LogInformation("Found {Count} words matching the search criteria", words.Length);
                 await MainThread.InvokeOnMainThreadAsync(() =>  
                 { 
-                    _logger.LogInformation("Updating UI with found words");
                     Words = new ObservableCollection<Models.Dictionary.Word>(words); 
-                    _logger.LogInformation("UI updated with found words");
                 });
-
-                _logger.LogInformation("Search completed successfully");
             }
             catch (Exception ex)
             {

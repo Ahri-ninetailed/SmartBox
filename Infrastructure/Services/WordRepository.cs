@@ -11,12 +11,10 @@ namespace Infrastructure.Services
 
         private const string EmptyIdsCollectionError = "The 'ids' collection must not be null, empty, or contain zero values.";
         private const string EmptyWordsCollectionError = "The 'words' array must not be null, empty, or contain null elements.";
-        private const string EmptyEntryError = "The entry cannot be null or whitespace";
         private const string NullWordError = "The new word cannot be null";
         private const string WordValuesNullOrEmptyError = "Word values array cannot be null, empty, or contain null/whitespace elements.";
         private const string WordIdMustBeGreaterThanZeroError = "Word ID must be greater than zero.";
         private const string DefinitionsArrayInvalidError = "Definitions array must not be null, empty, or contain null elements.";
-        private const string WordNotFoundError = "Word with ID {0} was not found in the database.";
 
         private readonly IDbContextFactory<MyDbContext> _dbFactory;
 
@@ -204,35 +202,93 @@ namespace Infrastructure.Services
                     (t1, t2) => t1.Concat(new T[] { t2 }));
         }
 
-        public async Task AddDefinitionsAsync(int wordId, Domain.Models.Dictionary.Definition[] definitions)
+        public async Task SyncDefinitionsAndExamplesAsync(int wordId, Domain.Models.Dictionary.Definition[] source)
         {
             if (wordId <= 0)
             {
                 throw new ArgumentException(WordIdMustBeGreaterThanZeroError, nameof(wordId));
             }
-
-            if (definitions == null || definitions.Length == 0 || definitions.Any(el => el == null))
+            if (source == null || source.Any(el => el == null))
             {
-                throw new ArgumentException(DefinitionsArrayInvalidError, nameof(definitions));
+                throw new ArgumentException(DefinitionsArrayInvalidError, nameof(source));
             }
-
-            Definition[] newDefinitions = _definitionToInfsMapper.MapToArray(definitions);
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
-            Word? word = db.EnglishWords.Find(wordId);
+            Word word = await db.EnglishWords
+                .Include(w => w.Definitions)
+                .ThenInclude(d => d.Examples)
+                .FirstAsync(w => w.Id == wordId);
 
-            if (word == null)
-            {
-                throw new InvalidOperationException(string.Format(WordNotFoundError, wordId));
-            }
+            Definition[] definitions = _definitionToInfsMapper.MapToArray(source);
 
-            foreach (Definition definition in newDefinitions)
-            {
-                word.Definitions.Add(definition);
-            }
+            SyncDefinitions(db, word, definitions);
 
             await db.SaveChangesAsync();
+        }
+
+        private void SyncDefinitions(MyDbContext db, Word word, Definition[] definitions)
+        {
+            List<Definition> definitionsForAddition = definitions.Where(el => el.Id == 0).ToList();
+
+            List<Definition> definitionsForRemoval = word.Definitions
+                .Where(definition => !definitions.Any(el => el.Id == definition.Id))
+                .ToList();
+
+            foreach (Definition sourceDefinition in definitions.Where(el => el.Id != 0))
+            {
+                Definition existingDefinition = word.Definitions.First(d => d.Id == sourceDefinition.Id);
+
+                if (existingDefinition.Value != sourceDefinition.Value)
+                {
+                    existingDefinition.Value = sourceDefinition.Value;
+                }
+
+                SyncExamples(db, existingDefinition, sourceDefinition.Examples.ToArray());
+            }
+
+            foreach (Definition definitionToRemove in definitionsForRemoval)
+            {
+                word.Definitions.Remove(definitionToRemove);
+                db.Definitions.Remove(definitionToRemove);
+            }
+
+            foreach (Definition definitionToAdd in definitionsForAddition)
+            {
+                definitionToAdd.WordId = word.Id;
+                word.Definitions.Add(definitionToAdd);
+            }
+        }
+
+        private void SyncExamples(MyDbContext db, Definition existingDefinition, Example[] sourceExamples)
+        {
+            List<Example> examplesForAddition = sourceExamples.Where(ex => ex.Id == 0).ToList();
+
+            List<Example> examplesForRemoval = existingDefinition.Examples
+                .Where(example => !sourceExamples.Any(ex => ex.Id == example.Id))
+                .ToList();
+
+            foreach (Example sourceExample in sourceExamples.Where(ex => ex.Id != 0))
+            {
+                Example existingExample = existingDefinition.Examples.First(ex => ex.Id == sourceExample.Id);
+
+                if (existingExample.Value != sourceExample.Value)
+                {
+                    existingExample.Value = sourceExample.Value;
+                }
+            }
+
+            foreach (Example exampleToRemove in examplesForRemoval)
+            {
+                existingDefinition.Examples.Remove(exampleToRemove);
+                db.Examples.Remove(exampleToRemove);
+            }
+
+            foreach (Example exampleToAdd in examplesForAddition)
+            {
+                exampleToAdd.DefinitionId = existingDefinition.Id;
+                existingDefinition.Examples.Add(exampleToAdd);
+            }
         }
     }
 }

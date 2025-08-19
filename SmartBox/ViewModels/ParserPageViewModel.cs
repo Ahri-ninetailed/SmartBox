@@ -23,8 +23,7 @@ namespace SmartBox.ViewModels
         private const string ExportErrorMessage = "An error occurred while exporting";
         private const string LoadWordFromDbErrorMessageFormat = "Error loading word from database with ID {0}";
         private const string EnrichErrorMessage = "An error occurred while enriching definitions";
-        private const string AddErrorMessage = "An error occurred while adding a word";
-        private const string NoNonDbWordSelectedError = "No words selected for addition";
+        private const string SyncErrorMessage = "An error occurred while syncing a word";
         private const string InvalidDbWordSelectionError = "Definitions can be added only for a single word from the database";
 
         #endregion
@@ -93,20 +92,22 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
-        [RelayCommand(CanExecute = nameof(CanAdd))]
-        private async Task AddAsync()
+        [RelayCommand(CanExecute = nameof(CanUnlock))]
+        private void Unlock()
+        {
+            foreach (Word element in TreeViewNodes.Where(el => el.IsEnabled == false))
+            {
+                element.EnableAll();
+            }
+
+            UnlockCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSync))]
+        private async Task SyncAsync()
         {
             try
             {
-                IEnumerable<Word> nonDbWord = TreeViewNodes
-                    .Where(word => word.Id == 0 && word.IsSelected && word.IsEnabled);
-
-                if (nonDbWord.Any() == false)
-                {
-                    await _alertService.DisplayAlertAsync(NoNonDbWordSelectedError);
-                    return;
-                }
-
                 if (TreeViewNodes.Where(word => word.Id != 0).Count() != 1)
                 {
                     await _alertService.DisplayAlertAsync(InvalidDbWordSelectionError);
@@ -115,18 +116,19 @@ namespace SmartBox.ViewModels
 
                 int wordId = TreeViewNodes.First(el => el.Id != 0).Id;
 
-                IEnumerable<Meaning> definitionsForAddition = nonDbWord
+                IEnumerable<Meaning> definitionsForSync = TreeViewNodes
                     .SelectMany(w => w.Children)
                     .Where(m => m.IsSelected)
                     .Select(m => new Meaning
                     {
+                        Id = m.Id,
                         Value = m.Value,
                         Children = new ObservableCollection<Example>(m.Children.Where(e => e.IsSelected))
                     });
 
-                Application.Models.Parser.Definition[] appDefinitions = _definitionToAppMapper.MapToArray(definitionsForAddition);
+                Application.Models.Parser.Definition[] appDefinitions = _definitionToAppMapper.MapToArray(definitionsForSync);
 
-                await _parserService.AddNewDefinitions(wordId, appDefinitions);
+                await _parserService.SyncDefinitionsAndExamplesAsync(wordId, appDefinitions);
 
                 Application.Models.Parser.Word updatedWord = await _parserService.GetWordFromDb(wordId);
 
@@ -138,8 +140,8 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, AddErrorMessage);
-                await _alertService.DisplayAlertAsync($"{AddErrorMessage}: {ex.Message}");
+                _logger.LogError(ex, SyncErrorMessage);
+                await _alertService.DisplayAlertAsync($"{SyncErrorMessage}: {ex.Message}");
             }
         }
 
@@ -197,6 +199,16 @@ namespace SmartBox.ViewModels
             if (!string.IsNullOrWhiteSpace(result))
             {
                 meaning.Value = result;
+            }
+        }
+
+        [RelayCommand]
+        private async Task EditExampleAsync(Example example)
+        {
+            string result = await _promptService!.ShowPromptAsync("Edit Example", "Enter new example:", example.Value);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                example.Value = result;
             }
         }
 
@@ -259,16 +271,18 @@ namespace SmartBox.ViewModels
             return TreeViewNodes.Any(el => el.Id != 0);
         }
 
-        private bool CanAdd()
+        private bool CanSync()
         {
-            if (TreeViewNodes.Any(el => el.Id != 0) == false)
-            {
-                return false;
-            }
+            return TreeViewNodes.Any(el => el.Id != 0);
+        }
 
-            IEnumerable<Word> nonDbWord = TreeViewNodes.Where(el => el.Id == 0);
-
-            return nonDbWord.Any(el => el.IsSelected);
+        private bool CanUnlock()
+        {
+            return TreeViewNodes.Any(word =>
+                !word.IsEnabled ||
+                word.Children.Any(definition =>
+                    !definition.IsEnabled ||
+                    definition.Children.Any(example => !example.IsEnabled)));
         }
 
         private bool CanRemoveWordsForExport()
@@ -350,6 +364,8 @@ namespace SmartBox.ViewModels
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
                 EnrichCommand.NotifyCanExecuteChanged();
+                SyncCommand.NotifyCanExecuteChanged();
+                UnlockCommand.NotifyCanExecuteChanged();
             });
         }
 
@@ -358,7 +374,6 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Word.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
-                AddCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -367,7 +382,6 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Meaning.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
-                AddCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -376,7 +390,6 @@ namespace SmartBox.ViewModels
             if (e.PropertyName == nameof(Example.IsSelected))
             {
                 AddWordsForExportCommand.NotifyCanExecuteChanged();
-                AddCommand.NotifyCanExecuteChanged();
             }
         }
         #endregion

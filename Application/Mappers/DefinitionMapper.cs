@@ -8,11 +8,14 @@ namespace Application.Mappers
         {
             return new Domain.Models.Dictionary.Definition()
             {
+                Id = source.Id,
                 Value = source.Value,
                 Examples = source.Examples.Select(example =>
                 {
                     return new Domain.Models.Dictionary.Example()
                     {
+                        Id = example.Id,
+                        DefinitionId = source.Id,
                         Value = example.Value
                     };
                 }).ToList(),

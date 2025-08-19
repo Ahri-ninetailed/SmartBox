@@ -38,11 +38,11 @@ namespace Application.Services
             _definitionToDomainMapper = definitionToDomainMapper;
         }
 
-        public async Task AddNewDefinitions(int wordId, IEnumerable<Definition> newDefinitions)
+        public async Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Definition> newDefinitions)
         {
             Domain.Models.Dictionary.Definition[] domainDefinitions = _definitionToDomainMapper.MapToArray(newDefinitions);
 
-            await _wordRepository.AddDefinitionsAsync(wordId, domainDefinitions);
+            await _wordRepository.SyncDefinitionsAndExamplesAsync(wordId, domainDefinitions);
         }
 
         public void ExportWords(string directoryPath, Word[] source)

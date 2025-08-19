@@ -23,6 +23,10 @@ namespace SmartBox.Views
             {
                 (BindingContext as ParserPageViewModel)?.EditMeaningCommand.Execute(meaning);
             }
+            else if ((e.Node?.Content is Example example) && example.IsEnabled)
+            {
+                (BindingContext as ParserPageViewModel)?.EditExampleCommand.Execute(example);
+            }
         }
 
         protected override async void OnNavigatedTo(NavigatedToEventArgs args)
