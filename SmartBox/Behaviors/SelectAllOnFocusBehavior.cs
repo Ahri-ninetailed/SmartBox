@@ -18,7 +18,7 @@
         {
             if (sender is Entry entry && !string.IsNullOrEmpty(entry.Text))
             {
-                Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread()?.DispatchDelayed(TimeSpan.FromMilliseconds(1), () =>
+                entry.Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(50), () =>
                 {
                     entry.CursorPosition = 0;
                     entry.SelectionLength = entry.Text.Length;

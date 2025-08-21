@@ -15,7 +15,7 @@
     <Grid Padding="30,0" RowDefinitions="Auto,*,Auto">
 
         <HorizontalStackLayout Grid.Row="0" Spacing="10">
-            <Entry x:Name="WordEntry" Placeholder="Word" Text="{Binding SearchText, Mode=TwoWay}">
+            <Entry MinimumWidthRequest="100" x:Name="WordEntry" Placeholder="Word" Text="{Binding SearchText, Mode=TwoWay}">
                 <Entry.Behaviors>
                     <toolkit:UserStoppedTypingBehavior StoppedTypingTimeThreshold="1000" />
                     <behaviors:SelectAllOnFocusBehavior />
