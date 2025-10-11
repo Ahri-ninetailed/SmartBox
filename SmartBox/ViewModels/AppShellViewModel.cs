@@ -36,5 +36,11 @@ namespace SmartBox.ViewModels
         {
             await Shell.Current.GoToAsync("//parser");
         }
+
+        [RelayCommand]
+        private async Task GoToDefinitions()
+        {
+            await Shell.Current.GoToAsync("//definitions");
+        }
     }
 }

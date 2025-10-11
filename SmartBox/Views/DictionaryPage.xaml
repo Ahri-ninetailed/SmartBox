@@ -67,8 +67,8 @@
         </syncfusion:SfDataGrid>
 
         <HorizontalStackLayout Grid.Row="2" Spacing="10">
-            <Button Text="Definitions" Command="{Binding DefinitionsCommand}" />
             <Button Text="Parse" Command="{Binding ParseCommand}" />
+            <Button Text="Definitions" Command="{Binding DefinitionsCommand}" />
             <Button Text="Mark" Command="{Binding MarkCommand}" />
             <Button Text="Learn" Command="{Binding LearnCommand}" />
             <Button Text="Change" Command="{Binding ChangeCommand}" />

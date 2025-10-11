@@ -35,7 +35,6 @@ namespace SmartBox.ViewModels
 
         private readonly IParserService _parserService;
         private readonly IAlertService _alertService;
-        public IPromptService? _promptService;
 
         private readonly IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
         private readonly IMapper<SmartBox.Models.Parser.WordPack, Application.Models.Parser.Word> _wordpackToAppParserMapper;

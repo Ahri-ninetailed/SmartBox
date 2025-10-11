@@ -10,10 +10,6 @@ namespace SmartBox.Views
         {
             InitializeComponent();
 
-            PromptService promptService = new PromptService(this);
-
-            viewModel._promptService = promptService;
-
             BindingContext = viewModel;
         }
 

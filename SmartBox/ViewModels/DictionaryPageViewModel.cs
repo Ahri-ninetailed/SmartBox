@@ -117,6 +117,23 @@ namespace SmartBox.ViewModels
             await Shell.Current.GoToAsync($"///parser?wordId={selectedWord.Id}");
         }
 
+        [RelayCommand(CanExecute = nameof(CanShowDefinitions))]
+        private async Task Definitions()
+        {
+            if (SelectedWords.Length != 1)
+            {
+                await _alertService.DisplayAlertAsync(NoSelectedWordForDefinitionsError);
+
+                return;
+            }
+
+            Models.Dictionary.Word selectedWord = SelectedWords.First();
+
+            RawSelectedWords = new ObservableCollection<object>();
+
+            await Shell.Current.GoToAsync($"///definitions?wordId={selectedWord.Id}");
+        }
+
         [RelayCommand]
         private async Task SearchAsync()
         {
@@ -298,6 +315,11 @@ namespace SmartBox.ViewModels
             return SelectedWords.Length == 1;
         }
 
+        private bool CanShowDefinitions()
+        {
+            return SelectedWords.Length == 1;
+        }
+
         private bool CanChangeWord()
         {
             return SelectedWords.Length == 1 &&
@@ -346,6 +368,7 @@ namespace SmartBox.ViewModels
             MarkCommand.NotifyCanExecuteChanged();
             ChangeCommand.NotifyCanExecuteChanged();
             ParseCommand.NotifyCanExecuteChanged();
+            DefinitionsCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnWordsChanged(ObservableCollection<Models.Dictionary.Word>? oldValue, ObservableCollection<Models.Dictionary.Word> newValue)

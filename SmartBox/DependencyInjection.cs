@@ -24,15 +24,18 @@ namespace SmartBox
 
             services.AddSingleton<IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition>, DefinitionMapper>();
 
-            services.AddSingleton<AppShell>();
             services.AddSingleton<App>();
+
+            services.AddSingleton<AppShell>();
+            services.AddTransient<AppShellViewModel>();
 
             services.AddSingleton<DictionaryPage>();
             services.AddSingleton<ParserPage>();
+            services.AddSingleton<DefinitionsPage>();
 
-            services.AddTransient<AppShellViewModel>();
             services.AddTransient<DictionaryPageViewModel>();
             services.AddTransient<ParserPageViewModel>();
+            services.AddTransient<DefinitionsPageViewModel>();
 
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IAlertService, AlertService>();
