@@ -46,7 +46,7 @@ namespace SmartBox.ViewModels
         [NotifyCanExecuteChangedFor(nameof(LearnCommand))]
         [NotifyCanExecuteChangedFor(nameof(MarkCommand))]
         [NotifyCanExecuteChangedFor(nameof(ChangeCommand))]
-        [NotifyCanExecuteChangedFor(nameof(ShowDefinitionsCommand))]
+        [NotifyCanExecuteChangedFor(nameof(ParseCommand))]
         private ObservableCollection<object> rawSelectedWords = new();
 
         [ObservableProperty]
@@ -100,8 +100,8 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
-        [RelayCommand(CanExecute = nameof(CanShowDefinitions))]
-        private async Task ShowDefinitions()
+        [RelayCommand(CanExecute = nameof(CanParse))]
+        private async Task Parse()
         {
             if (SelectedWords.Length != 1)
             {
@@ -114,7 +114,7 @@ namespace SmartBox.ViewModels
 
             RawSelectedWords = new ObservableCollection<object>();
 
-            await Shell.Current.GoToAsync($"///parserpage?wordId={selectedWord.Id}");
+            await Shell.Current.GoToAsync($"///parser?wordId={selectedWord.Id}");
         }
 
         [RelayCommand]
@@ -293,7 +293,7 @@ namespace SmartBox.ViewModels
                    SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
         }
 
-        private bool CanShowDefinitions()
+        private bool CanParse()
         {
             return SelectedWords.Length == 1;
         }
@@ -345,7 +345,7 @@ namespace SmartBox.ViewModels
             LearnCommand.NotifyCanExecuteChanged();
             MarkCommand.NotifyCanExecuteChanged();
             ChangeCommand.NotifyCanExecuteChanged();
-            ShowDefinitionsCommand.NotifyCanExecuteChanged();
+            ParseCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnWordsChanged(ObservableCollection<Models.Dictionary.Word>? oldValue, ObservableCollection<Models.Dictionary.Word> newValue)

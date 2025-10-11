@@ -194,26 +194,6 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand]
-        private async Task EditMeaningAsync(Meaning meaning)
-        {
-            string result = await _promptService!.ShowPromptAsync("Edit Meaning", "Enter new meaning:", meaning.Value);
-            if (!string.IsNullOrWhiteSpace(result))
-            {
-                meaning.Value = result;
-            }
-        }
-
-        [RelayCommand]
-        private async Task EditExampleAsync(Example example)
-        {
-            string result = await _promptService!.ShowPromptAsync("Edit Example", "Enter new example:", example.Value);
-            if (!string.IsNullOrWhiteSpace(result))
-            {
-                example.Value = result;
-            }
-        }
-
         [RelayCommand(CanExecute = nameof(CanAddWordsForExport))]
         private void AddWordsForExport()
         {

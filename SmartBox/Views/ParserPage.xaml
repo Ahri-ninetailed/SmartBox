@@ -100,41 +100,15 @@
         </Grid>
 
         <syncfusion:SfTreeView Grid.Row="1"
-                               x:Name="TreeView"
-                               ItemsSource="{Binding TreeViewNodes}"
-                               ChildPropertyName="Children"
-                               SelectionMode="None"
-                               ItemTapped="OnItemTapped"
-                               AutoExpandMode="AllNodesExpanded">
-
-            <syncfusion:SfTreeView.ItemTemplate>
-                <DataTemplate x:DataType="models:SelectableHierarchyNode">
-                    <Grid Padding="5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <CheckBox Grid.Column="0"
-                                  IsEnabled="{Binding IsEnabled}"
-                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                  VerticalOptions="Center"/>
-
-                        <Label Grid.Column="1"
-                               Text="{Binding Title}"
-                               VerticalOptions="Center">
-                            <Label.Triggers>
-                                <DataTrigger TargetType="Label"
-                                             Binding="{Binding IsBold}"
-                                             Value="True">
-                                    <Setter Property="FontAttributes" Value="Bold"/>
-                                </DataTrigger>
-                            </Label.Triggers>
-                        </Label>
-                    </Grid>
-                </DataTemplate>
-            </syncfusion:SfTreeView.ItemTemplate>
-
+                           x:Name="TreeView"
+                           ItemsSource="{Binding TreeViewNodes}"
+                           ChildPropertyName="Children"
+                           SelectionMode="None"
+                           AutoExpandMode="AllNodesExpanded"
+                           ItemTemplate="{StaticResource SelectableHierarchyNodeTemplate}" >
+            <syncfusion:SfTreeView.Behaviors>
+                <behaviors:EditNodeOnTapBehavior />
+            </syncfusion:SfTreeView.Behaviors>
         </syncfusion:SfTreeView>
     </Grid>
 </ContentPage>

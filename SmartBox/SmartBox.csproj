@@ -95,6 +95,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="Resources\Templates\SelectableHierarchyNodeTemplate.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\ParserPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

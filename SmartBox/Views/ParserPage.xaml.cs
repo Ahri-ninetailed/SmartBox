@@ -17,18 +17,6 @@ namespace SmartBox.Views
             BindingContext = viewModel;
         }
 
-        private void OnItemTapped(object sender, Syncfusion.Maui.TreeView.ItemTappedEventArgs e)
-        {
-            if ((e.Node?.Content is Meaning meaning) && meaning.IsEnabled)
-            {
-                (BindingContext as ParserPageViewModel)?.EditMeaningCommand.Execute(meaning);
-            }
-            else if ((e.Node?.Content is Example example) && example.IsEnabled)
-            {
-                (BindingContext as ParserPageViewModel)?.EditExampleCommand.Execute(example);
-            }
-        }
-
         protected override async void OnNavigatedTo(NavigatedToEventArgs args)
         {
             base.OnNavigatedTo(args);
