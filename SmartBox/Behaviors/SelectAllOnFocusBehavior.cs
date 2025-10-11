@@ -18,7 +18,7 @@
         {
             if (sender is Entry entry && !string.IsNullOrEmpty(entry.Text))
             {
-                entry.Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(50), () =>
+                entry.Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(100), () =>
                 {
                     entry.CursorPosition = 0;
                     entry.SelectionLength = entry.Text.Length;
