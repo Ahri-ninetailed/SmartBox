@@ -36,7 +36,7 @@
         {
             if (Learned)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, Values));
+                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, string.Join(", ", Values)));
             }
 
             Learned = true;
@@ -48,12 +48,12 @@
         {
             if (Learned)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, Values));
+                throw new InvalidOperationException(string.Format(WordAlreadyLearnedError, string.Join(", ", Values)));
             }
 
             if (ShouldStudy)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyMarkedForStudyError, Values));
+                throw new InvalidOperationException(string.Format(WordAlreadyMarkedForStudyError, string.Join(", ", Values)));
             }
 
             ShouldStudy = true;

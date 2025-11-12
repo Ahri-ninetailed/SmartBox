@@ -126,7 +126,12 @@ namespace Infrastructure
                         });
             });
 
-            string sqlConnectionString = Environment.GetEnvironmentVariable("ENGLISH_WORDS_STORAGE")!;
+            string? sqlConnectionString = Environment.GetEnvironmentVariable("ENGLISH_WORDS_STORAGE");
+            if (string.IsNullOrEmpty(sqlConnectionString))
+            {
+                throw new InvalidOperationException("ENGLISH_WORDS_STORAGE environment variable is not set");
+            }
+
             services.AddDbContextFactory<MyDbContext>(options =>
             {
                 options.UseNpgsql(sqlConnectionString);

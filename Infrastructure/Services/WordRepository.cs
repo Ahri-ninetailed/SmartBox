@@ -215,10 +215,15 @@ namespace Infrastructure.Services
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
-            Word word = await db.EnglishWords
+            Word? word = await db.EnglishWords
                 .Include(w => w.Definitions)
                 .ThenInclude(d => d.Examples)
-                .FirstAsync(w => w.Id == wordId);
+                .FirstOrDefaultAsync(w => w.Id == wordId);
+
+            if (word == null)
+            {
+                throw new ArgumentException($"Word with ID {wordId} not found", nameof(wordId));
+            }
 
             Definition[] definitions = _definitionToInfsMapper.MapToArray(source);
 

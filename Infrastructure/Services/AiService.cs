@@ -25,7 +25,11 @@ namespace Infrastructure.Services
 
             string json = await _openAiModel.GetExamplesForMeaningsAsync(meaningsForFilling);
 
-            Dictionary<string, List<string>> parsedMeaningsAndExamples = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)!;
+            Dictionary<string, List<string>>? parsedMeaningsAndExamples = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json);
+            if (parsedMeaningsAndExamples == null)
+            {
+                throw new InvalidOperationException("Failed to parse AI response while filling missing examples.");
+            }
 
             parsedMeaningsAndExamples = parsedMeaningsAndExamples.ToDictionary(
                 pair => pair.Key,
