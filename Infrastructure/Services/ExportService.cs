@@ -32,15 +32,15 @@ namespace Infrastructure.Services
 
         private string MapWordAndExamples(Word word)
         {
-            string preposition = (word.Type == PartOfSpeech.Verb || word.Type == PartOfSpeech.PhrasalVerb) ? 
+            string preposition = (word.Type == PartOfSpeech.Verb || word.Type == PartOfSpeech.PhrasalVerb) ?
                 "to " : "";
 
-            int countOfMeanings = word.MeaningsAndExamples.Count;
+            int countOfMeanings = word.Definitions.Count;
             string countOfMeaningsStr = countOfMeanings > 1 ? $" ({countOfMeanings})" : "";
 
-            string[] examples = word.MeaningsAndExamples
-                .SelectMany(el => el.Value)
-                .Select(el => 
+            string[] examples = word.Definitions
+                .SelectMany(def => def.Examples.Select(ex => ex.Value))
+                .Select(el =>
                     el.ToUpperFirstChar()
                       .Replace('(', '[')
                       .Replace(')', ']'))
@@ -52,7 +52,7 @@ namespace Infrastructure.Services
 
         private string MapMeanings(Word word)
         {
-            return string.Join(". ", word.MeaningsAndExamples.Select(el => el.Key.ToUpperFirstChar()));
+            return string.Join(". ", word.Definitions.Select(def => def.Value.ToUpperFirstChar()));
         }
 
         public string GetStringForCopyToBuffer(Word word)

@@ -36,9 +36,9 @@ namespace SmartBox.ViewModels
         private readonly IParserService _parserService;
         private readonly IAlertService _alertService;
 
-        private readonly IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
-        private readonly IMapper<SmartBox.Models.Parser.WordPack, Application.Models.Parser.Word> _wordpackToAppParserMapper;
-        private readonly IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition> _definitionToAppMapper;
+        private readonly IMapper<Domain.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
+        private readonly IMapper<SmartBox.Models.Parser.WordPack, Domain.Models.Parser.Word> _wordpackToAppParserMapper;
+        private readonly IMapper<SmartBox.Models.Parser.Meaning, Domain.Models.Parser.Definition> _definitionToAppMapper;
 
         #endregion
 
@@ -72,9 +72,9 @@ namespace SmartBox.ViewModels
         public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
                                    IParserService parserService,
                                    IAlertService alertService,
-                                   IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper,
-                                   IMapper<WordPack, Application.Models.Parser.Word> wordpackToAppParserMapper,
-                                   IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition> definitionToAppMapper)
+                                   IMapper<Domain.Models.Parser.Word, Word> wordToUIParserMapper,
+                                   IMapper<WordPack, Domain.Models.Parser.Word> wordpackToAppParserMapper,
+                                   IMapper<SmartBox.Models.Parser.Meaning, Domain.Models.Parser.Definition> definitionToAppMapper)
         {
             _logger = logger;
 
@@ -127,11 +127,11 @@ namespace SmartBox.ViewModels
                         Children = new ObservableCollection<Example>(m.Children.Where(e => e.IsSelected))
                     });
 
-                Application.Models.Parser.Definition[] appDefinitions = _definitionToAppMapper.MapToArray(definitionsForSync);
+                Domain.Models.Parser.Definition[] parserDefinitions = _definitionToAppMapper.MapToArray(definitionsForSync);
 
-                await _parserService.SyncDefinitionsAndExamplesAsync(wordId, appDefinitions);
+                await _parserService.SyncDefinitionsAndExamplesAsync(wordId, parserDefinitions);
 
-                Application.Models.Parser.Word updatedWord = await _parserService.GetWordFromDb(wordId);
+                Domain.Models.Parser.Word updatedWord = await _parserService.GetWordFromDb(wordId);
 
                 Word uiUpdatedWord = _wordToUIParserMapper.Map(updatedWord);
                 uiUpdatedWord.DisableAll();
@@ -156,7 +156,7 @@ namespace SmartBox.ViewModels
                                                 .Distinct()
                                                 .ToArray();
 
-                List<Application.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, IsAiEnabled);
+                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, IsAiEnabled);
 
                 List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
@@ -226,7 +226,7 @@ namespace SmartBox.ViewModels
                     throw new InvalidOperationException(NoWordsSelectedForCopyError);
                 }
 
-                Application.Models.Parser.Word word = _wordpackToAppParserMapper.Map(CompiledSelectedWordsForExport);
+                Domain.Models.Parser.Word word = _wordpackToAppParserMapper.Map(CompiledSelectedWordsForExport);
 
                 string stringToCopy = _parserService.GetStringForCopyToBuffer(word);
 
@@ -244,7 +244,7 @@ namespace SmartBox.ViewModels
         {
             try
             {
-                Application.Models.Parser.Word[] wordsforExport = _wordpackToAppParserMapper.MapToArray(WordsForExport);
+                Domain.Models.Parser.Word[] wordsforExport = _wordpackToAppParserMapper.MapToArray(WordsForExport);
 
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string exportDirectory = Path.Combine(documentsPath, AppInfo.Name);
@@ -411,16 +411,16 @@ namespace SmartBox.ViewModels
 
         private async Task ShowDefinitionsAndExamples(string[] entries, bool isAiEnabled)
         {
-            List<Application.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, isAiEnabled);
+            List<Domain.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, isAiEnabled);
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
         }
 
         private async Task ShowWordFromDb(int id)
         {
-            Application.Models.Parser.Word appWord = await _parserService.GetWordFromDb(id);
+            Domain.Models.Parser.Word domainWord = await _parserService.GetWordFromDb(id);
 
-            Word word = _wordToUIParserMapper.Map(appWord);
+            Word word = _wordToUIParserMapper.Map(domainWord);
             word.DisableAll();
             word.IsSelected = true;
 

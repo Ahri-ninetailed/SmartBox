@@ -19,7 +19,7 @@ namespace SmartBox.ViewModels
         private readonly IParserService _parserService;
         private readonly IAlertService _alertService;
 
-        private readonly IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
+        private readonly IMapper<Domain.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
 
         [ObservableProperty]
         private int wordId;
@@ -30,7 +30,7 @@ namespace SmartBox.ViewModels
         public DefinitionsPageViewModel(ILogger<DefinitionsPageViewModel> logger,
                            IParserService parserService,
                            IAlertService alertService,
-                           IMapper<Application.Models.Parser.Word, Word> wordToUIParserMapper)
+                           IMapper<Domain.Models.Parser.Word, Word> wordToUIParserMapper)
         {
             _logger = logger;
 
@@ -65,9 +65,9 @@ namespace SmartBox.ViewModels
 
         private async Task ShowWordFromDb(int id)
         {
-            Application.Models.Parser.Word appWord = await _parserService.GetWordFromDb(id);
+            Domain.Models.Parser.Word domainWord = await _parserService.GetWordFromDb(id);
 
-            Word word = _wordToUIParserMapper.Map(appWord);
+            Word word = _wordToUIParserMapper.Map(domainWord);
             word.DisableAll();
             word.IsSelected = true;
 

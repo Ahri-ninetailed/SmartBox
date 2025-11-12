@@ -1,19 +1,17 @@
-﻿using Application.Models;
-
-namespace Application.Interfaces
+﻿namespace Application.Interfaces
 {
     public interface IDictionaryService
     {
-        Task<Models.Dictionary.Word[]> GetWordsForLearningAsync();
+        Task<Domain.Models.Dictionary.Word[]> GetWordsForLearningAsync();
 
-        Task<Models.Dictionary.Word[]> SearchWordsAsync(string[] entries);
+        Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries);
 
         Task LearnWordsAsync(IEnumerable<int> ids);
 
         Task MarkWordsAsync(IEnumerable<int> ids);
 
-        Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment);
+        Task<Domain.Models.Dictionary.Word> AddWordAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech, string comment);
 
-        Task ChangeWordPartOfSpeech(int id, Models.Dictionary.PartOfSpeech partOfSpeech);
+        Task ChangeWordPartOfSpeech(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech);
     }
 }

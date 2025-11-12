@@ -3,26 +3,26 @@ using System.Collections.ObjectModel;
 
 namespace SmartBox.Mappers
 {
-    public class WordMapper : IMapper<Application.Models.Dictionary.Word, SmartBox.Models.Dictionary.Word>,
-                              IMapper<Application.Models.Parser.Word, SmartBox.Models.Parser.Word>,
-                              IMapper<SmartBox.Models.Parser.WordPack, Application.Models.Parser.Word>
+    public class WordMapper : IMapper<Domain.Models.Dictionary.Word, SmartBox.Models.Dictionary.Word>,
+                              IMapper<Domain.Models.Parser.Word, SmartBox.Models.Parser.Word>,
+                              IMapper<SmartBox.Models.Parser.WordPack, Domain.Models.Parser.Word>
     {
         private const string Separator = ", ";
 
-        private readonly IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> _partOfSpeechToUIDictionaryMapper;
-        private readonly IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> _partOfSpeechToUIParserMapper;
-        private readonly IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech> _partOfSpeechToAppParserMapper;
+        private readonly IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> _partOfSpeechToUIDictionaryMapper;
+        private readonly IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> _partOfSpeechToUIParserMapper;
+        private readonly IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> _partOfSpeechToAppParserMapper;
 
-        public WordMapper(IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> partOfSpeechToUIDictionaryMapper,
-                          IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> partOfSpeechToUIParserMapper,
-                          IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech> partOfSpeechToAppParserMapper)
+        public WordMapper(IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech> partOfSpeechToUIDictionaryMapper,
+                          IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech> partOfSpeechToUIParserMapper,
+                          IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech> partOfSpeechToAppParserMapper)
         {
             _partOfSpeechToUIDictionaryMapper = partOfSpeechToUIDictionaryMapper;
             _partOfSpeechToUIParserMapper = partOfSpeechToUIParserMapper;
             _partOfSpeechToAppParserMapper = partOfSpeechToAppParserMapper;
         }
 
-        public Models.Dictionary.Word Map(Application.Models.Dictionary.Word source)
+        public Models.Dictionary.Word Map(Domain.Models.Dictionary.Word source)
         {
             Models.Dictionary.PartOfSpeech partOfSpeech = _partOfSpeechToUIDictionaryMapper.Map(source.PartOfSpeech);
 
@@ -38,7 +38,7 @@ namespace SmartBox.Mappers
             };
         }
 
-        public Models.Parser.Word Map(Application.Models.Parser.Word source)
+        public Models.Parser.Word Map(Domain.Models.Parser.Word source)
         {
             Models.Parser.Word word = new()
             {
@@ -51,7 +51,7 @@ namespace SmartBox.Mappers
                 PluralForms = source.PluralForms.ToArray()
             };
 
-            foreach (Application.Models.Parser.Definition definition in source.Definitions)
+            foreach (Domain.Models.Parser.Definition definition in source.Definitions)
             {
                 Models.Parser.Meaning meaning = new Models.Parser.Meaning
                 {
@@ -61,7 +61,7 @@ namespace SmartBox.Mappers
                     Children = new ObservableCollection<Models.Parser.Example>()
                 };
 
-                foreach (Application.Models.Parser.Example example in definition.Examples)
+                foreach (Domain.Models.Parser.Example example in definition.Examples)
                 {
                     meaning.Children.Add(new Models.Parser.Example
                     {
@@ -77,23 +77,23 @@ namespace SmartBox.Mappers
             return word;
         }
 
-        public Application.Models.Parser.Word Map(SmartBox.Models.Parser.WordPack source)
+        public Domain.Models.Parser.Word Map(SmartBox.Models.Parser.WordPack source)
         {
-            List<Application.Models.Parser.Definition> definitions = new List<Application.Models.Parser.Definition>();
+            List<Domain.Models.Parser.Definition> definitions = new List<Domain.Models.Parser.Definition>();
 
             foreach (Models.Parser.Word word in source.Words)
             {
                 foreach (Models.Parser.Meaning meaning in word.Children)
                 {
-                    List<Application.Models.Parser.Example> examples = meaning.Children
-                        .Select(example => new Application.Models.Parser.Example
+                    List<Domain.Models.Parser.Example> examples = meaning.Children
+                        .Select(example => new Domain.Models.Parser.Example
                         {
                             Id = example.Id,
                             Value = example.Value.ToLowerFirstChar(),
                         })
                         .ToList();
 
-                    definitions.Add(new Application.Models.Parser.Definition
+                    definitions.Add(new Domain.Models.Parser.Definition
                     {
                         Id = meaning.Id,
                         Value = meaning.Value.ToLowerFirstChar(),
@@ -102,13 +102,13 @@ namespace SmartBox.Mappers
                 }
             }
 
-            return new Application.Models.Parser.Word()
+            return new Domain.Models.Parser.Word()
             {
                 Value = string.Join(", ", source.Words.Select(el => el.Value.ToLower()).Distinct()),
                 Area = null,
                 Type = source.Words.Any(el => el.Type == Models.Parser.PartOfSpeech.Verb || el.Type == Models.Parser.PartOfSpeech.PhrasalVerb) ?
-                    Application.Models.Parser.PartOfSpeech.Verb :
-                    Application.Models.Parser.PartOfSpeech.Other,
+                    Domain.Models.Parser.PartOfSpeech.Verb :
+                    Domain.Models.Parser.PartOfSpeech.Other,
                 OtherForms = source.Words
                     .SelectMany(el => el.OtherForms)
                     .ToHashSet(),

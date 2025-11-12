@@ -1,5 +1,4 @@
 ﻿using Application.Interfaces;
-using Application.Models.Parser;
 using Shared;
 
 namespace Application.Services
@@ -12,54 +11,44 @@ namespace Application.Services
         private readonly Domain.Interfaces.IExportService _exportService;
         private readonly Domain.Interfaces.IAiService _aiService;
         private readonly Domain.Interfaces.IWordRepository _wordRepository;
-
-        private readonly IMapper<Domain.Models.Parser.Word, Application.Models.Parser.Word> _wordToAppParserMapper;
-        private readonly IMapper<Application.Models.Parser.Word, Domain.Models.Parser.Word> _wordToDomainParserMapper;
-        private readonly IMapper<Domain.Models.Dictionary.Word, Application.Models.Parser.Word> _wordDomDictionaryToAppParserMapper;
-        private readonly IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition> _definitionToDomainMapper;
+        private readonly IMapper<Domain.Models.Parser.Definition, Domain.Models.Dictionary.Definition> _parserToDictionaryDefinitionMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, Domain.Models.Parser.Word> _dictionaryToParserWordMapper;
 
         public ParserService(Domain.Interfaces.IParserService parserService,
                              Domain.Interfaces.IExportService excelService,
                              Domain.Interfaces.IAiService aiService,
                              Domain.Interfaces.IWordRepository wordRepository,
-                             IMapper<Domain.Models.Parser.Word, Word> wordToAppParserMapper,
-                             IMapper<Word, Domain.Models.Parser.Word> wordToDomainParserMapper,
-                             IMapper<Domain.Models.Dictionary.Word, Word> wordDomDictionaryToAppParserMapper,
-                             IMapper<Application.Models.Parser.Definition, Domain.Models.Dictionary.Definition> definitionToDomainMapper)
+                             IMapper<Domain.Models.Parser.Definition, Domain.Models.Dictionary.Definition> parserToDictionaryDefinitionMapper,
+                             IMapper<Domain.Models.Dictionary.Word, Domain.Models.Parser.Word> dictionaryToParserWordMapper)
         {
             _parserService = parserService;
             _exportService = excelService;
             _aiService = aiService;
             _wordRepository = wordRepository;
-
-            _wordToAppParserMapper = wordToAppParserMapper;
-            _wordToDomainParserMapper = wordToDomainParserMapper;
-            _wordDomDictionaryToAppParserMapper = wordDomDictionaryToAppParserMapper;
-            _definitionToDomainMapper = definitionToDomainMapper;
+            _parserToDictionaryDefinitionMapper = parserToDictionaryDefinitionMapper;
+            _dictionaryToParserWordMapper = dictionaryToParserWordMapper;
         }
 
-        public async Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Definition> newDefinitions)
+        public async Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Domain.Models.Parser.Definition> newDefinitions)
         {
-            Domain.Models.Dictionary.Definition[] domainDefinitions = _definitionToDomainMapper.MapToArray(newDefinitions);
+            Domain.Models.Dictionary.Definition[] dictionaryDefinitions = newDefinitions
+                .Select(def => _parserToDictionaryDefinitionMapper.Map(def))
+                .ToArray();
 
-            await _wordRepository.SyncDefinitionsAndExamplesAsync(wordId, domainDefinitions);
+            await _wordRepository.SyncDefinitionsAndExamplesAsync(wordId, dictionaryDefinitions);
         }
 
-        public string GetStringForCopyToBuffer(Word word)
+        public string GetStringForCopyToBuffer(Domain.Models.Parser.Word word)
         {
-            Domain.Models.Parser.Word domainWord = _wordToDomainParserMapper.Map(word);
-
-            return _exportService.GetStringForCopyToBuffer(domainWord);
+            return _exportService.GetStringForCopyToBuffer(word);
         }
 
-        public void ExportWords(string directoryPath, Word[] source)
+        public void ExportWords(string directoryPath, Domain.Models.Parser.Word[] source)
         {
-            Domain.Models.Parser.Word[] domainWords = _wordToDomainParserMapper.MapToArray(source);
-
-            _exportService.GenerateLexilizeExcel(directoryPath, domainWords);
+            _exportService.GenerateLexilizeExcel(directoryPath, source);
         }
 
-        public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled)
+        public async Task<List<Domain.Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled)
         {
             entries = entries.Select(el => el.ToLower().Trim()).ToArray();
 
@@ -88,23 +77,19 @@ namespace Application.Services
                 wordData.AddRange(aiWords);
             }
 
-            List<Word> result = _wordToAppParserMapper.MapToList(wordData);
-
-            return result;
+            return wordData;
         }
 
-        public async Task<Word> GetWordFromDb(int wordId)
+        public async Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId)
         {
-            Domain.Models.Dictionary.Word[] word = await _wordRepository.GetWordsByIdsAsync(new[] { wordId }, true);
+            Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(new[] { wordId }, true);
 
-            if (word.Length == 0)
+            if (words.Length == 0)
             {
                 throw new InvalidOperationException(string.Format(WordNotFoundError, wordId));
             }
 
-            Word result = _wordDomDictionaryToAppParserMapper.Map(word[0]);
-
-            return result;
+            return _dictionaryToParserWordMapper.Map(words[0]);
         }
     }
 }

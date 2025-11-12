@@ -1,5 +1,6 @@
 ﻿using Application;
 using CommunityToolkit.Maui;
+using Domain;
 using Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
@@ -81,6 +82,7 @@ namespace SmartBox
             builder.Services.AddUIServices();
             builder.Services.AddInfrastructureServices();
             builder.Services.AddApplicationServices();
+            builder.Services.AddDomainMappers();
 
             builder.UseMauiApp(sp => sp.GetRequiredService<App>());
 

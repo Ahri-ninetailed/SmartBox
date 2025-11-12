@@ -13,16 +13,17 @@ namespace SmartBox
         public static IServiceCollection AddUIServices(this IServiceCollection services)
         {
             services.AddSingleton<IMapper<AppTheme, SfVisuals>, AppThemeMapper>();
-            services.AddSingleton<IMapper<Application.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<Application.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
-            services.AddSingleton<IMapper<Models.Parser.PartOfSpeech, Application.Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Parser.PartOfSpeech, Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
+            services.AddSingleton<IMapper<Models.Parser.PartOfSpeech, Domain.Models.Parser.PartOfSpeech>, PartOfSpeechMapper>();
 
-            services.AddSingleton<IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word>, WordMapper>();
-            services.AddSingleton<IMapper<Application.Models.Parser.Word, Models.Parser.Word>, WordMapper>();
-            services.AddSingleton<IMapper<Models.Parser.WordPack, Application.Models.Parser.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Domain.Models.Parser.Word, Models.Parser.Word>, WordMapper>();
+            services.AddSingleton<IMapper<Models.Parser.WordPack, Domain.Models.Parser.Word>, WordMapper>();
 
-            services.AddSingleton<IMapper<SmartBox.Models.Parser.Meaning, Application.Models.Parser.Definition>, DefinitionMapper>();
+            services.AddSingleton<IMapper<SmartBox.Models.Parser.Meaning, Domain.Models.Dictionary.Definition>, DefinitionMapper>();
+            services.AddSingleton<IMapper<SmartBox.Models.Parser.Meaning, Domain.Models.Parser.Definition>, DefinitionMapper>();
 
             services.AddSingleton<App>();
 

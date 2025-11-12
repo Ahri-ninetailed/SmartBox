@@ -1,16 +1,14 @@
-﻿using Application.Models.Parser;
-
-namespace Application.Interfaces
+﻿namespace Application.Interfaces
 {
     public interface IParserService
     {
-        Task<List<Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled);
+        Task<List<Domain.Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled);
 
-        Task<Models.Parser.Word> GetWordFromDb(int wordId);
+        Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId);
 
-        void ExportWords(string directoryPath, Models.Parser.Word[] source);
+        void ExportWords(string directoryPath, Domain.Models.Parser.Word[] source);
 
-        Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Models.Parser.Definition> newDefinitions);
-        string GetStringForCopyToBuffer(Word word);
+        Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Domain.Models.Parser.Definition> newDefinitions);
+        string GetStringForCopyToBuffer(Domain.Models.Parser.Word word);
     }
 }
