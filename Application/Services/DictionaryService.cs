@@ -1,10 +1,7 @@
 ﻿using Application.Interfaces;
-using Application.Models;
-using Application.Models.Dictionary;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Polly;
-using Shared;
 
 namespace Application.Services
 {
@@ -27,13 +24,8 @@ namespace Application.Services
         private readonly IWordRepository _wordRepository;
         private readonly IWordPopularityService _wordPopularityService;
 
-        private readonly IMapper<Application.Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechToDomMapper;
-        private readonly IMapper<Domain.Models.Dictionary.Word, Application.Models.Dictionary.Word> _wordToAppMapper;
-
         public DictionaryService(ILogger<DictionaryService> logger,
                                  IWordRepository wordRepository,
-                                 IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechToDomMapper,
-                                 IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word> wordToAppMapper,
                                  IWordPopularityService wordPopularityService)
         {
             _logger = logger;
@@ -57,14 +49,11 @@ namespace Application.Services
                 })
                 .Build();
 
-            _partOfSpeechToDomMapper = partOfSpeechToDomMapper;
-            _wordToAppMapper = wordToAppMapper;
-            
             _wordRepository = wordRepository;
-            _wordPopularityService = wordPopularityService;   
+            _wordPopularityService = wordPopularityService;
         }
 
-        public async Task<Models.Dictionary.Word> AddWordAsync(string[] wordValues, Models.Dictionary.PartOfSpeech partOfSpeech, string comment)
+        public async Task<Domain.Models.Dictionary.Word> AddWordAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech, string comment)
         {
             if (wordValues.Length == 0 || wordValues.Any(string.IsNullOrWhiteSpace))
             {
@@ -77,13 +66,11 @@ namespace Application.Services
 
             try
             {
-                Domain.Models.Dictionary.PartOfSpeech domainPartOfSpeech = _partOfSpeechToDomMapper.Map(partOfSpeech);
-
-                bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValues, domainPartOfSpeech);
+                bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValues, partOfSpeech);
 
                 if (isWordExisted)
                 {
-                    throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, wordValues), domainPartOfSpeech));
+                    throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, wordValues), partOfSpeech));
                 }
 
                 decimal? wordPopularity = null;
@@ -99,18 +86,16 @@ namespace Application.Services
                 Domain.Models.Dictionary.Word newWord = new Domain.Models.Dictionary.Word()
                 {
                     Values = wordValues,
-                    PartOfSpeech = domainPartOfSpeech,
+                    PartOfSpeech = partOfSpeech,
                     Comments = comment,
                     Popularity = wordPopularity
                 };
 
                 Domain.Models.Dictionary.Word word = await _wordRepository.AddWordAsync(newWord);
 
-                _logger.LogInformation(AddedWordMessage, string.Join(Separator,word.Values), word.Id, word.PartOfSpeech);
+                _logger.LogInformation(AddedWordMessage, string.Join(Separator, word.Values), word.Id, word.PartOfSpeech);
 
-                Models.Dictionary.Word result = _wordToAppMapper.Map(word);
-
-                return result;
+                return word;
             }
             finally
             {
@@ -118,7 +103,7 @@ namespace Application.Services
             }
         }
 
-        public async Task ChangeWordPartOfSpeech(int id, PartOfSpeech partOfSpeech)
+        public async Task ChangeWordPartOfSpeech(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(ChangeWordPartOfSpeech));
 
@@ -133,11 +118,9 @@ namespace Application.Services
                         throw new InvalidOperationException(string.Format(WordNotFoundError, id));
                     }
 
-                    Domain.Models.Dictionary.PartOfSpeech newPartOfSpeech = _partOfSpeechToDomMapper.Map(partOfSpeech);
-
                     Domain.Models.Dictionary.PartOfSpeech oldPartOfSpeech = words[0].PartOfSpeech;
 
-                    words[0].ChangePartOfSpeech(newPartOfSpeech);
+                    words[0].ChangePartOfSpeech(partOfSpeech);
 
                     await _wordRepository.SaveWordsAsync(words);
 
@@ -145,7 +128,7 @@ namespace Application.Services
                         string.Join(Separator, words[0].Values),
                         words[0].Id,
                         oldPartOfSpeech,
-                        newPartOfSpeech);
+                        partOfSpeech);
                 }, context);
             }
             finally
@@ -154,7 +137,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Models.Dictionary.Word[]> GetWordsForLearningAsync()
+        public async Task<Domain.Models.Dictionary.Word[]> GetWordsForLearningAsync()
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(GetWordsForLearningAsync));
 
@@ -162,9 +145,7 @@ namespace Application.Services
             {
                 return await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsForLearningAsync();
-
-                    return _wordToAppMapper.MapToArray(words);
+                    return await _wordRepository.GetWordsForLearningAsync();
                 }, context);
             }
             finally
@@ -232,7 +213,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
+        public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
         {
             ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchWordsAsync));
 
@@ -242,9 +223,7 @@ namespace Application.Services
             {
                 return await _retryPipeline.ExecuteAsync(async _ =>
                 {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.SearchWordsAsync(entries);
-
-                    return _wordToAppMapper.MapToArray(words);
+                    return await _wordRepository.SearchWordsAsync(entries);
                 }, context);
             }
             finally

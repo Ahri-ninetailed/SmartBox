@@ -33,8 +33,8 @@ namespace SmartBox.ViewModels
         private readonly IDictionaryService _dictionaryService;
         private readonly IAlertService _alertService;
 
-        private readonly IMapper<Application.Models.Dictionary.Word, SmartBox.Models.Dictionary.Word> _wordMapper;
-        private readonly IMapper<SmartBox.Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> _partOfSpeechMapper;
+        private readonly IMapper<Domain.Models.Dictionary.Word, SmartBox.Models.Dictionary.Word> _wordMapper;
+        private readonly IMapper<SmartBox.Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> _partOfSpeechMapper;
         #endregion
 
         #region Properties
@@ -73,11 +73,11 @@ namespace SmartBox.ViewModels
         private Models.Dictionary.Word[] SelectedWords => RawSelectedWords.OfType<Models.Dictionary.Word>().ToArray();
         #endregion
 
-        public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger, 
-                                       IDictionaryService dictionaryService, 
+        public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger,
+                                       IDictionaryService dictionaryService,
                                        IAlertService alertService,
-                                       IMapper<Application.Models.Dictionary.Word, Models.Dictionary.Word> wordMapper,
-                                       IMapper<Models.Dictionary.PartOfSpeech, Application.Models.Dictionary.PartOfSpeech> partOfSpeechMapper)
+                                       IMapper<Domain.Models.Dictionary.Word, Models.Dictionary.Word> wordMapper,
+                                       IMapper<Models.Dictionary.PartOfSpeech, Domain.Models.Dictionary.PartOfSpeech> partOfSpeechMapper)
         {
             _logger = logger;
 
@@ -146,9 +146,9 @@ namespace SmartBox.ViewModels
                     return;
                 }
 
-                Application.Models.Dictionary.Word[] appWords = await _dictionaryService.SearchWordsAsync(SearchWords);
+                Domain.Models.Dictionary.Word[] domainWords = await _dictionaryService.SearchWordsAsync(SearchWords);
 
-                Models.Dictionary.Word[] words = _wordMapper.MapToArray(appWords);
+                Models.Dictionary.Word[] words = _wordMapper.MapToArray(domainWords);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>  
                 { 
@@ -237,10 +237,10 @@ namespace SmartBox.ViewModels
         [RelayCommand(CanExecute = nameof(CanAddWord))]
         private async Task AddAsync()
         {
-            Application.Models.Dictionary.Word addedWord;
+            Domain.Models.Dictionary.Word addedWord;
             try
             {
-                Application.Models.Dictionary.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
+                Domain.Models.Dictionary.PartOfSpeech partOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
                 addedWord = await _dictionaryService.AddWordAsync(SearchWords, partOfSpeech, CommentText);
             }
@@ -283,7 +283,7 @@ namespace SmartBox.ViewModels
                     throw new InvalidOperationException(InvalidWordSelectionForChangeError);
                 }
 
-                Application.Models.Dictionary.PartOfSpeech newPartOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
+                Domain.Models.Dictionary.PartOfSpeech newPartOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
                 await _dictionaryService.ChangeWordPartOfSpeech(SelectedWords[0].Id, newPartOfSpeech);
 
@@ -396,9 +396,9 @@ namespace SmartBox.ViewModels
         {
             try
             {
-                Application.Models.Dictionary.Word[] appWords = await _dictionaryService.GetWordsForLearningAsync();
+                Domain.Models.Dictionary.Word[] domainWords = await _dictionaryService.GetWordsForLearningAsync();
 
-                Models.Dictionary.Word[] words = _wordMapper.MapToArray(appWords);
+                Models.Dictionary.Word[] words = _wordMapper.MapToArray(domainWords);
 
                 return new ObservableCollection<Models.Dictionary.Word>(words);
             }

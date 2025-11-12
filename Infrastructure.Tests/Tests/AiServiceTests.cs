@@ -23,45 +23,49 @@ namespace Infrastructure.Tests.Tests
                     new Word()
                     {
                         Value = "eve",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "The day or period before an important event",
-                                new()
+                                Value = "The day or period before an important event",
+                                Examples = new()
                                 {
-                                    "Mrs Clayton was speaking to Arab journalists in Paris on the eve of her visit to Egypt",
-                                    "Where did you spend Christmas Eve?",
-                                    "Sheena always throws a party on New Year's Eve"
+                                    new Example() { Value = "Mrs Clayton was speaking to Arab journalists in Paris on the eve of her visit to Egypt" },
+                                    new Example() { Value = "Where did you spend Christmas Eve?" },
+                                    new Example() { Value = "Sheena always throws a party on New Year's Eve" }
                                 }
                             },
+                            new Definition()
                             {
-                                "The evening",
-                                new()
+                                Value = "The evening",
+                                Examples = new()
                             }
                         }
                     },
                     new Word()
                     {
                         Value = "Eve",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "The first woman, according to the biblical story of how the world was made",
-                                new()
+                                Value = "The first woman, according to the biblical story of how the world was made",
+                                Examples = new()
                             }
                         }
                     },
                     new Word()
                     {
                         Value = "eve",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "The evening or day before a holiday, or the period immediately before an important event",
-                                new()
+                                Value = "The evening or day before a holiday, or the period immediately before an important event",
+                                Examples = new()
                                 {
-                                    "New Year's Eve",
-                                    "The eve of the election"
+                                    new Example() { Value = "New Year's Eve" },
+                                    new Example() { Value = "The eve of the election" }
                                 }
                             }
                         }
@@ -82,22 +86,24 @@ namespace Infrastructure.Tests.Tests
                     new Word()
                     {
                         Value = "eve",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "The day or period before an important event",
-                                new()
+                                Value = "The day or period before an important event",
+                                Examples = new()
                                 {
-                                    "Mrs Clayton was speaking to Arab journalists in Paris on the eve of her visit to Egypt",
-                                    "Where did you spend Christmas Eve?",
-                                    "Sheena always throws a party on New Year's Eve"
+                                    new Example() { Value = "Mrs Clayton was speaking to Arab journalists in Paris on the eve of her visit to Egypt" },
+                                    new Example() { Value = "Where did you spend Christmas Eve?" },
+                                    new Example() { Value = "Sheena always throws a party on New Year's Eve" }
                                 }
                             },
+                            new Definition()
                             {
-                                "The evening",
-                                new()
+                                Value = "The evening",
+                                Examples = new()
                                 {
-                                    "text example"
+                                    new Example() { Value = "text example" }
                                 }
                             }
                         }
@@ -105,13 +111,14 @@ namespace Infrastructure.Tests.Tests
                     new Word()
                     {
                         Value = "Eve",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "The first woman, according to the biblical story of how the world was made",
-                                new()
+                                Value = "The first woman, according to the biblical story of how the world was made",
+                                Examples = new()
                                 {
-                                    "test example"
+                                    new Example() { Value = "test example" }
                                 }
                             }
                         }
@@ -119,14 +126,15 @@ namespace Infrastructure.Tests.Tests
                     new Word()
                     {
                         Value = "eve",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "The evening or day before a holiday, or the period immediately before an important event",
-                                new()
+                                Value = "The evening or day before a holiday, or the period immediately before an important event",
+                                Examples = new()
                                 {
-                                    "New Year's Eve",
-                                    "The eve of the election"
+                                    new Example() { Value = "New Year's Eve" },
+                                    new Example() { Value = "The eve of the election" }
                                 }
                             }
                         }
@@ -147,15 +155,16 @@ namespace Infrastructure.Tests.Tests
                     new Word()
                     {
                         Value = "test",
-                        MeaningsAndExamples = new()
+                        Definitions = new()
                         {
+                            new Definition()
                             {
-                                "A procedure intended to establish the quality, performance, or reliability of something",
-                                new()
+                                Value = "A procedure intended to establish the quality, performance, or reliability of something",
+                                Examples = new()
                                 {
-                                    "Example 1",
-                                    "Example 2",
-                                    "Example 3"
+                                    new Example() { Value = "Example 1" },
+                                    new Example() { Value = "Example 2" },
+                                    new Example() { Value = "Example 3" }
                                 }
                             }
                         }

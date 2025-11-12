@@ -2,12 +2,17 @@
 {
     public static class IMapperExtensions
     {
-        // TODO: выбрасывать исключение, если mapper == null
+        private const string NullSourcesError = "Source collection cannot be null.";
+
         public static IEnumerable<TDestination> Map<TSource, TDestination>(
             this IMapper<TSource, TDestination> mapper,
             IEnumerable<TSource> sources)
         {
-            if (sources == null) return null;
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources), NullSourcesError);
+            }
+
             return sources.Select(mapper.Map);
         }
 
@@ -15,7 +20,11 @@
             this IMapper<TSource, TDestination> mapper,
             IEnumerable<TSource> sources)
         {
-            if (sources == null) return null;
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources), NullSourcesError);
+            }
+
             return sources.Select(mapper.Map).ToList();
         }
 
@@ -23,7 +32,11 @@
             this IMapper<TSource, TDestination> mapper,
             IEnumerable<TSource> sources)
         {
-            if (sources == null) return null;
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources), NullSourcesError);
+            }
+
             return sources.Select(mapper.Map).ToArray();
         }
     }

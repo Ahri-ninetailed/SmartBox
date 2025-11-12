@@ -25,7 +25,11 @@ namespace Infrastructure.Services
 
             string json = await _openAiModel.GetExamplesForMeaningsAsync(meaningsForFilling);
 
-            Dictionary<string, List<string>> parsedMeaningsAndExamples = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json)!;
+            Dictionary<string, List<string>>? parsedMeaningsAndExamples = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json);
+            if (parsedMeaningsAndExamples == null)
+            {
+                throw new InvalidOperationException("Failed to parse AI response while filling missing examples.");
+            }
 
             parsedMeaningsAndExamples = parsedMeaningsAndExamples.ToDictionary(
                 pair => pair.Key,
@@ -49,10 +53,12 @@ namespace Infrastructure.Services
                         Value = parsed.Value,
                         Area = "AI",
                         Type = MapPartOfSpeech(typeAndMeanings.Key),
-                        MeaningsAndExamples = typeAndMeanings.Value.ToDictionary(
-                            meaning => char.ToUpper(meaning.Key[0]) + meaning.Key.Substring(1),
-                            meaning => meaning.Value.Select(ex => ex.TrimEnd('.')).ToList()
-                        )
+                        Definitions = typeAndMeanings.Value.Select(meaning =>
+                            new Definition
+                            {
+                                Value = char.ToUpper(meaning.Key[0]) + meaning.Key.Substring(1),
+                                Examples = meaning.Value.Select(ex => new Example { Value = ex.TrimEnd('.') }).ToList()
+                            }).ToList()
                     }))
                 .ToList();
         }
@@ -85,9 +91,9 @@ namespace Infrastructure.Services
         internal HashSet<(string word, string meaning)> GetMeaningsWithEmptyExamples(IEnumerable<Word> words)
         {
             return words
-                .SelectMany(word => word.MeaningsAndExamples
-                    .Where(kvp => kvp.Value.Count < AcceptableAmountOfExamples)
-                    .Select(kvp => (word.Value, kvp.Key)))
+                .SelectMany(word => word.Definitions
+                    .Where(def => def.Examples.Count < AcceptableAmountOfExamples)
+                    .Select(def => (word.Value, def.Value)))
                 .ToHashSet();
         }
 
@@ -95,19 +101,21 @@ namespace Infrastructure.Services
         {
             foreach (Word word in words)
             {
-                if (word.MeaningsAndExamples.All(el => el.Value.Count >= AcceptableAmountOfExamples))
+                if (word.Definitions.All(def => def.Examples.Count >= AcceptableAmountOfExamples))
                 {
                     continue;
                 }
 
                 foreach (KeyValuePair<string, List<string>> kvp in meaningsAndExamples)
                 {
-                    if (!word.MeaningsAndExamples.ContainsKey(kvp.Key))
+                    Definition? definition = word.Definitions.FirstOrDefault(def => def.Value == kvp.Key);
+
+                    if (definition == null)
                     {
                         continue;
                     }
 
-                    word.MeaningsAndExamples[kvp.Key].AddRange(kvp.Value);
+                    definition.Examples.AddRange(kvp.Value.Select(ex => new Example { Value = ex }));
                 }
             }
         }

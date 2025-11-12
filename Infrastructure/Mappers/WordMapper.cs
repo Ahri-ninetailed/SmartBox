@@ -72,7 +72,14 @@ namespace Infrastructure.Mappers
             {
                 Area = source.Area,
                 Value = source.Value,
-                MeaningsAndExamples = source.MeaningsAndExamples,
+                Definitions = source.MeaningsAndExamples.Select(kvp => new Domain.Models.Parser.Definition
+                {
+                    Value = kvp.Key,
+                    Examples = kvp.Value.Select(example => new Domain.Models.Parser.Example
+                    {
+                        Value = example
+                    }).ToList()
+                }).ToList(),
                 OtherForms = source.OtherForms,
                 PluralForms = source.PluralForms,
                 Type = _partOfSpeechToDomParserMapper.Map(source.Type),

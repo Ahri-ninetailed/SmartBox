@@ -2,13 +2,14 @@
 {
     public class Word
     {
+        public int Id { get; set; }
         public required string Value { get; set; }
 
         public string? Area { get; set; }
 
         public PartOfSpeech Type { get; set; }
 
-        public Dictionary<string, List<string>> MeaningsAndExamples { get; set; } = new Dictionary<string, List<string>>();
+        public List<Definition> Definitions { get; set; } = [];
 
         public HashSet<string> PluralForms { get; set; } = new HashSet<string>();
 
