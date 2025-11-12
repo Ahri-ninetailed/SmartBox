@@ -55,6 +55,17 @@ namespace Infrastructure
                 client.BaseAddress = new Uri("https://books.google.com/ngrams/json");
                 //Первый запрос почему-то тоже стал валиться на 10 секундах
                 client.Timeout = TimeSpan.FromSeconds(45);
+
+                // Имитация настоящего браузера хз помогло ли
+                client.DefaultRequestHeaders.Add("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
             })
             .AddPolicyHandler((serviceProvider, request) =>
             {
@@ -69,13 +80,24 @@ namespace Infrastructure
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
                 //Для первого запроса всегда валилаься на таймауте 10 сек, попробовал увеличить, если будут ошибки, то стоит подумать над другим решением
-                //Также можно попробовать делать warmup 
+                //Также можно попробовать делать warmup
                 client.Timeout = TimeSpan.FromSeconds(45);
+
+                // Имитация настоящего браузера хз помогло ли
+                client.DefaultRequestHeaders.Add("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+                client.DefaultRequestHeaders.Add("DNT", "1");
+                client.DefaultRequestHeaders.Add("Connection", "keep-alive");
+                client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
             })
             .ConfigurePrimaryHttpMessageHandler(serviceProvider => new HttpClientHandler()
             {
                 CookieContainer = serviceProvider.GetRequiredKeyedService<CookieContainer>(Models.Parser.Parser.CambridgeDictionary.ToString()),
                 UseCookies = true,
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
             })
             // TODO: Вынести в отдельный метод, когда появится другой парсер
             .AddPolicyHandler((serviceProvider, request) =>
