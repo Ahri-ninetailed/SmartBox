@@ -53,7 +53,8 @@ namespace Infrastructure
             services.AddHttpClient<Domain.Interfaces.IWordPopularityService, WordPopularityService>(client =>
             {
                 client.BaseAddress = new Uri("https://books.google.com/ngrams/json");
-                client.Timeout = TimeSpan.FromSeconds(10);
+                //Первый запрос почему-то тоже стал валиться на 10 секундах
+                client.Timeout = TimeSpan.FromSeconds(45);
             })
             .AddPolicyHandler((serviceProvider, request) =>
             {
@@ -67,7 +68,9 @@ namespace Infrastructure
             services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
-                client.Timeout = TimeSpan.FromSeconds(10);
+                //Для первого запроса всегда валилаься на таймауте 10 сек, попробовал увеличить, если будут ошибки, то стоит подумать над другим решением
+                //Также можно попробовать делать warmup 
+                client.Timeout = TimeSpan.FromSeconds(45);
             })
             .ConfigurePrimaryHttpMessageHandler(serviceProvider => new HttpClientHandler()
             {
