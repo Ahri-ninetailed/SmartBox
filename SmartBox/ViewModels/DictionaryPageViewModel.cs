@@ -64,13 +64,14 @@ namespace SmartBox.ViewModels
         private Models.Dictionary.PartOfSpeech selectedPartOfSpeech = Models.Dictionary.PartOfSpeech.Other;
 
         [ObservableProperty]
-        private ObservableCollection<Models.Dictionary.PartOfSpeech> partOfSpeechOptions = new() 
-        { 
-            Models.Dictionary.PartOfSpeech.Other, 
-            Models.Dictionary.PartOfSpeech.Verb 
+        private ObservableCollection<Models.Dictionary.PartOfSpeech> partOfSpeechOptions = new()
+        {
+            Models.Dictionary.PartOfSpeech.Other,
+            Models.Dictionary.PartOfSpeech.Verb
         };
 
-        private Models.Dictionary.Word[] SelectedWords => RawSelectedWords.OfType<Models.Dictionary.Word>().ToArray();
+        private Models.Dictionary.Word[] _selectedWordsCache = Array.Empty<Models.Dictionary.Word>();
+        private Models.Dictionary.Word[] SelectedWords => _selectedWordsCache;
         #endregion
 
         public DictionaryPageViewModel(ILogger<DictionaryPageViewModel> logger,
@@ -300,14 +301,38 @@ namespace SmartBox.ViewModels
         #region CanExecute Methods
         private bool CanLearnWords()
         {
-            return SelectedWords.Any() &&
-                   SelectedWords.All(word => word.Learned == false);
+            if (SelectedWords.Length == 0)
+            {
+                return false;
+            }
+
+            foreach (var word in SelectedWords)
+            {
+                if (word.Learned)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private bool CanMarkWords()
         {
-            return SelectedWords.Any() &&
-                   SelectedWords.All(word => word.ShouldStudy == false && word.Learned == false);
+            if (SelectedWords.Length == 0)
+            {
+                return false;
+            }
+
+            foreach (var word in SelectedWords)
+            {
+                if (word.ShouldStudy || word.Learned)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private bool CanParse()
@@ -334,9 +359,19 @@ namespace SmartBox.ViewModels
                 return false;
             }
 
-            if (Words.Any(el => el.PartOfSpeech == SelectedPartOfSpeech && SearchWords.Any(searchWord => el.Values.Contains(searchWord))))
+            var searchWords = SearchWords;
+            foreach (var word in Words)
             {
-                return false;
+                if (word.PartOfSpeech == SelectedPartOfSpeech)
+                {
+                    foreach (var searchWord in searchWords)
+                    {
+                        if (word.Values.Contains(searchWord))
+                        {
+                            return false;
+                        }
+                    }
+                }
             }
 
             return true;
@@ -359,11 +394,19 @@ namespace SmartBox.ViewModels
             if (newValue != null)
             {
                 newValue.CollectionChanged += OnSelectedWordsChanged;
+                // Обновляем кэш при замене всей коллекции
+                _selectedWordsCache = newValue.OfType<Models.Dictionary.Word>().ToArray();
+            }
+            else
+            {
+                _selectedWordsCache = Array.Empty<Models.Dictionary.Word>();
             }
         }
 
         private void OnSelectedWordsChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
+            _selectedWordsCache = RawSelectedWords.OfType<Models.Dictionary.Word>().ToArray();
+
             LearnCommand.NotifyCanExecuteChanged();
             MarkCommand.NotifyCanExecuteChanged();
             ChangeCommand.NotifyCanExecuteChanged();
