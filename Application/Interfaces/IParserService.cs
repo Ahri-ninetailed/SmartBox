@@ -1,8 +1,11 @@
-﻿namespace Application.Interfaces
+﻿using Application.Enums;
+using Domain.Models.Parser;
+
+namespace Application.Interfaces
 {
     public interface IParserService
     {
-        Task<List<Domain.Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled, bool isAiLocalOnly);
+        Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode);
 
         Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId);
 

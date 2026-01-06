@@ -1,4 +1,6 @@
-﻿using Application.Interfaces;
+﻿using Application.Enums;
+using Application.Interfaces;
+using Domain.Models.Parser;
 using Shared;
 
 namespace Application.Services
@@ -48,40 +50,34 @@ namespace Application.Services
             _exportService.GenerateLexilizeExcel(directoryPath, source);
         }
 
-        public async Task<List<Domain.Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled, bool isAiLocalOnly)
+        public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode)
         {
             entries = entries.Select(el => el.ToLower().Trim()).ToArray();
 
-                List<Task<List<Domain.Models.Parser.Word>>> parseTasks = entries
-                    .Select(entry => _parserService.ParseWordDataAsync(entry))
-                    .ToList();
+            List<Task<List<Word>>> parseTasks = entries
+                .Select(entry => _parserService.ParseWordDataAsync(entry))
+                .ToList();
 
-                List<Domain.Models.Parser.Word>[] parsedResults = await Task.WhenAll(parseTasks);
-            List<Domain.Models.Parser.Word> wordData = parsedResults.SelectMany(x => x).ToList();
+            List<Word>[] parsedResults = await Task.WhenAll(parseTasks);
+            List<Word> wordData = parsedResults.SelectMany(x => x).ToList();
 
-            if (isAiEnabled)
+            if (aiMode != AiMode.Disabled)
             {
-                string[] uniqueWords;
-                if (isAiLocalOnly)
-                {
-                    uniqueWords = entries
-                        .Distinct().ToArray();
-                }   
-                else
-                {
-                    uniqueWords = entries
-                       .Concat(wordData.Select(w => w.Value))
-                       .Concat(wordData.SelectMany(el => el.OtherForms))
-                       .Distinct().ToArray();
-                }
+                IEnumerable<string> wordsForAi = aiMode == AiMode.LocalOnly
+                    ? entries
+                    : entries
+                        .Concat(wordData.Select(w => w.Value))
+                        .Concat(wordData.SelectMany(el => el.OtherForms));
 
-                Task<List<Domain.Models.Parser.Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
+                string[] uniqueWords = wordsForAi.Distinct().ToArray();
+
+                Task<List<Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
 
                 Task fillMissingExamplesTask = _aiService.FillMissingExamplesAsync(wordData);
 
                 await Task.WhenAll(aiWordsTask, fillMissingExamplesTask);
 
-                List<Domain.Models.Parser.Word> aiWords = await aiWordsTask;
+                List<Word> aiWords = await aiWordsTask;
 
                 wordData.AddRange(aiWords);
             }
