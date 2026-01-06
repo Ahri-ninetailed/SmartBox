@@ -2,7 +2,7 @@
 {
     public interface IParserService
     {
-        Task<List<Domain.Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled);
+        Task<List<Domain.Models.Parser.Word>> GetDefinitionsAndExamples(string[] entries, bool isAiEnabled, bool isAiLocalOnly);
 
         Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId);
 

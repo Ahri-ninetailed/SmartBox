@@ -63,6 +63,9 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         private bool isAiEnabled = false;
 
+        [ObservableProperty]
+        private bool isAiLocalOnly = false;
+
         private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
 
         public string ExportPlaceholder => string.Format(ExportPlaceholderFormat, WordsForExport.Count);
@@ -156,7 +159,7 @@ namespace SmartBox.ViewModels
                                                 .Distinct()
                                                 .ToArray();
 
-                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, IsAiEnabled);
+                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, IsAiEnabled, IsAiLocalOnly);
 
                 List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
@@ -183,7 +186,7 @@ namespace SmartBox.ViewModels
                     return;
                 }
 
-                await ShowDefinitionsAndExamples(entries, IsAiEnabled);
+                await ShowDefinitionsAndExamples(entries, IsAiEnabled, IsAiLocalOnly);
             }
             catch (Exception ex)
             {
@@ -312,6 +315,22 @@ namespace SmartBox.ViewModels
 
         #region Property Changed Handlers
 
+        partial void OnIsAiLocalOnlyChanged(bool value)
+        {
+            if (value && !IsAiEnabled)
+            {
+                IsAiEnabled = true;
+            }
+        }
+
+        partial void OnIsAiEnabledChanged(bool value)
+        {
+            if (!value && IsAiLocalOnly)
+            {
+                IsAiLocalOnly = false;
+            }
+        }
+
         #endregion
 
         #region Event Handlers
@@ -409,9 +428,9 @@ namespace SmartBox.ViewModels
 
         #region Private Helper Methods
 
-        private async Task ShowDefinitionsAndExamples(string[] entries, bool isAiEnabled)
+        private async Task ShowDefinitionsAndExamples(string[] entries, bool isAiEnabled, bool isAiLocalOnly)
         {
-            List<Domain.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, isAiEnabled);
+            List<Domain.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, isAiEnabled, isAiLocalOnly);
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
         }

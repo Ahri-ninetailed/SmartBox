@@ -65,16 +65,20 @@
                     HeightRequest="40"
                     ToolTipProperties.Text="Copy to buffer" />
 
-            <StackLayout Grid.Column="6" 
-                         Orientation="Horizontal" 
-                         Spacing="5" 
+            <StackLayout Grid.Column="6"
+                         Orientation="Horizontal"
+                         Spacing="5"
                          VerticalOptions="Center">
-                <Label Text="AI" 
-                       VerticalOptions="Center" 
+                <Label Text="AI"
+                       VerticalOptions="Center"
                        FontSize="14"/>
-                <CheckBox IsChecked="{Binding IsAiEnabled, Mode=TwoWay}" 
+                <CheckBox IsChecked="{Binding IsAiEnabled, Mode=TwoWay}"
                           VerticalOptions="Center"/>
-                
+                <Label Text="Local only"
+                       VerticalOptions="Center"
+                       FontSize="14"/>
+                <CheckBox IsChecked="{Binding IsAiLocalOnly, Mode=TwoWay}"
+                          VerticalOptions="Center"/>
             </StackLayout>
 
             <Button Grid.Column="7"
