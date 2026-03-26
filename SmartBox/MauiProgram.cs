@@ -24,8 +24,19 @@ namespace SmartBox
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            string appDataDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                AppInfo.Name);
+            Directory.CreateDirectory(appDataDir);
+
+            string configPath = Path.Combine(appDataDir, "config.json");
+            if (!File.Exists(configPath))
+            {
+                File.Copy(Path.Combine(AppContext.BaseDirectory, "config.json"), configPath);
+            }
+
             IConfiguration config = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
+                .SetBasePath(appDataDir)
                 .AddJsonFile("config.json", optional: false)
                 .Build();
 
@@ -60,13 +71,10 @@ namespace SmartBox
             });
 
             #region Logging Configuration
-            string logsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppInfo.Name, "Logs", ".log");
+            string logsPath = Path.Combine(appDataDir, "Logs", ".log");
 
             string logsDirectory = Path.GetDirectoryName(logsPath)!;
-            if (!Directory.Exists(logsDirectory))
-            {
-                Directory.CreateDirectory(logsDirectory);
-            }
+            Directory.CreateDirectory(logsDirectory);
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
