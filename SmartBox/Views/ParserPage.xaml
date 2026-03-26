@@ -32,7 +32,7 @@
                                SelectedItem="{Binding SelectedWordsForExport, Mode=TwoWay}"
                                DisplayMemberPath="Value"
                                Placeholder="{Binding ExportPlaceholder}"
-                               WidthRequest="120"
+                               WidthRequest="135"
                                VerticalOptions="Center"
                                IsEditable="False"
                                ShowBorder="True" />

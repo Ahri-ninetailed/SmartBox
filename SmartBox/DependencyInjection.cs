@@ -40,6 +40,7 @@ namespace SmartBox
 
             services.AddSingleton<IThemeService, ThemeService>();
             services.AddSingleton<IAlertService, AlertService>();
+            services.AddSingleton<IClipboardService, ClipboardService>();
 
             return services;
         }

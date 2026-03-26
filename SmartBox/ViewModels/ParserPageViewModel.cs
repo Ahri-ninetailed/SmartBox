@@ -36,6 +36,7 @@ namespace SmartBox.ViewModels
 
         private readonly IParserService _parserService;
         private readonly IAlertService _alertService;
+        private readonly IClipboardService _clipboardService;
 
         private readonly IMapper<Domain.Models.Parser.Word, SmartBox.Models.Parser.Word> _wordToUIParserMapper;
         private readonly IMapper<SmartBox.Models.Parser.WordPack, Domain.Models.Parser.Word> _wordpackToAppParserMapper;
@@ -94,6 +95,7 @@ namespace SmartBox.ViewModels
         public ParserPageViewModel(ILogger<ParserPageViewModel> logger,
                                    IParserService parserService,
                                    IAlertService alertService,
+                                   IClipboardService clipboardService,
                                    IMapper<Domain.Models.Parser.Word, Word> wordToUIParserMapper,
                                    IMapper<WordPack, Domain.Models.Parser.Word> wordpackToAppParserMapper,
                                    IMapper<SmartBox.Models.Parser.Meaning, Domain.Models.Parser.Definition> definitionToAppMapper)
@@ -102,6 +104,7 @@ namespace SmartBox.ViewModels
 
             _parserService = parserService;
             _alertService = alertService;
+            _clipboardService = clipboardService;
 
             _wordToUIParserMapper = wordToUIParserMapper;
             _wordpackToAppParserMapper = wordpackToAppParserMapper;
@@ -252,7 +255,7 @@ namespace SmartBox.ViewModels
 
                 string stringToCopy = _parserService.GetStringForCopyToBuffer(word);
 
-                await Clipboard.Default.SetTextAsync(stringToCopy);
+                await _clipboardService.SetTextAsync(stringToCopy);
             }
             catch (Exception ex)
             {
@@ -271,7 +274,9 @@ namespace SmartBox.ViewModels
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string exportDirectory = Path.Combine(documentsPath, AppInfo.Name);
 
-                _parserService.ExportWords(exportDirectory, wordsforExport);
+                string exportedFilePath = _parserService.ExportWords(exportDirectory, wordsforExport);
+
+                await _clipboardService.SetFileAsync(exportedFilePath);
 
                 WordsForExport.Clear();
 
@@ -452,6 +457,11 @@ namespace SmartBox.ViewModels
             List<Domain.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, aiMode);
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
+
+            if (TreeViewNodes.Count == 0)
+            {
+                await _alertService.DisplayAlertAsync("No definitions found for the provided input", "Info");
+            }
         }
 
         private async Task ShowWordFromDb(int id)

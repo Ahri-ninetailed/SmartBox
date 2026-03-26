@@ -7,7 +7,7 @@ namespace Infrastructure.Services
 {
     public class ExportService : IExportService
     {
-        public void GenerateLexilizeExcel(string directoryPath, Word[] source)
+        public string GenerateLexilizeExcel(string directoryPath, Word[] source)
         {
             string fileName = $"Pack{DateTime.Now:yyMMddHHmmss}.xlsx";
 
@@ -28,6 +28,8 @@ namespace Infrastructure.Services
 
                 workbook.SaveAs(fullPath);
             }
+
+            return fullPath;
         }
 
         private string MapWordAndExamples(Word word)

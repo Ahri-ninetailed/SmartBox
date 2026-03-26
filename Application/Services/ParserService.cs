@@ -45,9 +45,9 @@ namespace Application.Services
             return _exportService.GetStringForCopyToBuffer(word);
         }
 
-        public void ExportWords(string directoryPath, Domain.Models.Parser.Word[] source)
+        public string ExportWords(string directoryPath, Domain.Models.Parser.Word[] source)
         {
-            _exportService.GenerateLexilizeExcel(directoryPath, source);
+            return _exportService.GenerateLexilizeExcel(directoryPath, source);
         }
 
         public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode)
