@@ -36,10 +36,15 @@ namespace Infrastructure
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
             services.AddSingleton<Domain.Interfaces.IExportService, ExportService>();
-            int acceptableAmountOfExamples = config.GetValue<int>("Ai:AcceptableAmountOfExamples");
+            int fillMissingExamplesIfBelow = config.GetValue<int>("Ai:FillMissingExamplesIfBelow");
+            int examplesPerMeaningForFilling = config.GetValue<int>("Ai:ExamplesPerMeaningForFilling");
+            int examplesPerMeaningForNewWords = config.GetValue<int>("Ai:ExamplesPerMeaningForNewWords");
             services.AddSingleton<Domain.Interfaces.IAiService>(provider =>
-                new AiService(provider.GetRequiredService<AiModel>(),
-                              acceptableAmountOfExamples));
+                new AiService(provider.GetRequiredService<ILogger<AiService>>(),
+                              provider.GetRequiredService<IAiModel>(),
+                              fillMissingExamplesIfBelow,
+                              examplesPerMeaningForFilling,
+                              examplesPerMeaningForNewWords));
 
             services.AddSingleton<ChatClient>(provider =>
             {
@@ -49,11 +54,8 @@ namespace Infrastructure
                 return new ChatClient(model, key);
             });
 
-            int exampleCount = config.GetValue<int>("Ai:ExampleCount");
-            services.AddSingleton<AiModel>(provider =>
-                new OpenAi(provider.GetRequiredService<ILogger<OpenAi>>(),
-                           provider.GetRequiredService<ChatClient>(),
-                           exampleCount));
+            services.AddSingleton<IAiModel>(provider =>
+                new OpenAi(provider.GetRequiredService<ChatClient>()));
             services.AddSingleton<IParser, CambridgeDictionaryParser>();
 
             services.AddHttpClient<Domain.Interfaces.IWordPopularityService, WordPopularityService>(client =>

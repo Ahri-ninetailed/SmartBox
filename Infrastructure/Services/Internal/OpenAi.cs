@@ -1,19 +1,18 @@
 ﻿using Infrastructure.Interfaces;
-using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
 
 namespace Infrastructure.Services.Internal
 {
-    internal class OpenAi : AiModel
+    internal class OpenAi : IAiModel
     {
         private readonly ChatClient _client;
 
-        public OpenAi(ILogger<OpenAi> logger, ChatClient client, int exampleCount) : base(logger, exampleCount)
+        public OpenAi(ChatClient client)
         {
             _client = client;
         }
 
-        protected async override Task<string> GetAnswerAsync(string prompt)
+        public async Task<string> GetAnswerAsync(string prompt)
         {
             ChatCompletion gptAnswer = await _client.CompleteChatAsync(
             [

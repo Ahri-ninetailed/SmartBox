@@ -4,8 +4,9 @@
     "ApiKeyEnvVar": "OPENAI_API_KEY"
   },
   "Ai": {
-    "ExampleCount": 3,
-    "AcceptableAmountOfExamples": 3
+    "FillMissingExamplesIfBelow": 3,
+    "ExamplesPerMeaningForNewWords": 4,
+    "ExamplesPerMeaningForFilling": 3
   },
   "Database": {
     "ConnectionStringEnvVar": "ENGLISH_WORDS_STORAGE"
