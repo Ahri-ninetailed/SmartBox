@@ -39,12 +39,20 @@ namespace Infrastructure
             int fillMissingExamplesIfBelow = config.GetValue<int>("Ai:FillMissingExamplesIfBelow");
             int examplesPerMeaningForFilling = config.GetValue<int>("Ai:ExamplesPerMeaningForFilling");
             int examplesPerMeaningForNewWords = config.GetValue<int>("Ai:ExamplesPerMeaningForNewWords");
+            string promptsPath = Path.Combine(AppContext.BaseDirectory, "Prompts");
+            string missingExamplesPrompt = File.ReadAllText(Path.Combine(promptsPath, "MissingExamples.txt"));
+            string meaningsAndExamplesPrompt = File.ReadAllText(Path.Combine(promptsPath, "MeaningsAndExamples.txt"));
+            string missingExamplesSchema = File.ReadAllText(Path.Combine(promptsPath, "MissingExamplesResponse.json"));
+            string meaningsAndExamplesSchema = File.ReadAllText(Path.Combine(promptsPath, "MeaningsAndExamplesResponse.json"));
             services.AddSingleton<Domain.Interfaces.IAiService>(provider =>
-                new AiService(provider.GetRequiredService<ILogger<AiService>>(),
-                              provider.GetRequiredService<IAiModel>(),
+                new AiService(provider.GetRequiredService<IAiModel>(),
                               fillMissingExamplesIfBelow,
                               examplesPerMeaningForFilling,
-                              examplesPerMeaningForNewWords));
+                              examplesPerMeaningForNewWords,
+                              missingExamplesPrompt,
+                              meaningsAndExamplesPrompt,
+                              missingExamplesSchema,
+                              meaningsAndExamplesSchema));
 
             services.AddSingleton<ChatClient>(provider =>
             {
@@ -54,8 +62,11 @@ namespace Infrastructure
                 return new ChatClient(model, key);
             });
 
+            int? maxOutputTokens = config.GetValue<int?>("OpenAi:MaxOutputTokens");
             services.AddSingleton<IAiModel>(provider =>
-                new OpenAi(provider.GetRequiredService<ChatClient>()));
+                new OpenAi(provider.GetRequiredService<ILogger<OpenAi>>(),
+                           provider.GetRequiredService<ChatClient>(),
+                           maxOutputTokens));
             services.AddSingleton<IParser, CambridgeDictionaryParser>();
 
             services.AddHttpClient<Domain.Interfaces.IWordPopularityService, WordPopularityService>(client =>

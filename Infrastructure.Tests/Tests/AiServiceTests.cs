@@ -10,7 +10,7 @@ namespace Infrastructure.Tests.Tests
         public AiServiceTests()
         {
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            _aiService = new AiService(null, null, 3, 3, 4);
+            _aiService = new AiService(null, 3, 3, 4, "", "", "", "");
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         }
 

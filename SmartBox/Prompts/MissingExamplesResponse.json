@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "definitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "definition": { "type": "string" },
+          "examples": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["definition", "examples"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["definitions"],
+  "additionalProperties": false
+}

@@ -1,31 +1,39 @@
 ﻿using Domain.Interfaces;
 using Domain.Models.Parser;
 using Infrastructure.Interfaces;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Infrastructure.Services
 {
     public class AiService : IAiService
     {
-        private readonly ILogger<AiService> _logger;
         private readonly IAiModel _openAiModel;
         private readonly int _fillMissingExamplesIfBelow;
         private readonly int _examplesPerMeaningForFilling;
         private readonly int _examplesPerMeaningForNewWords;
+        private readonly string _missingExamplesPromptTemplate;
+        private readonly string _meaningsAndExamplesPromptTemplate;
+        private readonly string _missingExamplesSchema;
+        private readonly string _meaningsAndExamplesSchema;
 
         public AiService(
-            ILogger<AiService> logger,
             IAiModel openAiModel,
             int fillMissingExamplesIfBelow,
             int examplesPerMeaningForFilling,
-            int examplesPerMeaningForNewWords)
+            int examplesPerMeaningForNewWords,
+            string missingExamplesPromptTemplate,
+            string meaningsAndExamplesPromptTemplate,
+            string missingExamplesSchema,
+            string meaningsAndExamplesSchema)
         {
-            _logger = logger;
             _openAiModel = openAiModel;
             _fillMissingExamplesIfBelow = fillMissingExamplesIfBelow;
             _examplesPerMeaningForFilling = examplesPerMeaningForFilling;
             _examplesPerMeaningForNewWords = examplesPerMeaningForNewWords;
+            _missingExamplesPromptTemplate = missingExamplesPromptTemplate;
+            _meaningsAndExamplesPromptTemplate = meaningsAndExamplesPromptTemplate;
+            _missingExamplesSchema = missingExamplesSchema;
+            _meaningsAndExamplesSchema = meaningsAndExamplesSchema;
         }
 
         public async Task FillMissingExamplesAsync(IEnumerable<Word> words)
@@ -39,21 +47,18 @@ namespace Infrastructure.Services
 
             string prompt = GetPromptForMissingExamples(meaningsForFilling);
 
-            _logger.LogInformation("Сформирован промпт для получения недостающих примеров:\n{Prompt}", prompt);
+            string json = await _openAiModel.GetAnswerAsync(prompt, "missing_examples", _missingExamplesSchema);
 
-            string json = await _openAiModel.GetAnswerAsync(prompt);
-
-            _logger.LogInformation("Ответ от модели получен:\n{Answer}", json);
-
-            Dictionary<string, List<string>>? parsedMeaningsAndExamples = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json);
-            if (parsedMeaningsAndExamples == null)
+            var response = JsonSerializer.Deserialize<Models.MissingExamplesResponse>(json);
+            if (response?.Definitions == null)
             {
                 throw new InvalidOperationException("Failed to parse AI response while filling missing examples.");
             }
 
-            parsedMeaningsAndExamples = parsedMeaningsAndExamples.ToDictionary(
-                pair => pair.Key,
-                pair => pair.Value.Select(s => s.TrimEnd('.')).ToList());
+            Dictionary<string, List<string>> parsedMeaningsAndExamples = response.Definitions
+                .ToDictionary(
+                    d => d.Definition,
+                    d => d.Examples.Select(s => s.TrimEnd('.')).ToList());
 
             FillMissingExamples(parsedMeaningsAndExamples, words);
         }
@@ -62,28 +67,22 @@ namespace Infrastructure.Services
         {
             string prompt = GetPromptForMeaningsAndExamples(words);
 
-            _logger.LogInformation("Сформирован промпт для получения определений и примеров:\n{Prompt}", prompt);
+            string json = await _openAiModel.GetAnswerAsync(prompt, "meanings_and_examples", _meaningsAndExamplesSchema);
 
-            string json = await _openAiModel.GetAnswerAsync(prompt);
+            var response = JsonSerializer.Deserialize<Models.MeaningsAndExamplesResponse>(json)!;
 
-            _logger.LogInformation("Ответ от модели получен:\n{Answer}", json);
-
-            JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true };
-
-            Models.AiWord[] parsedWords = JsonSerializer.Deserialize<Models.AiWord[]>(json, options)!;
-
-            return parsedWords
-                .SelectMany(parsed => parsed.TypesAndMeanings.Select(typeAndMeanings =>
+            return response.Words
+                .SelectMany(parsed => parsed.Meanings.Select(meaning =>
                     new Word
                     {
                         Value = parsed.Value,
                         Area = "AI",
-                        Type = MapPartOfSpeech(typeAndMeanings.Key),
-                        Definitions = typeAndMeanings.Value.Select(meaning =>
+                        Type = MapPartOfSpeech(meaning.PartOfSpeech),
+                        Definitions = meaning.Definitions.Select(def =>
                             new Definition
                             {
-                                Value = char.ToUpper(meaning.Key[0]) + meaning.Key.Substring(1),
-                                Examples = meaning.Value.Select(ex => new Example { Value = ex.TrimEnd('.') }).ToList()
+                                Value = char.ToUpper(def.Definition[0]) + def.Definition.Substring(1),
+                                Examples = def.Examples.Select(ex => new Example { Value = ex.TrimEnd('.') }).ToList()
                             }).ToList()
                     }))
                 .ToList();
@@ -150,99 +149,18 @@ namespace Infrastructure.Services
         {
             string pairs = JsonSerializer.Serialize(meaningsForFilling.Select(x => new { word = x.word, definition = x.meaning }));
 
-            string prompt = $@"You will be given a list of word-definition pairs. For each pair, generate at least {_examplesPerMeaningForFilling} example sentences that illustrate the use of the word in the context of the given definition.
-
-Important rules:
-- Preserve the word and definition exactly as provided, including capitalization and punctuation.
-- The examples must clearly reflect the meaning described in the definition.
-- Return the result in JSON format.
-- The structure must be: a dictionary where each key is the definition, and its value is a list of example sentences using the word in that context.
-- Do not include any explanation, formatting, or markdown – only return raw JSON.
-
-Input:
-{pairs}
-
-Output format example:
-{{
-  ""to have a strong unpleasant smell"": [
-    ""Her breath reeked of garlic."",
-    ""The garbage reeked after a week in the sun."",
-    ""His clothes reeked of cigarette smoke after the party.""
-  ],
-  ""a strong unpleasant smell"": [
-    ""The room was filled with the reek of stale beer."",
-    ""The warm air was scented with the heady reek of diesel oil from the bus."",
-    ""A foul reek rose from the abandoned building.""
-  ]
-}}
-";
-            return prompt;
+            return _missingExamplesPromptTemplate
+                .Replace("{{ExampleCount}}", _examplesPerMeaningForFilling.ToString())
+                .Replace("{{Pairs}}", pairs);
         }
 
         private string GetPromptForMeaningsAndExamples(string[] words)
         {
-            string prompt = $@"You are given a list of English words or phrases:
+            string wordList = string.Join(", ", words.Select(s => $"\"{s}\""));
 
-[{string.Join(", ", words.Select(s => $"\"{s}\""))}]
-
-For each word or phrase, find all possible meanings, including rare or unique definitions. For each meaning, provide exactly {_examplesPerMeaningForNewWords} example sentences illustrating that meaning.
-
-Return the result as a JSON array, where each element is an object with these fields:
-
-- ""word"": the original word or phrase as it appears in the list (preserving case),
-- ""meanings"": an object with keys being parts of speech (e.g. noun, verb, adjective),
-- each part of speech maps to an object where keys are definitions (strings),
-- each definition maps to a list of exactly {_examplesPerMeaningForNewWords} example sentences illustrating that meaning.
-
-The output format example:
-
-[
-  {{
-    ""word"": ""reek"",
-    ""meanings"": {{
-      ""verb"": {{
-        ""to have a strong unpleasant smell"": [
-          ""Her breath reeked of garlic"",
-          ""The garbage reeked after days in the sun"",
-          ""The old cellar reeked of mold"",
-          ""His clothes reeked of smoke""
-        ]
-      }},
-      ""noun"": {{
-        ""a strong unpleasant smell"": [
-          ""The room was filled with the reek of stale beer"",
-          ""There was a reek of chemicals in the air"",
-          ""A foul reek arose from the swamp"",
-          ""The reek of burnt rubber filled the garage""
-        ]
-      }}
-    }}
-  }},
-  {{
-    ""word"": ""apex"",
-    ""meanings"": {{
-      ""noun"": {{
-        ""the highest point or top of a shape or object"": [
-          ""the apex of a triangle/pyramid"",
-          ""The climbers reached the apex of the mountain"",
-          ""The tree's apex was covered in snow"",
-          ""The apex of the building was adorned with a flag""
-        ],
-        ""the pointed end of an organ"": [
-          ""A chest x-ray showed an abnormality in the left lung apex"",
-          ""The apex of the heart points downwards"",
-          ""Pain was localized near the apex of the tooth"",
-          ""The apex of the leaf was slightly curled""
-        ]
-      }}
-    }}
-  }}
-]
-
-Do not add any explanations or commentary. Return only the JSON content without any markdown formatting or code block markers.
-";
-
-            return prompt;
+            return _meaningsAndExamplesPromptTemplate
+                .Replace("{{ExampleCount}}", _examplesPerMeaningForNewWords.ToString())
+                .Replace("{{Words}}", wordList);
         }
     }
 }

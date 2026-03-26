@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Infrastructure.Services.Internal;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -13,23 +13,7 @@ namespace Infrastructure.Tests.Tests
 
         public CambridgeDictionaryParserTests()
         {
-            var config = new ConfigurationBuilder()
-                .AddInMemoryCollection(new Dictionary<string, string?>
-                {
-                    ["OpenAi:Model"] = "gpt-4.1",
-                    ["OpenAi:ApiKeyEnvVar"] = "OPENAI_API_KEY",
-                    ["Ai:FillMissingExamplesIfBelow"] = "3",
-                    ["Ai:ExamplesPerMeaningForFilling"] = "3",
-                    ["Ai:ExamplesPerMeaningForNewWords"] = "4",
-                    ["Database:ConnectionStringEnvVar"] = "ENGLISH_WORDS_STORAGE"
-                })
-                .Build();
-
-            var services = new ServiceCollection();
-            services.AddInfrastructureServices(config);
-            var provider = services.BuildServiceProvider();
-
-            _parser = provider.GetRequiredService<Interfaces.IParser>();
+            _parser = new CambridgeDictionaryParser(NullLogger<CambridgeDictionaryParser>.Instance);
         }
 
         [Theory]

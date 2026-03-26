@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "words": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "word": { "type": "string" },
+          "meanings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "part_of_speech": { "type": "string" },
+                "definitions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "definition": { "type": "string" },
+                      "examples": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                      }
+                    },
+                    "required": ["definition", "examples"],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": ["part_of_speech", "definitions"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["word", "meanings"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["words"],
+  "additionalProperties": false
+}

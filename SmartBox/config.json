@@ -1,7 +1,8 @@
 {
   "OpenAi": {
     "Model": "gpt-4.1",
-    "ApiKeyEnvVar": "OPENAI_API_KEY"
+    "ApiKeyEnvVar": "OPENAI_API_KEY",
+    "MaxOutputTokens": 32768
   },
   "Ai": {
     "FillMissingExamplesIfBelow": 3,
