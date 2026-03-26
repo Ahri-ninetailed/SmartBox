@@ -3,6 +3,7 @@ using Infrastructure.Mappers;
 using Infrastructure.Services;
 using Infrastructure.Services.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenAI.Chat;
@@ -20,7 +21,7 @@ namespace Infrastructure
         private const string ParserRetryMessage = "{Parser} retry attempt {RetryCount} after {Delay}s. Status: {StatusCode}, Exception: {ExceptionType}, Message: {ErrorMessage}";
 
 
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration config)
         {
             services.AddSingleton<IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
             services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?>, PartOfSpeechMapper>();
@@ -35,19 +36,24 @@ namespace Infrastructure
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
             services.AddSingleton<Domain.Interfaces.IExportService, ExportService>();
-            services.AddSingleton<Domain.Interfaces.IAiService, AiService>();
+            int acceptableAmountOfExamples = config.GetValue<int>("Ai:AcceptableAmountOfExamples");
+            services.AddSingleton<Domain.Interfaces.IAiService>(provider =>
+                new AiService(provider.GetRequiredService<AiModel>(),
+                              acceptableAmountOfExamples));
 
             services.AddSingleton<ChatClient>(provider =>
             {
-                string? key = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-                if (key == null)
-                {
-                    throw new Exception("OPENAI_API_KEY is not set");
-                }
-                return new ChatClient("gpt-4.1", key);
+                string model = config["OpenAi:Model"] ?? throw new InvalidOperationException("OpenAi:Model is not set in config");
+                string apiKeyEnvVar = config["OpenAi:ApiKeyEnvVar"] ?? throw new InvalidOperationException("OpenAi:ApiKeyEnvVar is not set in config");
+                string key = Environment.GetEnvironmentVariable(apiKeyEnvVar) ?? throw new InvalidOperationException($"{apiKeyEnvVar} environment variable is not set");
+                return new ChatClient(model, key);
             });
 
-            services.AddSingleton<AiModel, OpenAi>();
+            int exampleCount = config.GetValue<int>("Ai:ExampleCount");
+            services.AddSingleton<AiModel>(provider =>
+                new OpenAi(provider.GetRequiredService<ILogger<OpenAi>>(),
+                           provider.GetRequiredService<ChatClient>(),
+                           exampleCount));
             services.AddSingleton<IParser, CambridgeDictionaryParser>();
 
             services.AddHttpClient<Domain.Interfaces.IWordPopularityService, WordPopularityService>(client =>
@@ -126,11 +132,8 @@ namespace Infrastructure
                         });
             });
 
-            string? sqlConnectionString = Environment.GetEnvironmentVariable("ENGLISH_WORDS_STORAGE");
-            if (string.IsNullOrEmpty(sqlConnectionString))
-            {
-                throw new InvalidOperationException("ENGLISH_WORDS_STORAGE environment variable is not set");
-            }
+            string dbEnvVar = config["Database:ConnectionStringEnvVar"] ?? throw new InvalidOperationException("Database:ConnectionStringEnvVar is not set in config");
+            string sqlConnectionString = Environment.GetEnvironmentVariable(dbEnvVar) ?? throw new InvalidOperationException($"{dbEnvVar} environment variable is not set");
 
             services.AddDbContextFactory<MyDbContext>(options =>
             {

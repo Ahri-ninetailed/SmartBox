@@ -4,11 +4,11 @@ using OpenAI.Chat;
 
 namespace Infrastructure.Services.Internal
 {
-    public class OpenAi : AiModel
+    internal class OpenAi : AiModel
     {
         private readonly ChatClient _client;
 
-        public OpenAi(ILogger<OpenAi> logger, ChatClient client) : base(logger)
+        public OpenAi(ILogger<OpenAi> logger, ChatClient client, int exampleCount) : base(logger, exampleCount)
         {
             _client = client;
         }

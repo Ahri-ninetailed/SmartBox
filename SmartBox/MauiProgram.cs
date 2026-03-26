@@ -2,6 +2,7 @@
 using CommunityToolkit.Maui;
 using Domain;
 using Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
 using Serilog;
@@ -23,6 +24,11 @@ namespace SmartBox
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            IConfiguration config = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("config.json", optional: false)
+                .Build();
+
             builder.ConfigureLifecycleEvents(events =>
             {
 #if WINDOWS
@@ -35,8 +41,8 @@ namespace SmartBox
                         var id = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
                         var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(id);
 
-                        const int width = 1150;
-                        const int height = 700;
+                        int width = config.GetValue<int>("Window:Width");
+                        int height = config.GetValue<int>("Window:Height");
 
                         appWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
 
@@ -80,7 +86,7 @@ namespace SmartBox
             #endregion
 
             builder.Services.AddUIServices();
-            builder.Services.AddInfrastructureServices();
+            builder.Services.AddInfrastructureServices(config);
             builder.Services.AddApplicationServices();
             builder.Services.AddDomainMappers();
 

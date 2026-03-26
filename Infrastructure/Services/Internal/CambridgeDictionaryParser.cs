@@ -11,7 +11,7 @@ using Shared;
 namespace Infrastructure.Services.Internal
 {
     // TODO: когда нибудь переписать это дело
-    public class CambridgeDictionaryParser : IParser
+    internal class CambridgeDictionaryParser : IParser
     {
         private readonly ILogger<CambridgeDictionaryParser> _logger;
 

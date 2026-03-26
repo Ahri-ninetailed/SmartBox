@@ -5,13 +5,13 @@ namespace Infrastructure.Interfaces
 {
     public abstract class AiModel
     {
-        private const int ExampleCount = 3;
-
+        private readonly int _exampleCount;
         private readonly ILogger _logger;
 
-        public AiModel(ILogger logger)
+        public AiModel(ILogger logger, int exampleCount)
         {
             _logger = logger;
+            _exampleCount = exampleCount;
         }
 
         public async Task<string> GetExamplesForMeaningsAsync(HashSet<(string word, string meaning)> meaningsForFilling)
@@ -31,7 +31,7 @@ namespace Infrastructure.Interfaces
         {
             string pairs = JsonSerializer.Serialize(meaningsForFilling.Select(x => new { word = x.word, definition = x.meaning }));
 
-            string prompt = $@"You will be given a list of word-definition pairs. For each pair, generate at least {ExampleCount} example sentences that illustrate the use of the word in the context of the given definition.
+            string prompt = $@"You will be given a list of word-definition pairs. For each pair, generate at least {_exampleCount} example sentences that illustrate the use of the word in the context of the given definition.
 
 Important rules:
 - Preserve the word and definition exactly as provided, including capitalization and punctuation.

@@ -5,13 +5,13 @@ namespace Infrastructure.Services
 {
     public class AiService : Domain.Interfaces.IAiService
     {
-        private const int AcceptableAmountOfExamples = 3;
-
+        private readonly int _acceptableAmountOfExamples;
         private readonly Interfaces.AiModel _openAiModel;
 
-        public AiService(Interfaces.AiModel openAiModel)
+        public AiService(Interfaces.AiModel openAiModel, int acceptableAmountOfExamples)
         {
             _openAiModel = openAiModel;
+            _acceptableAmountOfExamples = acceptableAmountOfExamples;
         }
 
         public async Task FillMissingExamplesAsync(IEnumerable<Word> words)
@@ -92,7 +92,7 @@ namespace Infrastructure.Services
         {
             return words
                 .SelectMany(word => word.Definitions
-                    .Where(def => def.Examples.Count < AcceptableAmountOfExamples)
+                    .Where(def => def.Examples.Count < _acceptableAmountOfExamples)
                     .Select(def => (word.Value, def.Value)))
                 .ToHashSet();
         }
@@ -101,7 +101,7 @@ namespace Infrastructure.Services
         {
             foreach (Word word in words)
             {
-                if (word.Definitions.All(def => def.Examples.Count >= AcceptableAmountOfExamples))
+                if (word.Definitions.All(def => def.Examples.Count >= _acceptableAmountOfExamples))
                 {
                     continue;
                 }
