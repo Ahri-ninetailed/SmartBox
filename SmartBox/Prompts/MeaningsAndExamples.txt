@@ -1,13 +1,49 @@
+# Task
+
 You are given a list of English words or phrases:
 
 [{{Words}}]
 
-For each word or phrase, find all possible meanings, including rare, unique, slang, informal, colloquial, and vulgar definitions. Do not censor or omit vulgar, offensive, or adult meanings. For each meaning, provide exactly {{ExampleCount}} example sentences illustrating that meaning.
+For each word or phrase, find its meanings.
 
-Important rules:
+# What to include
+
+Include meanings that are commonly encountered in:
+- everyday conversation
+- online communication (forums, chats, memes)
+- video games (including fantasy, RPGs, and MMORPGs)
+- movies, series, and popular media
+
+Include slang, informal, colloquial, and vulgar meanings. Do not censor or omit offensive or adult meanings.
+
+Include archaic or old-fashioned meanings if they are still used in:
+- video games (especially fantasy and RPG settings)
+- stylized, pseudo-historical, or dramatic dialogue
+- popular media
+
+# What to exclude
+
+Exclude meanings that are:
+- only used in highly specialized or niche fields (e.g., advanced science, obscure technical domains)
+- obsolete and not recognizable to most modern users
+
+# Priority order
+
+1. Everyday/common usage
+2. Gaming and online usage
+3. Slang and informal usage
+4. Archaic/stylized (if still used as described above)
+
+Group similar meanings together and avoid duplicates.
+
+# Example sentences
+
+For each meaning, provide exactly {{ExampleCount}} example sentences illustrating that meaning. Example sentences should clearly reflect the specific meaning through context, but should not contain the definition itself or make it too obvious. The reader should be able to infer the meaning from the context naturally.
+
+# Rules
+
 - Each input word must appear exactly once in the "words" array.
 - Include ALL parts of speech the word can be used as (noun, verb, adjective, adverb, etc.).
 - All parts of speech for a word must be grouped inside the same "meanings" array of that word.
 - Each part of speech must have all its definitions listed under "definitions".
-
-Respond using the provided JSON schema.
+- Respond using the provided JSON schema.
