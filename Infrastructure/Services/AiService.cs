@@ -57,7 +57,7 @@ namespace Infrastructure.Services
 
             Dictionary<string, List<string>> parsedMeaningsAndExamples = response.Definitions
                 .ToDictionary(
-                    d => d.Definition,
+                    d => d.Definition.TrimEnd('.'),
                     d => d.Examples.Select(s => s.TrimEnd('.')).ToList());
 
             FillMissingExamples(parsedMeaningsAndExamples, words);
@@ -75,13 +75,13 @@ namespace Infrastructure.Services
                 .SelectMany(parsed => parsed.Meanings.Select(meaning =>
                     new Word
                     {
-                        Value = parsed.Value,
+                        Value = parsed.Value.TrimEnd(','),
                         Area = "AI",
                         Type = MapPartOfSpeech(meaning.PartOfSpeech),
                         Definitions = meaning.Definitions.Select(def =>
                             new Definition
                             {
-                                Value = char.ToUpper(def.Definition[0]) + def.Definition.Substring(1),
+                                Value = (char.ToUpper(def.Definition[0]) + def.Definition.Substring(1)).TrimEnd('.'),
                                 Examples = def.Examples.Select(ex => new Example { Value = ex.TrimEnd('.') }).ToList()
                             }).ToList()
                     }))
