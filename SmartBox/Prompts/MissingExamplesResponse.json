@@ -6,10 +6,11 @@
       "items": {
         "type": "object",
         "properties": {
-          "definition": { "type": "string" },
+          "definition": { "type": "string", "description": "The original definition text exactly as provided in the input, copied verbatim without any changes" },
           "examples": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string", "description": "A generated example sentence" },
+            "description": "Generated example sentences illustrating the word used in the context of this definition"
           }
         },
         "required": ["definition", "examples"],

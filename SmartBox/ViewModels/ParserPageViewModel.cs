@@ -186,6 +186,8 @@ namespace SmartBox.ViewModels
                 List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
                 TreeViewNodes = new ObservableCollection<Word>(TreeViewNodes.Where(el => el.Id != 0).Concat(additionalDefinitions));
+
+                await ShowNoDefinitionsFoundAlert();
             }
             catch (Exception ex)
             {
@@ -458,6 +460,11 @@ namespace SmartBox.ViewModels
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
 
+            await ShowNoDefinitionsFoundAlert();
+        }
+
+        private async Task ShowNoDefinitionsFoundAlert()
+        {
             if (TreeViewNodes.Count == 0)
             {
                 await _alertService.DisplayAlertAsync("No definitions found for the provided input", "Info");
