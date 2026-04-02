@@ -19,7 +19,7 @@ namespace Infrastructure.Services.Internal
 
         public async Task<string> GetAnswerAsync(string prompt, string jsonSchemaName, string jsonSchema)
         {
-            _logger.LogInformation("Отправка промпта:\n{Prompt}", prompt);
+            _logger.LogInformation("[{Schema}] Отправка промпта:\n{Prompt}", jsonSchemaName, prompt);
 
             var options = new ChatCompletionOptions
             {
@@ -38,7 +38,7 @@ namespace Infrastructure.Services.Internal
 
             string answer = gptAnswer.Content[0].Text;
 
-            _logger.LogInformation("Ответ от модели получен:\n{Answer}", answer);
+            _logger.LogInformation("[{Schema}] Ответ от модели получен:\n{Answer}", jsonSchemaName, answer);
 
             return answer;
         }

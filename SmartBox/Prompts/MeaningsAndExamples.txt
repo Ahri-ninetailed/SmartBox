@@ -38,7 +38,10 @@ Group similar meanings together and avoid duplicates.
 
 # Example sentences
 
-For each meaning, provide exactly {{ExampleCount}} example sentences illustrating that meaning. Example sentences should clearly reflect the specific meaning through context, but should not contain the definition itself or make it too obvious. The reader should be able to infer the meaning from the context naturally.
+For each meaning, provide exactly {{ExampleCount}} example sentences illustrating that meaning. 
+Every example sentence must use the word itself (or its grammatical form). 
+Example sentences should clearly reflect the specific meaning through context, but should not contain the definition itself or make it too obvious. 
+The reader should be able to infer the meaning from the context naturally.
 
 # Rules
 

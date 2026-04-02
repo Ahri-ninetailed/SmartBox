@@ -206,9 +206,9 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<string, List<string>>
+            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
             {
-                ["to have a strong unpleasant smell"] = new() { "Her breath reeked of garlic", "The garbage reeked" }
+                [("reek", "to have a strong unpleasant smell")] = new() { "Her breath reeked of garlic", "The garbage reeked" }
             };
 
             _aiService.FillMissingExamples(meaningsAndExamples, words);
@@ -238,9 +238,9 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<string, List<string>>
+            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
             {
-                ["completely different definition"] = new() { "example 1", "example 2" }
+                [("reek", "completely different definition")] = new() { "example 1", "example 2" }
             };
 
             _aiService.FillMissingExamples(meaningsAndExamples, words);
@@ -272,9 +272,9 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<string, List<string>>
+            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
             {
-                ["to have a strong unpleasant smell"] = new() { "should not be added" }
+                [("reek", "to have a strong unpleasant smell")] = new() { "should not be added" }
             };
 
             _aiService.FillMissingExamples(meaningsAndExamples, words);
@@ -323,10 +323,10 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<string, List<string>>
+            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
             {
-                ["The evening"] = new() { "A warm summer eve", "On that fateful eve" },
-                ["The first woman"] = new() { "Adam and Eve", "Eve was created from a rib" }
+                [("eve", "The evening")] = new() { "A warm summer eve", "On that fateful eve" },
+                [("Eve", "The first woman")] = new() { "Adam and Eve", "Eve was created from a rib" }
             };
 
             _aiService.FillMissingExamples(meaningsAndExamples, words);

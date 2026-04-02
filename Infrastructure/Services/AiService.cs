@@ -50,14 +50,14 @@ namespace Infrastructure.Services
             string json = await _openAiModel.GetAnswerAsync(prompt, "missing_examples", _missingExamplesSchema);
 
             var response = JsonSerializer.Deserialize<Models.MissingExamplesResponse>(json);
-            if (response?.Definitions == null)
+            if (response?.Words == null)
             {
                 throw new InvalidOperationException("Failed to parse AI response while filling missing examples.");
             }
 
-            Dictionary<string, List<string>> parsedMeaningsAndExamples = response.Definitions
+            Dictionary<(string word, string definition), List<string>> parsedMeaningsAndExamples = response.Words
                 .ToDictionary(
-                    d => d.Definition.TrimEnd('.'),
+                    d => (d.Value, d.Definition.TrimEnd('.')),
                     d => d.Examples.Select(s => s.TrimEnd('.')).ToList());
 
             FillMissingExamples(parsedMeaningsAndExamples, words);
@@ -122,7 +122,7 @@ namespace Infrastructure.Services
                 .ToHashSet();
         }
 
-        internal void FillMissingExamples(Dictionary<string, List<string>> meaningsAndExamples, IEnumerable<Word> words)
+        internal void FillMissingExamples(Dictionary<(string word, string definition), List<string>> meaningsAndExamples, IEnumerable<Word> words)
         {
             foreach (Word word in words)
             {
@@ -131,9 +131,14 @@ namespace Infrastructure.Services
                     continue;
                 }
 
-                foreach (KeyValuePair<string, List<string>> kvp in meaningsAndExamples)
+                foreach (var kvp in meaningsAndExamples)
                 {
-                    Definition? definition = word.Definitions.FirstOrDefault(def => def.Value == kvp.Key);
+                    if (kvp.Key.word != word.Value)
+                    {
+                        continue;
+                    }
+
+                    Definition? definition = word.Definitions.FirstOrDefault(def => def.Value == kvp.Key.definition);
 
                     if (definition == null)
                     {

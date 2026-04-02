@@ -1,7 +1,8 @@
 You will be given a list of word-definition pairs. For each pair, generate at least {{ExampleCount}} example sentences that illustrate the use of the word in the context of the given definition.
 
 Important rules:
-- In the response, the "definition" field must contain the original definition text exactly as provided in the input, copied verbatim without any changes.
+- In the response, the "value" field must contain the original word exactly as provided in the input.
+- The "definition" field must contain the original definition text exactly as provided in the input, copied verbatim without any changes.
 - The "examples" field must contain the generated example sentences.
 - The examples must clearly reflect the meaning described in the definition.
 

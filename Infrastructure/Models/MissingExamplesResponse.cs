@@ -4,12 +4,15 @@ namespace Infrastructure.Models
 {
     public class MissingExamplesResponse
     {
-        [JsonPropertyName("definitions")]
-        public List<AiDefinitionExamples> Definitions { get; set; } = null!;
+        [JsonPropertyName("words")]
+        public List<AiDefinitionExamples> Words { get; set; } = null!;
     }
 
     public class AiDefinitionExamples
     {
+        [JsonPropertyName("value")]
+        public string Value { get; set; } = null!;
+
         [JsonPropertyName("definition")]
         public string Definition { get; set; } = null!;
 

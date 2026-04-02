@@ -1,11 +1,12 @@
 {
   "type": "object",
   "properties": {
-    "definitions": {
+    "words": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
+          "value": { "type": "string", "description": "The original word exactly as provided in the input" },
           "definition": { "type": "string", "description": "The original definition text exactly as provided in the input, copied verbatim without any changes" },
           "examples": {
             "type": "array",
@@ -13,11 +14,11 @@
             "description": "Generated example sentences illustrating the word used in the context of this definition"
           }
         },
-        "required": ["definition", "examples"],
+        "required": ["value", "definition", "examples"],
         "additionalProperties": false
       }
     }
   },
-  "required": ["definitions"],
+  "required": ["words"],
   "additionalProperties": false
 }
