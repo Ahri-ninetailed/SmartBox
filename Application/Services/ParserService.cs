@@ -45,9 +45,14 @@ namespace Application.Services
             return _exportService.GetStringForCopyToBuffer(word);
         }
 
-        public string ExportWords(string directoryPath, Domain.Models.Parser.Word[] source)
+        public string ExportLexilizeWords(string directoryPath, Domain.Models.Parser.Word[] source)
         {
             return _exportService.GenerateLexilizeExcel(directoryPath, source);
+        }
+
+        public string ExportAnkiWords(string directoryPath, Domain.Models.Parser.Word[] source)
+        {
+            return _exportService.GenerateAnkiTsv(directoryPath, source);
         }
 
         public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode)

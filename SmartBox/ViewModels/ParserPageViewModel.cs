@@ -21,7 +21,8 @@ namespace SmartBox.ViewModels
         private readonly string[] Separators = [", ", ","];
         private const string ParseErrorMessage = "An error occurred while parsing";
         private const string ExportPlaceholderFormat = "To export: {0}";
-        private const string ExportErrorMessage = "An error occurred while exporting";
+        private const string ExportLexilizeErrorMessage = "An error occurred while exporting to Lexilize";
+        private const string ExportAnkiErrorMessage = "An error occurred while exporting to Anki";
         private const string LoadWordFromDbErrorMessageFormat = "Error loading word from database with ID {0}";
         private const string EnrichErrorMessage = "An error occurred while enriching definitions";
         private const string SyncErrorMessage = "An error occurred while syncing a word";
@@ -266,30 +267,39 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanExport))]
-        private async Task ExportAsync()
+        [RelayCommand(CanExecute = nameof(CanExportLexilize))]
+        private Task ExportLexilizeAsync() =>
+            ExportAsync(_parserService.ExportLexilizeWords, ExportLexilizeErrorMessage);
+
+        [RelayCommand(CanExecute = nameof(CanExportAnki))]
+        private Task ExportAnkiAsync() =>
+            ExportAsync(_parserService.ExportAnkiWords, ExportAnkiErrorMessage);
+
+        private async Task ExportAsync(Func<string, Domain.Models.Parser.Word[], string> exportMethod, string errorMessage)
         {
             try
             {
-                Domain.Models.Parser.Word[] wordsforExport = _wordpackToAppParserMapper.MapToArray(WordsForExport);
+                Domain.Models.Parser.Word[] wordsForExport = _wordpackToAppParserMapper.MapToArray(WordsForExport);
 
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string exportDirectory = Path.Combine(documentsPath, AppInfo.Name);
 
-                string exportedFilePath = _parserService.ExportWords(exportDirectory, wordsforExport);
+                string exportedFilePath = exportMethod(exportDirectory, wordsForExport);
 
                 await _clipboardService.SetFileAsync(exportedFilePath);
-
-                WordsForExport.Clear();
-
-                SelectedWordsForExport = null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ExportErrorMessage);
-
-                await _alertService.DisplayAlertAsync($"{ExportErrorMessage}: {ex.Message}");
+                _logger.LogError(ex, errorMessage);
+                await _alertService.DisplayAlertAsync($"{errorMessage}: {ex.Message}");
             }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanClearExportBuffer))]
+        private void ClearExportBuffer()
+        {
+            WordsForExport.Clear();
+            SelectedWordsForExport = null;
         }
         #endregion
 
@@ -328,7 +338,17 @@ namespace SmartBox.ViewModels
             return TreeViewNodes.Any(el => el.IsSelected);
         }
 
-        private bool CanExport()
+        private bool CanExportLexilize()
+        {
+            return WordsForExport.Any();
+        }
+
+        private bool CanExportAnki()
+        {
+            return WordsForExport.Any();
+        }
+
+        private bool CanClearExportBuffer()
         {
             return WordsForExport.Any();
         }
@@ -376,7 +396,9 @@ namespace SmartBox.ViewModels
 
         private void OnWordsForExportCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            ExportCommand.NotifyCanExecuteChanged();
+            ExportLexilizeCommand.NotifyCanExecuteChanged();
+            ExportAnkiCommand.NotifyCanExecuteChanged();
+            ClearExportBufferCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(ExportPlaceholder));
         }
 

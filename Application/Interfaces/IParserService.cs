@@ -9,7 +9,8 @@ namespace Application.Interfaces
 
         Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId);
 
-        string ExportWords(string directoryPath, Domain.Models.Parser.Word[] source);
+        string ExportLexilizeWords(string directoryPath, Domain.Models.Parser.Word[] source);
+        string ExportAnkiWords(string directoryPath, Domain.Models.Parser.Word[] source);
 
         Task SyncDefinitionsAndExamplesAsync(int wordId, IEnumerable<Domain.Models.Parser.Definition> newDefinitions);
         string GetStringForCopyToBuffer(Domain.Models.Parser.Word word);
