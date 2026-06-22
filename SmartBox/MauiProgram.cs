@@ -34,6 +34,8 @@ namespace SmartBox
             {
                 File.Copy(Path.Combine(AppContext.BaseDirectory, "config.json"), configPath);
             }
+            // TODO: add config versioning — on update, merge missing keys from the bundled config
+            // into the user's config without overwriting existing values, then bump ConfigVersion.
 
             IConfiguration config = new ConfigurationBuilder()
                 .SetBasePath(appDataDir)
