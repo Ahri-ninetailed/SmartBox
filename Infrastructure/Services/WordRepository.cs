@@ -148,6 +148,25 @@ namespace Infrastructure.Services
             return result;
         }
 
+        public async Task<Domain.Models.Dictionary.Word[]> SearchByMeaningAsync(string meaning, Domain.Models.Dictionary.PartOfSpeech? partOfSpeech, int count = 500)
+        {
+            if (string.IsNullOrWhiteSpace(meaning))
+            {
+                throw new ArgumentException("Meaning cannot be null or whitespace.");
+            }
+
+            using MyDbContext db = _dbFactory.CreateDbContext();
+
+            Word[] words = await db.EnglishWords
+                .Where(w => w.Definitions.Any(d => d.Value.Contains(meaning)))
+                .Where(w => partOfSpeech == null || w.PartOfSpeech == _partOfSpeechToInfsMapper.Map(partOfSpeech.Value))
+                .OrderBy(w => w.Value)
+                .Take(count)
+                .ToArrayAsync();
+
+            return _wordToDomMapper.MapToArray(words);
+        }
+
         public async Task<Domain.Models.Dictionary.Word> AddWordAsync(Domain.Models.Dictionary.Word newWord)
         {
             if (newWord == null)

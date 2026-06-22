@@ -18,6 +18,7 @@ namespace SmartBox.ViewModels
 
         private const string UpdateUIErrorMessage = "Operation completed, but failed to update the interface";
         private const string SearchWordsErrorMessage = "Failed to search words";
+        private const string SearchByMeaningErrorMessage = "Failed to search by meaning";
         private const string LearnWordsErrorMessage = "Failed to mark words as learned";
         private const string MarkWordsErrorMessage = "Failed to mark words for further study";
         private const string LoadWordsErrorMessage = "Failed to get words for learning";
@@ -56,6 +57,9 @@ namespace SmartBox.ViewModels
         public string[] SearchWords => SearchText.Split(Separators, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
         [ObservableProperty]
+        private string meaningSearchText = string.Empty;
+
+        [ObservableProperty]
         private string commentText = string.Empty;
 
         [ObservableProperty]
@@ -66,6 +70,7 @@ namespace SmartBox.ViewModels
         [ObservableProperty]
         private ObservableCollection<Models.Dictionary.PartOfSpeech> partOfSpeechOptions = new()
         {
+            Models.Dictionary.PartOfSpeech.Unknown,
             Models.Dictionary.PartOfSpeech.Other,
             Models.Dictionary.PartOfSpeech.Verb
         };
@@ -101,6 +106,39 @@ namespace SmartBox.ViewModels
         #endregion
 
         #region Commands
+        [RelayCommand]
+        private async Task SearchByMeaningAsync()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(MeaningSearchText))
+                {
+                    Words = await GetWordsForLearningAsync();
+
+                    return;
+                }
+
+                Domain.Models.Dictionary.PartOfSpeech? domainPartOfSpeech = SelectedPartOfSpeech != Models.Dictionary.PartOfSpeech.Unknown
+                    ? _partOfSpeechMapper.Map(SelectedPartOfSpeech)
+                    : null;
+
+                Domain.Models.Dictionary.Word[] domainWords = await _dictionaryService.SearchByMeaningAsync(MeaningSearchText, domainPartOfSpeech);
+
+                Models.Dictionary.Word[] words = _wordMapper.MapToArray(domainWords);
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Words = new ObservableCollection<Models.Dictionary.Word>(words);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, SearchByMeaningErrorMessage);
+
+                await _alertService.DisplayAlertAsync($"{SearchByMeaningErrorMessage}: {ex.Message}");
+            }
+        }
+
         [RelayCommand(CanExecute = nameof(CanParse))]
         private async Task Parse()
         {
@@ -354,7 +392,7 @@ namespace SmartBox.ViewModels
 
         private bool CanAddWord()
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
+            if (string.IsNullOrWhiteSpace(SearchText) || SelectedPartOfSpeech == Models.Dictionary.PartOfSpeech.Unknown)
             {
                 return false;
             }

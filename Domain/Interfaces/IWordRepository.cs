@@ -8,6 +8,8 @@ namespace Domain.Interfaces
 
         Task<Word[]> SearchWordsAsync(string[] entries, int count = 100);
 
+        Task<Word[]> SearchByMeaningAsync(string meaning, PartOfSpeech? partOfSpeech, int count = 500);
+
         Task<Word[]> GetWordsByIdsAsync(IEnumerable<int> ids, bool includeRelatedData);
 
         Task SaveWordsAsync(Word[] words);

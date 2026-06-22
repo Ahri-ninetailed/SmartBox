@@ -22,13 +22,19 @@
                 </Entry.Behaviors>
             </Entry>
             <Entry x:Name="CommentEntry" Placeholder="Comment" Text="{Binding CommentText, Mode=TwoWay}"/>
-            <inputs:SfComboBox 
+            <inputs:SfComboBox
                 x:Name="PartOfSpeechComboBox"
                 ItemsSource="{Binding PartOfSpeechOptions}"
                 SelectedItem="{Binding SelectedPartOfSpeech, Mode=TwoWay}"
                 MinimumWidthRequest="150"
                 IsClearButtonVisible="False"
                 IsEditable="False"/>
+            <Entry MinimumWidthRequest="100" x:Name="MeaningEntry" Placeholder="Meaning" Text="{Binding MeaningSearchText, Mode=TwoWay}">
+                <Entry.Behaviors>
+                    <toolkit:UserStoppedTypingBehavior StoppedTypingTimeThreshold="1000" />
+                    <behaviors:SelectAllOnFocusBehavior />
+                </Entry.Behaviors>
+            </Entry>
         </HorizontalStackLayout>
 
         <syncfusion:SfDataGrid

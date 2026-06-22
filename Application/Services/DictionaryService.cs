@@ -231,5 +231,24 @@ namespace Application.Services
                 ResilienceContextPool.Shared.Return(context);
             }
         }
+
+        public async Task<Domain.Models.Dictionary.Word[]> SearchByMeaningAsync(string meaning, Domain.Models.Dictionary.PartOfSpeech? partOfSpeech)
+        {
+            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchByMeaningAsync));
+
+            meaning = meaning.ToLower();
+
+            try
+            {
+                return await _retryPipeline.ExecuteAsync(async _ =>
+                {
+                    return await _wordRepository.SearchByMeaningAsync(meaning, partOfSpeech);
+                }, context);
+            }
+            finally
+            {
+                ResilienceContextPool.Shared.Return(context);
+            }
+        }
     }
 }

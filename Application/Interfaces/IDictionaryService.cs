@@ -6,6 +6,8 @@
 
         Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries);
 
+        Task<Domain.Models.Dictionary.Word[]> SearchByMeaningAsync(string meaning, Domain.Models.Dictionary.PartOfSpeech? partOfSpeech);
+
         Task LearnWordsAsync(IEnumerable<int> ids);
 
         Task MarkWordsAsync(IEnumerable<int> ids);

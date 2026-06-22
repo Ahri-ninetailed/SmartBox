@@ -26,10 +26,16 @@ namespace SmartBox.Views
 
             if (BindingContext is DictionaryPageViewModel viewModel)
             {
-                var behavior = WordEntry.Behaviors.OfType<CommunityToolkit.Maui.Behaviors.UserStoppedTypingBehavior>().FirstOrDefault();
-                if (behavior != null)
+                var wordBehavior = WordEntry.Behaviors.OfType<CommunityToolkit.Maui.Behaviors.UserStoppedTypingBehavior>().FirstOrDefault();
+                if (wordBehavior != null)
                 {
-                    behavior.Command = viewModel.SearchCommand;
+                    wordBehavior.Command = viewModel.SearchCommand;
+                }
+
+                var meaningBehavior = MeaningEntry.Behaviors.OfType<CommunityToolkit.Maui.Behaviors.UserStoppedTypingBehavior>().FirstOrDefault();
+                if (meaningBehavior != null)
+                {
+                    meaningBehavior.Command = viewModel.SearchByMeaningCommand;
                 }
             }
         }
