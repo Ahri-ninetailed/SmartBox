@@ -1,10 +1,18 @@
-You will be given a list of word-definition pairs. For each pair, generate at least {{ExampleCount}} example sentences that illustrate the use of the word in the context of the given definition.
+# Task
 
-Important rules:
-- In the response, the "value" field must contain the original word exactly as provided in the input.
+You are given a list of word-definition pairs. For each pair, generate example sentences that illustrate the word used in the context of the given definition.
+
+# Example sentences
+
+For each pair, provide exactly {{ExampleCount}} example sentences illustrating the given definition.
+Every example sentence must use the word itself (or its grammatical form).
+Example sentences should clearly reflect the specific meaning through context, but should not contain the definition itself or make it too obvious.
+The reader should be able to infer the meaning from the context naturally.
+
+# Rules
+
+- The "value" field must contain the original word exactly as provided in the input.
 - The "definition" field must contain the original definition text exactly as provided in the input, copied verbatim without any changes.
-- The "examples" field must contain the generated example sentences.
-- The examples must clearly reflect the meaning described in the definition.
 
 Input:
 {{Pairs}}
