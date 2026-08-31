@@ -78,8 +78,15 @@ namespace Infrastructure.Tests.Tests
     {
         public bool Equals(Models.Parser.Word? x, Models.Parser.Word? y)
         {
-            if (ReferenceEquals(x, y)) return true;
-            if (x is null || y is null) return false;
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (x is null || y is null)
+            {
+                return false;
+            }
 
             bool areDictionariesEqual = AreDictionariesEqual(x.MeaningsAndExamples, y.MeaningsAndExamples);
             bool arePluralFormsEqual = x.PluralForms.SetEquals(y.PluralForms);

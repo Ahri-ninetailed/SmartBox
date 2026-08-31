@@ -44,7 +44,10 @@ namespace SmartBox.Models.Parser
         protected void SetParentSelection<T>(T parent, bool value, Func<T, IEnumerable<SelectableHierarchyNode>> getSiblings)
             where T : SelectableHierarchyNode
         {
-            if (parent == null) return;
+            if (parent == null)
+            {
+                return;
+            }
 
             if (value)
             {
