@@ -14,7 +14,7 @@
 
     <Grid RowDefinitions="Auto,*" Padding="20">
 
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10">
             <Entry x:Name="WordEntry"
                    Grid.Column="0"
                    Placeholder="Enter word or ID"
@@ -59,27 +59,20 @@
                     ToolTipProperties.Text="Clear export buffer" />
 
             <Button Grid.Column="5"
-                    Text="Lexilize"
-                    Command="{Binding ExportLexilizeCommand}"
-                    WidthRequest="80"
-                    HeightRequest="40"
-                    ToolTipProperties.Text="Export to Lexilize format" />
-
-            <Button Grid.Column="6"
                     Text="Anki"
                     Command="{Binding ExportAnkiCommand}"
                     WidthRequest="60"
                     HeightRequest="40"
                     ToolTipProperties.Text="Export to Anki format" />
 
-            <Button Grid.Column="7"
+            <Button Grid.Column="6"
                     Text="Copy"
                     Command="{Binding CopyCommand}"
                     WidthRequest="60"
                     HeightRequest="40"
                     ToolTipProperties.Text="Copy to buffer" />
 
-            <StackLayout Grid.Column="8"
+            <StackLayout Grid.Column="7"
                          Orientation="Horizontal"
                          Spacing="5"
                          VerticalOptions="Center">
@@ -95,21 +88,21 @@
                           VerticalOptions="Center"/>
             </StackLayout>
 
-            <Button Grid.Column="9"
+            <Button Grid.Column="8"
                     Text="Enrich"
                     Command="{Binding EnrichCommand}"
                     WidthRequest="70"
                     HeightRequest="40"
                     ToolTipProperties.Text="Enrich word with another definitions and examples" />
 
-            <Button Grid.Column="10"
+            <Button Grid.Column="9"
                     Text="Unlock"
                     Command="{Binding UnlockCommand}"
                     WidthRequest="75"
                     HeightRequest="40"
                     ToolTipProperties.Text="Unlock word for sync" />
 
-            <Button Grid.Column="11"
+            <Button Grid.Column="10"
                     Text="Sync"
                     Command="{Binding SyncCommand}"
                     WidthRequest="60"

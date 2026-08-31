@@ -171,6 +171,29 @@ namespace Infrastructure.Tests.Tests
             Assert.StartsWith("Anki", Path.GetFileNameWithoutExtension(path));
         }
 
+        [Fact]
+        public void GetStringForCopyToBuffer_ReturnsSameRowAsAnkiExport()
+        {
+            Word word = MakeWord("run", PartOfSpeech.Verb,
+                Def("move quickly", "she runs."),
+                Def("operate", "the engine runs."));
+
+            string copied = _service.GetStringForCopyToBuffer(word);
+
+            Assert.Equal(Generate([word]), copied);
+        }
+
+        [Fact]
+        public void GetStringForCopyToBuffer_HasFourAnkiFields()
+        {
+            Word word = MakeWord("book", PartOfSpeech.Noun, Def("a written work", "I read a book."));
+
+            string[] fields = SplitFields(_service.GetStringForCopyToBuffer(word));
+
+            Assert.Equal(4, fields.Length);
+            Assert.Equal("book", fields[0]);
+        }
+
         // helpers
 
         private string Generate(Word[] words)

@@ -4,7 +4,6 @@ namespace Domain.Interfaces
 {
     public interface IExportService
     {
-        string GenerateLexilizeExcel(string directoryPath, Word[] source);
         string GenerateAnkiTsv(string directoryPath, Word[] source);
         string GetStringForCopyToBuffer(Word domainWord);
     }

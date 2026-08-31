@@ -21,7 +21,6 @@ namespace SmartBox.ViewModels
         private readonly string[] Separators = [", ", ","];
         private const string ParseErrorMessage = "An error occurred while parsing";
         private const string ExportPlaceholderFormat = "To export: {0}";
-        private const string ExportLexilizeErrorMessage = "An error occurred while exporting to Lexilize";
         private const string ExportAnkiErrorMessage = "An error occurred while exporting to Anki";
         private const string LoadWordFromDbErrorMessageFormat = "Error loading word from database with ID {0}";
         private const string EnrichErrorMessage = "An error occurred while enriching definitions";
@@ -267,15 +266,8 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanExportLexilize))]
-        private Task ExportLexilizeAsync() =>
-            ExportAsync(_parserService.ExportLexilizeWords, ExportLexilizeErrorMessage);
-
         [RelayCommand(CanExecute = nameof(CanExportAnki))]
-        private Task ExportAnkiAsync() =>
-            ExportAsync(_parserService.ExportAnkiWords, ExportAnkiErrorMessage);
-
-        private async Task ExportAsync(Func<string, Domain.Models.Parser.Word[], string> exportMethod, string errorMessage)
+        private async Task ExportAnkiAsync()
         {
             try
             {
@@ -284,14 +276,16 @@ namespace SmartBox.ViewModels
                 string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 string exportDirectory = Path.Combine(documentsPath, AppInfo.Name);
 
-                string exportedFilePath = exportMethod(exportDirectory, wordsForExport);
+                string exportedFilePath = _parserService.ExportAnkiWords(exportDirectory, wordsForExport);
 
                 await _clipboardService.SetFileAsync(exportedFilePath);
+
+                ClearExportBuffer();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, errorMessage);
-                await _alertService.DisplayAlertAsync($"{errorMessage}: {ex.Message}");
+                _logger.LogError(ex, ExportAnkiErrorMessage);
+                await _alertService.DisplayAlertAsync($"{ExportAnkiErrorMessage}: {ex.Message}");
             }
         }
 
@@ -336,11 +330,6 @@ namespace SmartBox.ViewModels
         private bool CanAddWordsForExport()
         {
             return TreeViewNodes.Any(el => el.IsSelected);
-        }
-
-        private bool CanExportLexilize()
-        {
-            return WordsForExport.Any();
         }
 
         private bool CanExportAnki()
@@ -396,7 +385,6 @@ namespace SmartBox.ViewModels
 
         private void OnWordsForExportCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            ExportLexilizeCommand.NotifyCanExecuteChanged();
             ExportAnkiCommand.NotifyCanExecuteChanged();
             ClearExportBufferCommand.NotifyCanExecuteChanged();
             OnPropertyChanged(nameof(ExportPlaceholder));
