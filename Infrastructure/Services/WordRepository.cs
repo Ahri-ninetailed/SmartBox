@@ -87,15 +87,17 @@ namespace Infrastructure.Services
 
             List<Word> firstPack = await unlearnedWords
                                 .Where(word => word.ShouldStudy)
-                                .OrderByDescending(word => word.Popularity)
+                                .OrderByDescending(word => !word.Popularity.HasValue)
+                                .ThenByDescending(word => word.Popularity)
                                 .Take(count)
                                 .ToListAsync();
 
             if (firstPack.Count < count)
             {
                 List<Word> secondPack = await unlearnedWords
-                                .Where(word => !firstPack.Contains(word) && word.Popularity.HasValue)
-                                .OrderByDescending(word => word.Popularity)
+                                .Where(word => !firstPack.Contains(word))
+                                .OrderByDescending(word => !word.Popularity.HasValue)
+                                .ThenByDescending(word => word.Popularity)
                                 .Take(count - firstPack.Count)
                                 .ToListAsync();
 
