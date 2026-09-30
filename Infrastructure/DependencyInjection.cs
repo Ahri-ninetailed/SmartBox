@@ -94,13 +94,16 @@ namespace Infrastructure
 
             services.AddKeyedSingleton<CookieContainer>(Models.Parser.Parser.CambridgeDictionary.ToString());
 
+            // Общий лимит на запрос вместе с ретраями
+            int cambridgeDictionaryTimeoutSeconds = config.GetValue<int?>("CambridgeDictionary:TimeoutSeconds") ?? throw new InvalidOperationException("CambridgeDictionary:TimeoutSeconds is not set in config");
+
             // TODO: Возникают проблемы с отправкой запросов, может быть стоит использовать Microsoft.Playwright
             services.AddHttpClient(Models.Parser.Parser.CambridgeDictionary.ToString(), client =>
             {
                 client.BaseAddress = new Uri("https://dictionary.cambridge.org/dictionary/english/");
                 //Для первого запроса всегда валилаься на таймауте 10 сек, попробовал увеличить, если будут ошибки, то стоит подумать над другим решением
                 //Также можно попробовать делать warmup
-                client.Timeout = TimeSpan.FromSeconds(45);
+                client.Timeout = TimeSpan.FromSeconds(cambridgeDictionaryTimeoutSeconds);
 
                 // Имитация настоящего браузера хз помогло ли
                 client.DefaultRequestHeaders.Add("User-Agent",

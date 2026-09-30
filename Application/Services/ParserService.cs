@@ -52,37 +52,26 @@ namespace Application.Services
 
         public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode)
         {
-            entries = entries.Select(el => el.ToLower().Trim()).ToArray();
+            string[] normalizedEntries = entries.Select(entry => entry.ToLower().Trim()).ToArray();
 
-            List<Task<List<Word>>> parseTasks = entries
-                .Select(entry => _parserService.ParseWordDataAsync(entry))
-                .ToList();
+            List<Word> dictionaryWords = aiMode == AiMode.Exclusive
+                ? new List<Word>()
+                : await ParseEntriesAsync(normalizedEntries);
 
-            List<Word>[] parsedResults = await Task.WhenAll(parseTasks);
-            List<Word> wordData = parsedResults.SelectMany(x => x).ToList();
-
-            if (aiMode != AiMode.Disabled)
+            if (aiMode == AiMode.Disabled)
             {
-                IEnumerable<string> wordsForAi = aiMode == AiMode.LocalOnly
-                    ? entries
-                    : entries
-                        .Concat(wordData.Select(w => w.Value))
-                        .Concat(wordData.SelectMany(el => el.OtherForms));
-
-                string[] uniqueWords = wordsForAi.Distinct().ToArray();
-
-                Task<List<Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(uniqueWords);
-
-                Task fillMissingExamplesTask = _aiService.FillMissingExamplesAsync(wordData);
-
-                await Task.WhenAll(aiWordsTask, fillMissingExamplesTask);
-
-                List<Word> aiWords = await aiWordsTask;
-
-                wordData.AddRange(aiWords);
+                return dictionaryWords;
             }
 
-            return wordData;
+            string[] wordsForAi = GetWordsForAi(normalizedEntries, dictionaryWords, aiMode);
+
+            Task<List<Word>> aiWordsTask = _aiService.GetMeaningsAndExamplesAsync(wordsForAi);
+            // Дописывает примеры прямо в dictionaryWords
+            Task fillMissingExamplesTask = _aiService.FillMissingExamplesAsync(dictionaryWords);
+
+            await Task.WhenAll(aiWordsTask, fillMissingExamplesTask);
+
+            return dictionaryWords.Concat(await aiWordsTask).ToList();
         }
 
         public async Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId)
@@ -95,6 +84,24 @@ namespace Application.Services
             }
 
             return _dictionaryToParserWordMapper.Map(words[0]);
+        }
+
+        private async Task<List<Word>> ParseEntriesAsync(string[] entries)
+        {
+            List<Word>[] parsedResults = await Task.WhenAll(entries.Select(_parserService.ParseWordDataAsync));
+
+            return parsedResults.SelectMany(words => words).ToList();
+        }
+
+        private static string[] GetWordsForAi(string[] entries, List<Word> dictionaryWords, AiMode aiMode)
+        {
+            IEnumerable<string> wordsForAi = aiMode == AiMode.Full
+                ? entries
+                    .Concat(dictionaryWords.Select(word => word.Value))
+                    .Concat(dictionaryWords.SelectMany(word => word.OtherForms))
+                : entries;
+
+            return wordsForAi.Distinct().ToArray();
         }
     }
 }

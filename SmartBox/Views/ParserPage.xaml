@@ -72,21 +72,13 @@
                     HeightRequest="40"
                     ToolTipProperties.Text="Copy to buffer" />
 
-            <StackLayout Grid.Column="7"
-                         Orientation="Horizontal"
-                         Spacing="5"
-                         VerticalOptions="Center">
-                <Label Text="AI"
-                       VerticalOptions="Center"
-                       FontSize="14"/>
-                <CheckBox IsChecked="{Binding IsAiEnabled, Mode=TwoWay}"
-                          VerticalOptions="Center"/>
-                <Label Text="Local only"
-                       VerticalOptions="Center"
-                       FontSize="14"/>
-                <CheckBox IsChecked="{Binding IsAiLocalOnly, Mode=TwoWay}"
-                          VerticalOptions="Center"/>
-            </StackLayout>
+            <Picker Grid.Column="7"
+                    ItemsSource="{Binding AiModeOptions}"
+                    ItemDisplayBinding="{Binding Title, x:DataType=models:AiModeOption}"
+                    SelectedItem="{Binding SelectedAiMode, Mode=TwoWay}"
+                    WidthRequest="115"
+                    VerticalOptions="Center"
+                    ToolTipProperties.Text="Where to get meanings and examples.&#10;AI also fills in missing examples for Cambridge meanings.&#10;Input only: AI handles only the entered words, not the forms found in Cambridge" />
 
             <Button Grid.Column="8"
                     Text="Enrich"

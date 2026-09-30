@@ -18,6 +18,11 @@ namespace Application.Enums
         /// <summary>
         /// AI только для input слов
         /// </summary>
-        LocalOnly
+        InputOnly,
+
+        /// <summary>
+        /// Только AI для input слов, без запросов к Cambridge
+        /// </summary>
+        Exclusive
     }
 }

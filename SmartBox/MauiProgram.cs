@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.LifecycleEvents;
 using Serilog;
+using SmartBox.Services;
 using Syncfusion.Maui.Core.Hosting;
 
 namespace SmartBox
@@ -29,13 +30,8 @@ namespace SmartBox
                 AppInfo.Name);
             Directory.CreateDirectory(appDataDir);
 
-            string configPath = Path.Combine(appDataDir, "config.json");
-            if (!File.Exists(configPath))
-            {
-                File.Copy(Path.Combine(AppContext.BaseDirectory, "config.json"), configPath);
-            }
-            // TODO: add config versioning — on update, merge missing keys from the bundled config
-            // into the user's config without overwriting existing values, then bump ConfigVersion.
+            ConfigMerger.EnsureUserConfig(Path.Combine(AppContext.BaseDirectory, "config.json"),
+                                          Path.Combine(appDataDir, "config.json"));
 
             IConfiguration config = new ConfigurationBuilder()
                 .SetBasePath(appDataDir)

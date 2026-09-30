@@ -29,6 +29,14 @@ namespace SmartBox.ViewModels
         private const string CopyErrorMessage = "An error occurred while copying to clipboard";
         private const string NoWordsSelectedForCopyError = "No words selected for copying";
 
+        private static readonly AiModeOption[] AiModes =
+        [
+            new AiModeOption { Mode = AiMode.Disabled, Title = "Cambridge" },
+            new AiModeOption { Mode = AiMode.Full, Title = "Cambridge + AI" },
+            new AiModeOption { Mode = AiMode.InputOnly, Title = "Cambridge + AI (input only)" },
+            new AiModeOption { Mode = AiMode.Exclusive, Title = "AI only" },
+        ];
+
         #endregion
 
         #region Fields
@@ -63,30 +71,11 @@ namespace SmartBox.ViewModels
         private int wordId;
 
         [ObservableProperty]
-        private bool isAiEnabled = false;
+        private AiModeOption selectedAiMode = AiModes[0];
 
-        [ObservableProperty]
-        private bool isAiLocalOnly = false;
+        public IReadOnlyList<AiModeOption> AiModeOptions => AiModes;
 
         private WordPack? CompiledSelectedWordsForExport => GetCompiledSelectedWords();
-
-        private AiMode CurrentAiMode
-        {
-            get
-            {
-                if (IsAiLocalOnly)
-                {
-                    return AiMode.LocalOnly;
-                }
-
-                if (IsAiEnabled)
-                {
-                    return AiMode.Full;
-                }
-
-                return AiMode.Disabled;
-            }
-        }
 
         public string ExportPlaceholder => string.Format(ExportPlaceholderFormat, WordsForExport.Count);
 
@@ -181,7 +170,7 @@ namespace SmartBox.ViewModels
                                                 .Distinct()
                                                 .ToArray();
 
-                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, CurrentAiMode);
+                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, SelectedAiMode.Mode);
 
                 List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
@@ -210,7 +199,7 @@ namespace SmartBox.ViewModels
                     return;
                 }
 
-                await ShowDefinitionsAndExamples(entries, CurrentAiMode);
+                await ShowDefinitionsAndExamples(entries, SelectedAiMode.Mode);
             }
             catch (Exception ex)
             {
@@ -346,26 +335,6 @@ namespace SmartBox.ViewModels
         {
             return TreeViewNodes.Any(el => el.IsSelected);
         }
-        #endregion
-
-        #region Property Changed Handlers
-
-        partial void OnIsAiLocalOnlyChanged(bool value)
-        {
-            if (value && !IsAiEnabled)
-            {
-                IsAiEnabled = true;
-            }
-        }
-
-        partial void OnIsAiEnabledChanged(bool value)
-        {
-            if (!value && IsAiLocalOnly)
-            {
-                IsAiLocalOnly = false;
-            }
-        }
-
         #endregion
 
         #region Event Handlers
