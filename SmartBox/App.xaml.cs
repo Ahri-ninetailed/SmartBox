@@ -1,4 +1,5 @@
 ﻿using SmartBox.Interfaces;
+using SmartBox.ViewModels;
 using SmartBox.Views;
 using Syncfusion.Maui.Themes;
 
@@ -9,7 +10,7 @@ namespace SmartBox
         private readonly AppShell _appShell;
         private readonly IThemeService _themeService;
 
-        public App(AppShell appShell, IThemeService themeService)
+        public App(AppShell appShell, IThemeService themeService, DatabaseBackupViewModel databaseBackup)
         {
             InitializeComponent();
 
@@ -19,6 +20,10 @@ namespace SmartBox
             SyncfusionThemeResourceDictionary syncfusionThemeDictionary = Microsoft.Maui.Controls.Application.Current!.Resources.MergedDictionaries.OfType<SyncfusionThemeResourceDictionary>().First();
 
             _themeService.Initialize(syncfusionThemeDictionary);
+
+            // Бэкап нужен один раз на запуск приложения. App — singleton, поэтому конструктор выполняется ровно один раз,
+            // а OnStart MAUI вызывает на каждое созданное окно. Не ждем, ход бэкапа виден в шапке приложения
+            _ = databaseBackup.RunIfDueAsync();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)

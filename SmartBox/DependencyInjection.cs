@@ -29,6 +29,7 @@ namespace SmartBox
 
             services.AddSingleton<AppShell>();
             services.AddTransient<AppShellViewModel>();
+            services.AddSingleton<DatabaseBackupViewModel>();
 
             services.AddSingleton<DictionaryPage>();
             services.AddSingleton<ParserPage>();

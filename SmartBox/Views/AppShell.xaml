@@ -18,7 +18,30 @@
                 <Button Text="Definitions" Command="{Binding GoToDefinitionsCommand}" />
             </HorizontalStackLayout>
 
-            <Grid Grid.Column="1" />
+            <Grid Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="15,0">
+                <ActivityIndicator Grid.Column="0"
+                                   IsRunning="{Binding DatabaseBackup.IsRunning}"
+                                   IsVisible="{Binding DatabaseBackup.IsRunning}"
+                                   WidthRequest="16"
+                                   HeightRequest="16" />
+
+                <Label Grid.Column="1"
+                       Text="{Binding DatabaseBackup.Status}"
+                       ToolTipProperties.Text="{Binding DatabaseBackup.Details}"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       MaxLines="1"
+                       LineBreakMode="TailTruncation">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding DatabaseBackup.ShowErrorCommand}" />
+                    </Label.GestureRecognizers>
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding DatabaseBackup.IsFailed}" Value="True">
+                            <Setter Property="TextColor" Value="{AppThemeBinding Light=#C42B1C, Dark=#FF99A4}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </Grid>
 
             <HorizontalStackLayout Grid.Column="2" Spacing="5">
                 <Button Text="🌞" Command="{Binding LightThemeClickedCommand}" />

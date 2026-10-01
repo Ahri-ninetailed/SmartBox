@@ -30,6 +30,34 @@ namespace SmartBox
                 AppInfo.Name);
             Directory.CreateDirectory(appDataDir);
 
+            // Логирование настраиваем первым, чтобы в лог попадали и ошибки чтения конфига
+            #region Logging Configuration
+            string logsPath = Path.Combine(appDataDir, "Logs", ".log");
+
+            string logsDirectory = Path.GetDirectoryName(logsPath)!;
+            Directory.CreateDirectory(logsDirectory);
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("System.Net.Http.HttpClient", Serilog.Events.LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.File(logsPath,
+                              rollingInterval: RollingInterval.Day,
+                              outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties}{NewLine}{Exception}")
+                .CreateLogger();
+#if DEBUG
+            builder.Logging.AddDebug();
+#endif
+
+            builder.Logging.AddSerilog(Log.Logger);
+
+            #endregion
+
+#if WINDOWS
+            WinUI.FatalErrorHandler.Register(logsDirectory);
+#endif
+
             ConfigMerger.EnsureUserConfig(Path.Combine(AppContext.BaseDirectory, "config.json"),
                                           Path.Combine(appDataDir, "config.json"));
 
@@ -68,32 +96,9 @@ namespace SmartBox
 #endif
             });
 
-            #region Logging Configuration
-            string logsPath = Path.Combine(appDataDir, "Logs", ".log");
-
-            string logsDirectory = Path.GetDirectoryName(logsPath)!;
-            Directory.CreateDirectory(logsDirectory);
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
-                .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
-                .MinimumLevel.Override("System.Net.Http.HttpClient", Serilog.Events.LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.File(logsPath,
-                              rollingInterval: RollingInterval.Day,
-                              outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties}{NewLine}{Exception}")
-                .CreateLogger();
-#if DEBUG
-            builder.Logging.AddDebug();
-#endif
-
-            builder.Logging.AddSerilog(Log.Logger);
-
-            #endregion
-
             builder.Services.AddUIServices();
-            builder.Services.AddInfrastructureServices(config);
-            builder.Services.AddApplicationServices();
+            builder.Services.AddInfrastructureServices(config, Path.Combine(appDataDir, "Backups"));
+            builder.Services.AddApplicationServices(config);
             builder.Services.AddDomainMappers();
 
             builder.UseMauiApp(sp => sp.GetRequiredService<App>());

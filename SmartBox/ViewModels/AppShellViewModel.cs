@@ -8,9 +8,12 @@ namespace SmartBox.ViewModels
     {
         private readonly IThemeService _themeService;
 
-        public AppShellViewModel(IThemeService themeService)
+        public DatabaseBackupViewModel DatabaseBackup { get; }
+
+        public AppShellViewModel(IThemeService themeService, DatabaseBackupViewModel databaseBackup)
         {
             _themeService = themeService;
+            DatabaseBackup = databaseBackup;
         }
 
         [RelayCommand]

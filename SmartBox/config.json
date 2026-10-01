@@ -18,5 +18,9 @@
   "Window": {
     "Width": 1150,
     "Height": 700
+  },
+  "Backup": {
+    "IntervalHours": 24,
+    "KeepCount": 30
   }
 }

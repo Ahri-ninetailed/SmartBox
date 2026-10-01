@@ -21,7 +21,7 @@ namespace Infrastructure
         private const string ParserRetryMessage = "{Parser} retry attempt {RetryCount} after {Delay}s. Status: {StatusCode}, Exception: {ExceptionType}, Message: {ErrorMessage}";
 
 
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration config)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration config, string backupsDirectory)
         {
             services.AddSingleton<IMapper<Models.DataBase.PartOfSpeech?, Domain.Models.Dictionary.PartOfSpeech>, PartOfSpeechMapper>();
             services.AddSingleton<IMapper<Domain.Models.Dictionary.PartOfSpeech, Models.DataBase.PartOfSpeech?>, PartOfSpeechMapper>();
@@ -157,6 +157,11 @@ namespace Infrastructure
 
                 options.EnableDetailedErrors();
             });
+
+            services.AddSingleton<Domain.Interfaces.IDatabaseBackupStorage>(provider =>
+                new DatabaseBackupStorage(provider.GetRequiredService<ILogger<DatabaseBackupStorage>>(),
+                                          sqlConnectionString,
+                                          backupsDirectory));
 
             return services;
         }

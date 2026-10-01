@@ -19,7 +19,19 @@ namespace SmartBox.WinUI
             this.InitializeComponent();
         }
 
-        protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+        protected override MauiApp CreateMauiApp()
+        {
+            // Ошибки запуска, например нет переменной окружения или ключа в конфиге
+            try
+            {
+                return MauiProgram.CreateMauiApp();
+            }
+            catch (Exception ex)
+            {
+                FatalErrorHandler.Report(ex);
+                throw;
+            }
+        }
     }
 
 }
