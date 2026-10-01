@@ -1,6 +1,5 @@
 ﻿using Application;
 using CommunityToolkit.Maui;
-using Domain;
 using Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -99,7 +98,6 @@ namespace SmartBox
             builder.Services.AddUIServices();
             builder.Services.AddInfrastructureServices(config, Path.Combine(appDataDir, "Backups"));
             builder.Services.AddApplicationServices(config);
-            builder.Services.AddDomainMappers();
 
             builder.UseMauiApp(sp => sp.GetRequiredService<App>());
 

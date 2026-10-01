@@ -5,12 +5,12 @@ using System.Text.Json;
 
 namespace Infrastructure.Services
 {
+    /// <summary>
+    /// Собирает промпты, отправляет их в модель и приводит ответ к доменным моделям
+    /// </summary>
     public class AiService : IAiService
     {
         private readonly IAiModel _openAiModel;
-        private readonly int _fillMissingExamplesIfBelow;
-        private readonly int _examplesPerMeaningForFilling;
-        private readonly int _examplesPerMeaningForNewWords;
         private readonly string _missingExamplesPromptTemplate;
         private readonly string _meaningsAndExamplesPromptTemplate;
         private readonly string _missingExamplesSchema;
@@ -18,34 +18,21 @@ namespace Infrastructure.Services
 
         public AiService(
             IAiModel openAiModel,
-            int fillMissingExamplesIfBelow,
-            int examplesPerMeaningForFilling,
-            int examplesPerMeaningForNewWords,
             string missingExamplesPromptTemplate,
             string meaningsAndExamplesPromptTemplate,
             string missingExamplesSchema,
             string meaningsAndExamplesSchema)
         {
             _openAiModel = openAiModel;
-            _fillMissingExamplesIfBelow = fillMissingExamplesIfBelow;
-            _examplesPerMeaningForFilling = examplesPerMeaningForFilling;
-            _examplesPerMeaningForNewWords = examplesPerMeaningForNewWords;
             _missingExamplesPromptTemplate = missingExamplesPromptTemplate;
             _meaningsAndExamplesPromptTemplate = meaningsAndExamplesPromptTemplate;
             _missingExamplesSchema = missingExamplesSchema;
             _meaningsAndExamplesSchema = meaningsAndExamplesSchema;
         }
 
-        public async Task FillMissingExamplesAsync(IEnumerable<Word> words)
+        public async Task<Dictionary<WordMeaning, List<string>>> GetExamplesAsync(IReadOnlyCollection<WordMeaning> meanings, int examplesPerMeaning)
         {
-            HashSet<(string word, string meaning)> meaningsForFilling = GetMeaningsWithEmptyExamples(words);
-
-            if (meaningsForFilling.Count == 0)
-            {
-                return;
-            }
-
-            string prompt = GetPromptForMissingExamples(meaningsForFilling);
+            string prompt = GetPromptForMissingExamples(meanings, examplesPerMeaning);
 
             string json = await _openAiModel.GetAnswerAsync(prompt, "missing_examples", _missingExamplesSchema);
 
@@ -55,17 +42,15 @@ namespace Infrastructure.Services
                 throw new InvalidOperationException("Failed to parse AI response while filling missing examples.");
             }
 
-            Dictionary<(string word, string definition), List<string>> parsedMeaningsAndExamples = response.Words
+            return response.Words
                 .ToDictionary(
-                    d => (d.Value, d.Definition.TrimEnd('.')),
+                    d => new WordMeaning(d.Value, d.Definition.TrimEnd('.')),
                     d => d.Examples.Select(s => s.TrimEnd('.')).ToList());
-
-            FillMissingExamples(parsedMeaningsAndExamples, words);
         }
 
-        public async Task<List<Word>> GetMeaningsAndExamplesAsync(string[] words)
+        public async Task<List<Word>> GetMeaningsAndExamplesAsync(string[] words, int examplesPerMeaning)
         {
-            string prompt = GetPromptForMeaningsAndExamples(words);
+            string prompt = GetPromptForMeaningsAndExamples(words, examplesPerMeaning);
 
             string json = await _openAiModel.GetAnswerAsync(prompt, "meanings_and_examples", _meaningsAndExamplesSchema);
 
@@ -113,58 +98,21 @@ namespace Infrastructure.Services
             return PartOfSpeech.Other;
         }
 
-        internal HashSet<(string word, string meaning)> GetMeaningsWithEmptyExamples(IEnumerable<Word> words)
+        private string GetPromptForMissingExamples(IEnumerable<WordMeaning> meanings, int examplesPerMeaning)
         {
-            return words
-                .SelectMany(word => word.Definitions
-                    .Where(def => def.Examples.Count < _fillMissingExamplesIfBelow)
-                    .Select(def => (word.Value, def.Value)))
-                .ToHashSet();
-        }
-
-        internal void FillMissingExamples(Dictionary<(string word, string definition), List<string>> meaningsAndExamples, IEnumerable<Word> words)
-        {
-            foreach (Word word in words)
-            {
-                if (word.Definitions.All(def => def.Examples.Count >= _fillMissingExamplesIfBelow))
-                {
-                    continue;
-                }
-
-                foreach (var kvp in meaningsAndExamples)
-                {
-                    if (kvp.Key.word != word.Value)
-                    {
-                        continue;
-                    }
-
-                    Definition? definition = word.Definitions.FirstOrDefault(def => def.Value == kvp.Key.definition);
-
-                    if (definition == null)
-                    {
-                        continue;
-                    }
-
-                    definition.Examples.AddRange(kvp.Value.Select(ex => new Example { Value = ex }));
-                }
-            }
-        }
-
-        private string GetPromptForMissingExamples(HashSet<(string word, string meaning)> meaningsForFilling)
-        {
-            string pairs = JsonSerializer.Serialize(meaningsForFilling.Select(x => new { word = x.word, definition = x.meaning }));
+            string pairs = JsonSerializer.Serialize(meanings.Select(x => new { word = x.Word, definition = x.Meaning }));
 
             return _missingExamplesPromptTemplate
-                .Replace("{{ExampleCount}}", _examplesPerMeaningForFilling.ToString())
+                .Replace("{{ExampleCount}}", examplesPerMeaning.ToString())
                 .Replace("{{Pairs}}", pairs);
         }
 
-        private string GetPromptForMeaningsAndExamples(string[] words)
+        private string GetPromptForMeaningsAndExamples(string[] words, int examplesPerMeaning)
         {
             string wordList = string.Join(", ", words.Select(s => $"\"{s}\""));
 
             return _meaningsAndExamplesPromptTemplate
-                .Replace("{{ExampleCount}}", _examplesPerMeaningForNewWords.ToString())
+                .Replace("{{ExampleCount}}", examplesPerMeaning.ToString())
                 .Replace("{{Words}}", wordList);
         }
     }

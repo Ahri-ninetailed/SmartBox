@@ -1,9 +1,11 @@
-﻿namespace Domain.Interfaces
+﻿using Domain.Models.Parser;
+
+namespace Domain.Interfaces
 {
     public interface IAiService
     {
-        Task FillMissingExamplesAsync(IEnumerable<Models.Parser.Word> words);
+        Task<Dictionary<WordMeaning, List<string>>> GetExamplesAsync(IReadOnlyCollection<WordMeaning> meanings, int examplesPerMeaning);
 
-        Task<List<Models.Parser.Word>> GetMeaningsAndExamplesAsync(string[] words);
+        Task<List<Word>> GetMeaningsAndExamplesAsync(string[] words, int examplesPerMeaning);
     }
 }

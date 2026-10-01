@@ -1,7 +1,6 @@
 ﻿using Application.Interfaces;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
-using Polly;
 
 namespace Application.Services
 {
@@ -9,7 +8,6 @@ namespace Application.Services
     {
         private const string Separator = ", ";
 
-        private const string RetryAttemptMessage = "Retry attempt {AttemptNumber} for {OperationName}. Exception: {ExceptionType}";
         private const string LearnedWordsMessage = "Learned {WordCount} words with IDs: {WordIds} and values: {WordValues}";
         private const string MarkedWordsMessage = "Marked {WordCount} words for study with IDs: {WordIds} and values: {WordValues}";
         private const string WordAlreadyExistsError = "Word '{0}' with part of speech '{1}' already exists in the dictionary";
@@ -19,7 +17,6 @@ namespace Application.Services
         private const string ChangedPartOfSpeechMessage = "Changed part of speech for word '{WordValues}' (Id: {WordId}) from '{OldPartOfSpeech}' to '{NewPartOfSpeech}'";
         private const string ValuesNullOrEmptyError = "Values array cannot be null, empty, or contain null/whitespace elements.";
 
-        private readonly ResiliencePipeline _retryPipeline;
         private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
         private readonly IWordPopularityService _wordPopularityService;
@@ -29,26 +26,6 @@ namespace Application.Services
                                  IWordPopularityService wordPopularityService)
         {
             _logger = logger;
-
-            _retryPipeline = new ResiliencePipelineBuilder()
-                .AddRetry(new()
-                {
-                    MaxRetryAttempts = 3,
-                    Delay = TimeSpan.FromSeconds(1),
-                    ShouldHandle = new PredicateBuilder()
-                        .Handle<InvalidOperationException>(ex =>
-                            ex.Message.Contains("transient failure", StringComparison.OrdinalIgnoreCase)),
-                    OnRetry = args =>
-                    {
-                        string operationName = args.Context.OperationKey ?? "Unknown";
-
-                        _logger.LogWarning(RetryAttemptMessage, args.AttemptNumber, operationName, args.Outcome.Exception?.GetType().Name);
-
-                        return ValueTask.CompletedTask;
-                    }
-                })
-                .Build();
-
             _wordRepository = wordRepository;
             _wordPopularityService = wordPopularityService;
         }
@@ -60,195 +37,114 @@ namespace Application.Services
                 throw new ArgumentException(ValuesNullOrEmptyError, nameof(wordValues));
             }
 
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(AddWordAsync));
-
             wordValues = wordValues.Select(el => el.ToLower().Trim()).ToArray();
 
+            bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValues, partOfSpeech);
+
+            if (isWordExisted)
+            {
+                throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, wordValues), partOfSpeech));
+            }
+
+            decimal? wordPopularity = null;
             try
             {
-                bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValues, partOfSpeech);
-
-                if (isWordExisted)
-                {
-                    throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, wordValues), partOfSpeech));
-                }
-
-                decimal? wordPopularity = null;
-                try
-                {
-                    wordPopularity = await _wordPopularityService.GetWordPopularityAsync(wordValues);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, GetWordPopularityErrorMessage, string.Join(Separator, wordValues));
-                }
-
-                Domain.Models.Dictionary.Word newWord = new Domain.Models.Dictionary.Word()
-                {
-                    Values = wordValues,
-                    PartOfSpeech = partOfSpeech,
-                    Comments = comment,
-                    Popularity = wordPopularity
-                };
-
-                Domain.Models.Dictionary.Word word = await _wordRepository.AddWordAsync(newWord);
-
-                _logger.LogInformation(AddedWordMessage, string.Join(Separator, word.Values), word.Id, word.PartOfSpeech);
-
-                return word;
+                wordPopularity = await _wordPopularityService.GetWordPopularityAsync(wordValues);
             }
-            finally
+            catch (Exception ex)
             {
-                ResilienceContextPool.Shared.Return(context);
+                _logger.LogError(ex, GetWordPopularityErrorMessage, string.Join(Separator, wordValues));
             }
+
+            Domain.Models.Dictionary.Word newWord = new Domain.Models.Dictionary.Word()
+            {
+                Values = wordValues,
+                PartOfSpeech = partOfSpeech,
+                Comments = comment,
+                Popularity = wordPopularity
+            };
+
+            Domain.Models.Dictionary.Word word = await _wordRepository.AddWordAsync(newWord);
+
+            _logger.LogInformation(AddedWordMessage, string.Join(Separator, word.Values), word.Id, word.PartOfSpeech);
+
+            return word;
         }
 
         public async Task ChangeWordPartOfSpeech(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
         {
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(ChangeWordPartOfSpeech));
+            Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync([id], false);
 
-            try
+            if (words.Length == 0)
             {
-                await _retryPipeline.ExecuteAsync(async _ =>
-                {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync([id], false);
-
-                    if (words.Length == 0)
-                    {
-                        throw new InvalidOperationException(string.Format(WordNotFoundError, id));
-                    }
-
-                    Domain.Models.Dictionary.PartOfSpeech oldPartOfSpeech = words[0].PartOfSpeech;
-
-                    words[0].ChangePartOfSpeech(partOfSpeech);
-
-                    await _wordRepository.SaveWordsAsync(words);
-
-                    _logger.LogInformation(ChangedPartOfSpeechMessage,
-                        string.Join(Separator, words[0].Values),
-                        words[0].Id,
-                        oldPartOfSpeech,
-                        partOfSpeech);
-                }, context);
+                throw new InvalidOperationException(string.Format(WordNotFoundError, id));
             }
-            finally
-            {
-                ResilienceContextPool.Shared.Return(context);
-            }
+
+            Domain.Models.Dictionary.PartOfSpeech oldPartOfSpeech = words[0].PartOfSpeech;
+
+            words[0].ChangePartOfSpeech(partOfSpeech);
+
+            await _wordRepository.SaveWordsAsync(words);
+
+            _logger.LogInformation(ChangedPartOfSpeechMessage,
+                string.Join(Separator, words[0].Values),
+                words[0].Id,
+                oldPartOfSpeech,
+                partOfSpeech);
         }
 
         public async Task<Domain.Models.Dictionary.Word[]> GetWordsForLearningAsync()
         {
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(GetWordsForLearningAsync));
-
-            try
-            {
-                return await _retryPipeline.ExecuteAsync(async _ =>
-                {
-                    return await _wordRepository.GetWordsForLearningAsync();
-                }, context);
-            }
-            finally
-            {
-                ResilienceContextPool.Shared.Return(context);
-            }
+            return await _wordRepository.GetWordsForLearningAsync();
         }
 
         public async Task LearnWordsAsync(IEnumerable<int> ids)
         {
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(LearnWordsAsync));
+            Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids, false);
 
-            try
+            foreach (Domain.Models.Dictionary.Word word in words)
             {
-                await _retryPipeline.ExecuteAsync(async _ =>
-                {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids, false);
-
-                    foreach (Domain.Models.Dictionary.Word word in words)
-                    {
-                        word.Learn();
-                    }
-
-                    await _wordRepository.SaveWordsAsync(words);
-
-                    _logger.LogInformation(LearnedWordsMessage,
-                        words.Length,
-                        string.Join(Separator, words.Select(w => w.Id)),
-                        string.Join("; ", words.Select(w => string.Join(Separator, w.Values))));
-                }, context);
+                word.Learn();
             }
-            finally
-            {
-                ResilienceContextPool.Shared.Return(context);
-            }
+
+            await _wordRepository.SaveWordsAsync(words);
+
+            _logger.LogInformation(LearnedWordsMessage,
+                words.Length,
+                string.Join(Separator, words.Select(w => w.Id)),
+                string.Join("; ", words.Select(w => string.Join(Separator, w.Values))));
         }
 
         public async Task MarkWordsAsync(IEnumerable<int> ids)
         {
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(MarkWordsAsync));
+            Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids, false);
 
-            try
+            foreach (Domain.Models.Dictionary.Word word in words)
             {
-                await _retryPipeline.ExecuteAsync(async _ =>
-                {
-                    Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(ids, false);
-
-                    foreach (Domain.Models.Dictionary.Word word in words)
-                    {
-                        word.MarkForStudy();
-                    }
-
-                    await _wordRepository.SaveWordsAsync(words);
-
-                    _logger.LogInformation(
-                        MarkedWordsMessage,
-                        words.Length,
-                        string.Join(Separator, words.Select(w => w.Id)),
-                        string.Join("; ", words.Select(w => string.Join(Separator, w.Values))));
-                }, context);
+                word.MarkForStudy();
             }
-            finally
-            {
-                ResilienceContextPool.Shared.Return(context);
-            }
+
+            await _wordRepository.SaveWordsAsync(words);
+
+            _logger.LogInformation(
+                MarkedWordsMessage,
+                words.Length,
+                string.Join(Separator, words.Select(w => w.Id)),
+                string.Join("; ", words.Select(w => string.Join(Separator, w.Values))));
         }
 
         public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
         {
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchWordsAsync));
-
             entries = entries.Select(el => el.ToLower().Trim()).ToArray();
 
-            try
-            {
-                return await _retryPipeline.ExecuteAsync(async _ =>
-                {
-                    return await _wordRepository.SearchWordsAsync(entries);
-                }, context);
-            }
-            finally
-            {
-                ResilienceContextPool.Shared.Return(context);
-            }
+            return await _wordRepository.SearchWordsAsync(entries);
         }
 
         public async Task<Domain.Models.Dictionary.Word[]> SearchByMeaningAsync(string meaning, Domain.Models.Dictionary.PartOfSpeech? partOfSpeech)
         {
-            ResilienceContext context = ResilienceContextPool.Shared.Get(operationKey: nameof(SearchByMeaningAsync));
-
             meaning = meaning.ToLower();
 
-            try
-            {
-                return await _retryPipeline.ExecuteAsync(async _ =>
-                {
-                    return await _wordRepository.SearchByMeaningAsync(meaning, partOfSpeech);
-                }, context);
-            }
-            finally
-            {
-                ResilienceContextPool.Shared.Return(context);
-            }
+            return await _wordRepository.SearchByMeaningAsync(meaning, partOfSpeech);
         }
     }
 }

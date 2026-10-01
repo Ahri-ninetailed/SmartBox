@@ -1,20 +1,13 @@
-﻿using Domain.Models.Parser;
-using Infrastructure.Services;
+using Application.Services;
+using Domain.Models.Parser;
 
-namespace Infrastructure.Tests.Tests
+namespace Application.Tests.Tests
 {
-    public class AiServiceTests
+    public class MissingExamplesTests
     {
-        private readonly AiService _aiService;
+        private const int FillIfBelow = 3;
 
-        public AiServiceTests()
-        {
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            _aiService = new AiService(null, 3, 3, 4, "", "", "", "");
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
-        }
-
-        public static IEnumerable<object[]> GetMeaningsWithEmptyExamplesTestData()
+        public static IEnumerable<object[]> FindTestData()
         {
             yield return new object[]
             {
@@ -71,11 +64,11 @@ namespace Infrastructure.Tests.Tests
                         }
                     }
                 },
-                new HashSet<(string word, string meaning)>
+                new HashSet<WordMeaning>
                 {
-                    ("eve", "The evening"),
-                    ("Eve", "The first woman, according to the biblical story of how the world was made"),
-                    ("eve", "The evening or day before a holiday, or the period immediately before an important event")
+                    new WordMeaning("eve", "The evening"),
+                    new WordMeaning("Eve", "The first woman, according to the biblical story of how the world was made"),
+                    new WordMeaning("eve", "The evening or day before a holiday, or the period immediately before an important event")
                 }
             };
 
@@ -140,11 +133,11 @@ namespace Infrastructure.Tests.Tests
                         }
                     }
                 },
-                new HashSet<(string word, string meaning)>
+                new HashSet<WordMeaning>
                 {
-                    ("eve", "The evening"),
-                    ("Eve", "The first woman, according to the biblical story of how the world was made"),
-                    ("eve", "The evening or day before a holiday, or the period immediately before an important event")
+                    new WordMeaning("eve", "The evening"),
+                    new WordMeaning("Eve", "The first woman, according to the biblical story of how the world was made"),
+                    new WordMeaning("eve", "The evening or day before a holiday, or the period immediately before an important event")
                 }
             };
 
@@ -170,25 +163,25 @@ namespace Infrastructure.Tests.Tests
                         }
                     }
                 },
-                new HashSet<(string word, string meaning)>()
+                new HashSet<WordMeaning>()
             };
         }
 
         [Theory]
-        [MemberData(nameof(GetMeaningsWithEmptyExamplesTestData))]
-        public void GetMeaningsWithEmptyExamples_WordsWithMeaningsWithoutEnoughExamples_ReturnsExpectedEmptyMeanings(
+        [MemberData(nameof(FindTestData))]
+        public void Find_WordsWithMeaningsWithoutEnoughExamples_ReturnsThoseMeanings(
             IEnumerable<Word> input,
-            HashSet<(string word, string meaning)> expectedResult)
+            HashSet<WordMeaning> expectedResult)
         {
             // Act
-            HashSet<(string word, string meaning)> result = _aiService.GetMeaningsWithEmptyExamples(input);
+            HashSet<WordMeaning> result = MissingExamples.Find(input, FillIfBelow);
 
             // Assert
             Assert.Equal(expectedResult, result);
         }
 
         [Fact]
-        public void FillMissingExamples_MatchingDefinition_AddsExamples()
+        public void Add_MatchingDefinition_AddsExamples()
         {
             var words = new List<Word>
             {
@@ -206,12 +199,12 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
+            var meaningsAndExamples = new Dictionary<WordMeaning, List<string>>
             {
-                [("reek", "to have a strong unpleasant smell")] = new() { "Her breath reeked of garlic", "The garbage reeked" }
+                [new WordMeaning("reek", "to have a strong unpleasant smell")] = new() { "Her breath reeked of garlic", "The garbage reeked" }
             };
 
-            _aiService.FillMissingExamples(meaningsAndExamples, words);
+            MissingExamples.Add(words, meaningsAndExamples, FillIfBelow);
 
             Assert.Equal(3, words[0].Definitions[0].Examples.Count);
             Assert.Equal("existing example", words[0].Definitions[0].Examples[0].Value);
@@ -220,7 +213,7 @@ namespace Infrastructure.Tests.Tests
         }
 
         [Fact]
-        public void FillMissingExamples_NoMatchingDefinition_ExamplesUnchanged()
+        public void Add_NoMatchingDefinition_ExamplesUnchanged()
         {
             var words = new List<Word>
             {
@@ -238,18 +231,18 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
+            var meaningsAndExamples = new Dictionary<WordMeaning, List<string>>
             {
-                [("reek", "completely different definition")] = new() { "example 1", "example 2" }
+                [new WordMeaning("reek", "completely different definition")] = new() { "example 1", "example 2" }
             };
 
-            _aiService.FillMissingExamples(meaningsAndExamples, words);
+            MissingExamples.Add(words, meaningsAndExamples, FillIfBelow);
 
             Assert.Single(words[0].Definitions[0].Examples);
         }
 
         [Fact]
-        public void FillMissingExamples_WordAlreadyHasEnoughExamples_Skipped()
+        public void Add_WordAlreadyHasEnoughExamples_Skipped()
         {
             var words = new List<Word>
             {
@@ -272,18 +265,18 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
+            var meaningsAndExamples = new Dictionary<WordMeaning, List<string>>
             {
-                [("reek", "to have a strong unpleasant smell")] = new() { "should not be added" }
+                [new WordMeaning("reek", "to have a strong unpleasant smell")] = new() { "should not be added" }
             };
 
-            _aiService.FillMissingExamples(meaningsAndExamples, words);
+            MissingExamples.Add(words, meaningsAndExamples, FillIfBelow);
 
             Assert.Equal(3, words[0].Definitions[0].Examples.Count);
         }
 
         [Fact]
-        public void FillMissingExamples_MultipleWordsAndDefinitions_FillsCorrectly()
+        public void Add_MultipleWordsAndDefinitions_FillsCorrectly()
         {
             var words = new List<Word>
             {
@@ -323,13 +316,13 @@ namespace Infrastructure.Tests.Tests
                 }
             };
 
-            var meaningsAndExamples = new Dictionary<(string word, string definition), List<string>>
+            var meaningsAndExamples = new Dictionary<WordMeaning, List<string>>
             {
-                [("eve", "The evening")] = new() { "A warm summer eve", "On that fateful eve" },
-                [("Eve", "The first woman")] = new() { "Adam and Eve", "Eve was created from a rib" }
+                [new WordMeaning("eve", "The evening")] = new() { "A warm summer eve", "On that fateful eve" },
+                [new WordMeaning("Eve", "The first woman")] = new() { "Adam and Eve", "Eve was created from a rib" }
             };
 
-            _aiService.FillMissingExamples(meaningsAndExamples, words);
+            MissingExamples.Add(words, meaningsAndExamples, FillIfBelow);
 
             // First word, first definition — already had 3, untouched
             Assert.Equal(3, words[0].Definitions[0].Examples.Count);

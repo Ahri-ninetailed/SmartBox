@@ -3,6 +3,7 @@ using Infrastructure.Mappers;
 using Infrastructure.Services;
 using Infrastructure.Services.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -36,9 +37,6 @@ namespace Infrastructure
             services.AddSingleton<Domain.Interfaces.IWordRepository, WordRepository>();
             services.AddSingleton<Domain.Interfaces.IParserService, ParserService>();
             services.AddSingleton<Domain.Interfaces.IExportService, ExportService>();
-            int fillMissingExamplesIfBelow = config.GetValue<int>("Ai:FillMissingExamplesIfBelow");
-            int examplesPerMeaningForFilling = config.GetValue<int>("Ai:ExamplesPerMeaningForFilling");
-            int examplesPerMeaningForNewWords = config.GetValue<int>("Ai:ExamplesPerMeaningForNewWords");
             string promptsPath = Path.Combine(AppContext.BaseDirectory, "Prompts");
             string missingExamplesPrompt = File.ReadAllText(Path.Combine(promptsPath, "MissingExamples.txt"));
             string meaningsAndExamplesPrompt = File.ReadAllText(Path.Combine(promptsPath, "MeaningsAndExamples.txt"));
@@ -46,9 +44,6 @@ namespace Infrastructure
             string meaningsAndExamplesSchema = File.ReadAllText(Path.Combine(promptsPath, "MeaningsAndExamplesResponse.json"));
             services.AddSingleton<Domain.Interfaces.IAiService>(provider =>
                 new AiService(provider.GetRequiredService<IAiModel>(),
-                              fillMissingExamplesIfBelow,
-                              examplesPerMeaningForFilling,
-                              examplesPerMeaningForNewWords,
                               missingExamplesPrompt,
                               meaningsAndExamplesPrompt,
                               missingExamplesSchema,
@@ -153,7 +148,12 @@ namespace Infrastructure
 
             services.AddDbContextFactory<MyDbContext>(options =>
             {
-                options.UseNpgsql(sqlConnectionString);
+                // Повторяет только временные ошибки: обрыв соединения, таймаут, перегрузка пулера
+                options.UseNpgsql(sqlConnectionString, npgsql =>
+                    npgsql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null));
+
+                // По умолчанию повторы пишутся как Information, а логи EF ниже Warning отфильтрованы
+                options.ConfigureWarnings(warnings => warnings.Log((CoreEventId.ExecutionStrategyRetrying, LogLevel.Warning)));
 
                 options.EnableDetailedErrors();
             });
