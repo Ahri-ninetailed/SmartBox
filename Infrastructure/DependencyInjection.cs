@@ -148,10 +148,13 @@ namespace Infrastructure
 
             services.AddDbContextFactory<MyDbContext>(options => ConfigureDbContext(options, sqlConnectionString));
 
+            // Сама переменная необязательна: если ее нет, pg_dump ищется автоматически
+            string pgDumpPathEnvVar = config["Backup:PgDumpPathEnvVar"] ?? throw new InvalidOperationException("Backup:PgDumpPathEnvVar is not set in config");
             services.AddSingleton<Domain.Interfaces.IDatabaseBackupStorage>(provider =>
                 new DatabaseBackupStorage(provider.GetRequiredService<ILogger<DatabaseBackupStorage>>(),
                                           sqlConnectionString,
-                                          backupsDirectory));
+                                          backupsDirectory,
+                                          pgDumpPathEnvVar));
 
             return services;
         }

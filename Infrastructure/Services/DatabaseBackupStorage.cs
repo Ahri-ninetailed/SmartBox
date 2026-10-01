@@ -22,12 +22,14 @@ namespace Infrastructure.Services
         private readonly ILogger<DatabaseBackupStorage> _logger;
         private readonly string _connectionString;
         private readonly string _backupsDirectory;
+        private readonly string _pgDumpPathEnvVar;
 
-        public DatabaseBackupStorage(ILogger<DatabaseBackupStorage> logger, string connectionString, string backupsDirectory)
+        public DatabaseBackupStorage(ILogger<DatabaseBackupStorage> logger, string connectionString, string backupsDirectory, string pgDumpPathEnvVar)
         {
             _logger = logger;
             _connectionString = connectionString;
             _backupsDirectory = backupsDirectory;
+            _pgDumpPathEnvVar = pgDumpPathEnvVar;
         }
 
         public BackupFile? GetLastBackup()
@@ -91,6 +93,33 @@ namespace Infrastructure.Services
         }
 
         /// <summary>
+        /// Путь из переменной окружения, если он задан, иначе автопоиск
+        /// </summary>
+        internal static string ResolvePgDump(string? configuredPath, string envVarName, string programFilesDirectory)
+        {
+            // Кавычки появляются, если путь скопирован в проводнике через "Копировать как путь"
+            string? path = configuredPath?.Trim().Trim('"').Trim();
+
+            if (string.IsNullOrEmpty(path))
+            {
+                return FindPgDump(programFilesDirectory);
+            }
+
+            if (Directory.Exists(path))
+            {
+                throw new InvalidOperationException($"{envVarName} environment variable must be the full path to {PgDumpFileName}, but '{path}' is a folder");
+            }
+
+            // Явно заданный путь не подменяем автопоиском, иначе опечатка в нем останется незамеченной
+            if (!File.Exists(path))
+            {
+                throw new InvalidOperationException($"{envVarName} environment variable points to '{path}', but this file does not exist");
+            }
+
+            return path;
+        }
+
+        /// <summary>
         /// Ищет pg_dump самой свежей установленной версии PostgreSQL, иначе рассчитывает на PATH
         /// </summary>
         internal static string FindPgDump(string programFilesDirectory)
@@ -118,7 +147,9 @@ namespace Infrastructure.Services
 
             ProcessStartInfo startInfo = new()
             {
-                FileName = FindPgDump(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)),
+                FileName = ResolvePgDump(Environment.GetEnvironmentVariable(_pgDumpPathEnvVar),
+                                         _pgDumpPathEnvVar,
+                                         Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)),
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true,
@@ -161,7 +192,7 @@ namespace Infrastructure.Services
             }
         }
 
-        private static Process StartProcess(ProcessStartInfo startInfo)
+        private Process StartProcess(ProcessStartInfo startInfo)
         {
             try
             {
@@ -169,7 +200,7 @@ namespace Infrastructure.Services
             }
             catch (Win32Exception ex) when (ex.NativeErrorCode == FileNotFoundErrorCode)
             {
-                throw new InvalidOperationException($"{PgDumpFileName} was not found in Program Files\\PostgreSQL\\<version>\\bin or in PATH. Install PostgreSQL or add its bin folder to PATH", ex);
+                throw new InvalidOperationException($"{PgDumpFileName} was not found in Program Files\\PostgreSQL\\<version>\\bin or in PATH. Install PostgreSQL or set the {_pgDumpPathEnvVar} environment variable to the full path of {PgDumpFileName}", ex);
             }
             catch (Win32Exception ex)
             {

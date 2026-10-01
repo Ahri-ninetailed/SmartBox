@@ -21,6 +21,7 @@
   },
   "Backup": {
     "IntervalHours": 24,
-    "KeepCount": 30
+    "KeepCount": 30,
+    "PgDumpPathEnvVar": "PG_DUMP_PATH"
   }
 }

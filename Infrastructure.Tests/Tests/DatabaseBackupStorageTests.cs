@@ -6,6 +6,7 @@ namespace Infrastructure.Tests.Tests
 {
     public class DatabaseBackupStorageTests : IDisposable
     {
+        private const string PgDumpPathEnvVar = "PG_DUMP_PATH";
         private static readonly DateTime Now = new(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
 
         private readonly string _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -26,7 +27,7 @@ namespace Infrastructure.Tests.Tests
         [Fact]
         public void GetLastBackup_NoBackupsDirectory_ReturnsNull()
         {
-            DatabaseBackupStorage storage = new(NullLogger<DatabaseBackupStorage>.Instance, "", Path.Combine(_tempDir, "Missing"));
+            DatabaseBackupStorage storage = new(NullLogger<DatabaseBackupStorage>.Instance, "", Path.Combine(_tempDir, "Missing"), PgDumpPathEnvVar);
 
             Assert.Null(storage.GetLastBackup());
         }
@@ -96,9 +97,69 @@ namespace Infrastructure.Tests.Tests
             Assert.Equal("pg_dump.exe", DatabaseBackupStorage.FindPgDump(_tempDir));
         }
 
+        [Fact]
+        public void ResolvePgDump_PathConfigured_ReturnsIt()
+        {
+            string pgDump = Path.Combine(_tempDir, "pgAdmin 4", "runtime", "pg_dump.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(pgDump)!);
+            File.WriteAllText(pgDump, "");
+            CreatePostgresVersion("18", withPgDump: true);
+
+            Assert.Equal(pgDump, DatabaseBackupStorage.ResolvePgDump(pgDump, PgDumpPathEnvVar, _tempDir));
+        }
+
+        [Fact]
+        public void ResolvePgDump_ConfiguredFileMissing_ThrowsWithVariableName()
+        {
+            CreatePostgresVersion("18", withPgDump: true);
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+                () => DatabaseBackupStorage.ResolvePgDump(Path.Combine(_tempDir, "missing", "pg_dump.exe"), PgDumpPathEnvVar, _tempDir));
+
+            Assert.Contains(PgDumpPathEnvVar, error.Message);
+        }
+
+        [Fact]
+        public void ResolvePgDump_PathInQuotesAndSpaces_ReturnsPathWithoutThem()
+        {
+            string pgDump = Path.Combine(_tempDir, "pgAdmin 4", "runtime", "pg_dump.exe");
+            Directory.CreateDirectory(Path.GetDirectoryName(pgDump)!);
+            File.WriteAllText(pgDump, "");
+
+            Assert.Equal(pgDump, DatabaseBackupStorage.ResolvePgDump($" \"{pgDump}\" ", PgDumpPathEnvVar, _tempDir));
+        }
+
+        [Fact]
+        public void ResolvePgDump_FolderConfigured_ThrowsSayingItIsFolder()
+        {
+            string binFolder = Path.Combine(_tempDir, "PostgreSQL", "bin");
+            Directory.CreateDirectory(binFolder);
+            File.WriteAllText(Path.Combine(binFolder, "pg_dump.exe"), "");
+
+            InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+                () => DatabaseBackupStorage.ResolvePgDump(binFolder, PgDumpPathEnvVar, _tempDir));
+
+            Assert.Contains("is a folder", error.Message);
+            Assert.Contains(PgDumpPathEnvVar, error.Message);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData("\"\"")]
+        public void ResolvePgDump_NotConfigured_FindsAutomatically(string? configuredPath)
+        {
+            CreatePostgresVersion("18", withPgDump: true);
+
+            string pgDump = DatabaseBackupStorage.ResolvePgDump(configuredPath, PgDumpPathEnvVar, _tempDir);
+
+            Assert.Equal(Path.Combine(_tempDir, "PostgreSQL", "18", "bin", "pg_dump.exe"), pgDump);
+        }
+
         private DatabaseBackupStorage CreateStorage()
         {
-            return new DatabaseBackupStorage(NullLogger<DatabaseBackupStorage>.Instance, "", _tempDir);
+            return new DatabaseBackupStorage(NullLogger<DatabaseBackupStorage>.Instance, "", _tempDir, PgDumpPathEnvVar);
         }
 
         private void CreateFile(string name, DateTime lastWriteUtc)
