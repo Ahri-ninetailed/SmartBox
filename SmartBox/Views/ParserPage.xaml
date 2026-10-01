@@ -76,9 +76,9 @@
                     ItemsSource="{Binding AiModeOptions}"
                     ItemDisplayBinding="{Binding Title, x:DataType=models:AiModeOption}"
                     SelectedItem="{Binding SelectedAiMode, Mode=TwoWay}"
-                    WidthRequest="115"
+                    WidthRequest="125"
                     VerticalOptions="Center"
-                    ToolTipProperties.Text="Where to get meanings and examples.&#10;AI also fills in missing examples for Cambridge meanings.&#10;Input only: AI handles only the entered words, not the forms found in Cambridge" />
+                    ToolTipProperties.Text="Where to get meanings and examples.&#10;Camb: Cambridge only.&#10;Camb+AI: Cambridge + AI for the entered words and the forms found in Cambridge. AI also fills in missing examples for Cambridge meanings.&#10;Camb+AI in: Cambridge + AI, but AI handles only the entered (input) words.&#10;AI only: AI without Cambridge" />
 
             <Button Grid.Column="8"
                     Text="Enrich"

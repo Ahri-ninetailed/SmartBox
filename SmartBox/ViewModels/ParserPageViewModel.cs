@@ -31,9 +31,9 @@ namespace SmartBox.ViewModels
 
         private static readonly AiModeOption[] AiModes =
         [
-            new AiModeOption { Mode = AiMode.Disabled, Title = "Cambridge" },
-            new AiModeOption { Mode = AiMode.Full, Title = "Cambridge + AI" },
-            new AiModeOption { Mode = AiMode.InputOnly, Title = "Cambridge + AI (input only)" },
+            new AiModeOption { Mode = AiMode.Disabled, Title = "Camb" },
+            new AiModeOption { Mode = AiMode.Full, Title = "Camb+AI" },
+            new AiModeOption { Mode = AiMode.InputOnly, Title = "Camb+AI in" },
             new AiModeOption { Mode = AiMode.Exclusive, Title = "AI only" },
         ];
 
