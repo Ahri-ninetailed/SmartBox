@@ -1,4 +1,6 @@
-﻿namespace Domain.Models.Dictionary
+﻿using Domain.Rules;
+
+namespace Domain.Models.Dictionary
 {
     public class Word
     {
@@ -15,10 +17,7 @@
             get => _values;
             set
             {
-                if (value == null || value.Length == 0 || value.Any(string.IsNullOrWhiteSpace))
-                {
-                    throw new ArgumentException(ValuesNullOrEmptyError, nameof(Values));
-                }
+                ValidateValues(value);
 
                 _values = value;
             }
@@ -31,6 +30,22 @@
         public string Comments { get; set; } = string.Empty;
 
         public List<Definition> Definitions { get; set; } = [];
+
+        /// <summary>
+        /// Новое слово с нормализованными значениями. Слова из БД создаются без нормализации, чтобы их не переписать при сохранении
+        /// </summary>
+        public static Word CreateNew(string[] values, PartOfSpeech partOfSpeech, string comments)
+        {
+            // Проверяем до нормализации, иначе пробелы превратятся в пустые строки, а null упадет в Trim
+            ValidateValues(values);
+
+            return new Word
+            {
+                Values = WordValues.Normalize(values),
+                PartOfSpeech = partOfSpeech,
+                Comments = comments
+            };
+        }
 
         public void Learn()
         {
@@ -67,6 +82,14 @@
             }
 
             PartOfSpeech = newPartOfSpeech;
+        }
+
+        private static void ValidateValues(string[]? values)
+        {
+            if (values == null || values.Length == 0 || values.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException(ValuesNullOrEmptyError, nameof(Values));
+            }
         }
     }
 }

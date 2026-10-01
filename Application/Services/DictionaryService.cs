@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Domain.Interfaces;
+using Domain.Rules;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Services
@@ -15,7 +16,6 @@ namespace Application.Services
         private const string AddedWordMessage = "Added word '{Word}' (Id: {Id}, PartOfSpeech: {PartOfSpeech}) to the database.";
         private const string WordNotFoundError = "Word with ID '{0}' was not found in the dictionary";
         private const string ChangedPartOfSpeechMessage = "Changed part of speech for word '{WordValues}' (Id: {WordId}) from '{OldPartOfSpeech}' to '{NewPartOfSpeech}'";
-        private const string ValuesNullOrEmptyError = "Values array cannot be null, empty, or contain null/whitespace elements.";
 
         private readonly ILogger<DictionaryService> _logger;
         private readonly IWordRepository _wordRepository;
@@ -32,37 +32,23 @@ namespace Application.Services
 
         public async Task<Domain.Models.Dictionary.Word> AddWordAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech, string comment)
         {
-            if (wordValues.Length == 0 || wordValues.Any(string.IsNullOrWhiteSpace))
-            {
-                throw new ArgumentException(ValuesNullOrEmptyError, nameof(wordValues));
-            }
+            Domain.Models.Dictionary.Word newWord = Domain.Models.Dictionary.Word.CreateNew(wordValues, partOfSpeech, comment);
 
-            wordValues = wordValues.Select(el => el.ToLower().Trim()).ToArray();
-
-            bool isWordExisted = await _wordRepository.IsWordExistedAsync(wordValues, partOfSpeech);
+            bool isWordExisted = await _wordRepository.IsWordExistedAsync(newWord.Values, partOfSpeech);
 
             if (isWordExisted)
             {
-                throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, wordValues), partOfSpeech));
+                throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, newWord.Values), partOfSpeech));
             }
 
-            decimal? wordPopularity = null;
             try
             {
-                wordPopularity = await _wordPopularityService.GetWordPopularityAsync(wordValues);
+                newWord.Popularity = await _wordPopularityService.GetWordPopularityAsync(newWord.Values);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, GetWordPopularityErrorMessage, string.Join(Separator, wordValues));
+                _logger.LogError(ex, GetWordPopularityErrorMessage, string.Join(Separator, newWord.Values));
             }
-
-            Domain.Models.Dictionary.Word newWord = new Domain.Models.Dictionary.Word()
-            {
-                Values = wordValues,
-                PartOfSpeech = partOfSpeech,
-                Comments = comment,
-                Popularity = wordPopularity
-            };
 
             Domain.Models.Dictionary.Word word = await _wordRepository.AddWordAsync(newWord);
 
@@ -135,15 +121,11 @@ namespace Application.Services
 
         public async Task<Domain.Models.Dictionary.Word[]> SearchWordsAsync(string[] entries)
         {
-            entries = entries.Select(el => el.ToLower().Trim()).ToArray();
-
-            return await _wordRepository.SearchWordsAsync(entries);
+            return await _wordRepository.SearchWordsAsync(WordValues.Normalize(entries));
         }
 
         public async Task<Domain.Models.Dictionary.Word[]> SearchByMeaningAsync(string meaning, Domain.Models.Dictionary.PartOfSpeech? partOfSpeech)
         {
-            meaning = meaning.ToLower();
-
             return await _wordRepository.SearchByMeaningAsync(meaning, partOfSpeech);
         }
     }

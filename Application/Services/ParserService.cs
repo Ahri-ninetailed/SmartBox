@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using Application.Settings;
 using Domain.Models.Parser;
+using Domain.Rules;
 using Shared;
 
 namespace Application.Services
@@ -56,7 +57,7 @@ namespace Application.Services
 
         public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode)
         {
-            string[] normalizedEntries = entries.Select(entry => entry.ToLower().Trim()).ToArray();
+            string[] normalizedEntries = WordValues.Normalize(entries);
 
             List<Word> dictionaryWords = aiMode == AiMode.Exclusive
                 ? new List<Word>()

@@ -146,17 +146,7 @@ namespace Infrastructure
             string dbEnvVar = config["Database:ConnectionStringEnvVar"] ?? throw new InvalidOperationException("Database:ConnectionStringEnvVar is not set in config");
             string sqlConnectionString = Environment.GetEnvironmentVariable(dbEnvVar) ?? throw new InvalidOperationException($"{dbEnvVar} environment variable is not set");
 
-            services.AddDbContextFactory<MyDbContext>(options =>
-            {
-                // Повторяет только временные ошибки: обрыв соединения, таймаут, перегрузка пулера
-                options.UseNpgsql(sqlConnectionString, npgsql =>
-                    npgsql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null));
-
-                // По умолчанию повторы пишутся как Information, а логи EF ниже Warning отфильтрованы
-                options.ConfigureWarnings(warnings => warnings.Log((CoreEventId.ExecutionStrategyRetrying, LogLevel.Warning)));
-
-                options.EnableDetailedErrors();
-            });
+            services.AddDbContextFactory<MyDbContext>(options => ConfigureDbContext(options, sqlConnectionString));
 
             services.AddSingleton<Domain.Interfaces.IDatabaseBackupStorage>(provider =>
                 new DatabaseBackupStorage(provider.GetRequiredService<ILogger<DatabaseBackupStorage>>(),
@@ -164,6 +154,21 @@ namespace Infrastructure
                                           backupsDirectory));
 
             return services;
+        }
+
+        /// <summary>
+        /// Общая настройка для приложения и интеграционных тестов, чтобы тесты проверяли ту же конфигурацию
+        /// </summary>
+        internal static void ConfigureDbContext(DbContextOptionsBuilder options, string connectionString)
+        {
+            // Повторяет только временные ошибки: обрыв соединения, таймаут, перегрузка пулера
+            options.UseNpgsql(connectionString, npgsql =>
+                npgsql.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorCodesToAdd: null));
+
+            // По умолчанию повторы пишутся как Information, а логи EF ниже Warning отфильтрованы
+            options.ConfigureWarnings(warnings => warnings.Log((CoreEventId.ExecutionStrategyRetrying, LogLevel.Warning)));
+
+            options.EnableDetailedErrors();
         }
 
         private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(ILogger logger)

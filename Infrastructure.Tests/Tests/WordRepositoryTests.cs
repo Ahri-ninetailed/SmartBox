@@ -1,26 +1,31 @@
 using Infrastructure.Mappers;
 using Infrastructure.Models.DataBase;
 using Infrastructure.Services;
+using Infrastructure.Tests.Fixtures;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Tests.Tests
 {
-    public class WordRepositoryTests : IDisposable
+    /// <summary>
+    /// Запросы проверяются на настоящем PostgreSQL: InMemory не умеет ILIKE и местами сортирует иначе
+    /// </summary>
+    [Collection(PostgresCollection.Name)]
+    public class WordRepositoryTests : IAsyncLifetime
     {
-        private readonly ServiceProvider _provider;
-        private readonly IDbContextFactory<MyDbContext> _dbFactory;
-        private readonly WordRepository _repository;
+        private readonly PostgresFixture _postgres;
+        private TestDatabase _database = null!;
+        private IDbContextFactory<MyDbContext> _dbFactory = null!;
+        private WordRepository _repository = null!;
 
-        public WordRepositoryTests()
+        public WordRepositoryTests(PostgresFixture postgres)
         {
-            string databaseName = Guid.NewGuid().ToString();
+            _postgres = postgres;
+        }
 
-            _provider = new ServiceCollection()
-                .AddDbContextFactory<MyDbContext>(options => options.UseInMemoryDatabase(databaseName))
-                .BuildServiceProvider();
-
-            _dbFactory = _provider.GetRequiredService<IDbContextFactory<MyDbContext>>();
+        public async Task InitializeAsync()
+        {
+            _database = await _postgres.CreateDatabaseAsync();
+            _dbFactory = _database.DbFactory;
 
             PartOfSpeechMapper partOfSpeechMapper = new();
             WordMapper wordMapper = new(partOfSpeechMapper, partOfSpeechMapper, partOfSpeechMapper);
@@ -28,9 +33,9 @@ namespace Infrastructure.Tests.Tests
             _repository = new WordRepository(_dbFactory, wordMapper, wordMapper, partOfSpeechMapper, new DefinitionMapper());
         }
 
-        public void Dispose()
+        public async Task DisposeAsync()
         {
-            _provider.Dispose();
+            await _database.DisposeAsync();
         }
 
         [Fact]
@@ -113,6 +118,89 @@ namespace Infrastructure.Tests.Tests
             Assert.Equal(["study-high", "plain-null"], values);
         }
 
+        [Theory]
+        [InlineData("christmas")]
+        [InlineData("CHRISTMAS")]
+        [InlineData("Day Before")]
+        public async Task SearchByMeaningAsync_QueryInAnyCase_FindsDefinition(string meaning)
+        {
+            await SeedAsync(
+                MakeWord("eve", PartOfSpeech.Other, "the day before Christmas"),
+                MakeWord("dawn", PartOfSpeech.Other, "the first light of the day"));
+
+            Domain.Models.Dictionary.Word[] words = await _repository.SearchByMeaningAsync(meaning, null);
+
+            Assert.Equal(["eve"], words.Select(word => word.Values[0]));
+        }
+
+        [Fact]
+        public async Task SearchByMeaningAsync_PercentInQuery_MatchedLiterally()
+        {
+            await SeedAsync(
+                MakeWord("sale", PartOfSpeech.Other, "a 50% discount"),
+                MakeWord("crowd", PartOfSpeech.Other, "500 people in one place"));
+
+            Domain.Models.Dictionary.Word[] words = await _repository.SearchByMeaningAsync("50%", null);
+
+            Assert.Equal(["sale"], words.Select(word => word.Values[0]));
+        }
+
+        [Fact]
+        public async Task SearchByMeaningAsync_UnderscoreAndBackslashInQuery_MatchedLiterally()
+        {
+            await SeedAsync(
+                MakeWord("snake", PartOfSpeech.Other, @"names written in snake_case or C:\path"),
+                MakeWord("camel", PartOfSpeech.Other, "names written in snakeXcase"));
+
+            Assert.Equal(["snake"], (await _repository.SearchByMeaningAsync("e_c", null)).Select(word => word.Values[0]));
+            Assert.Equal(["snake"], (await _repository.SearchByMeaningAsync(@"C:\path", null)).Select(word => word.Values[0]));
+        }
+
+        [Fact]
+        public async Task SearchByMeaningAsync_PartOfSpeechSet_ReturnsOnlyThatPartOfSpeech()
+        {
+            await SeedAsync(
+                MakeWord("run", PartOfSpeech.Verb, "to move fast"),
+                MakeWord("run", PartOfSpeech.Other, "a fast move on foot"));
+
+            Domain.Models.Dictionary.Word[] words = await _repository.SearchByMeaningAsync("fast", Domain.Models.Dictionary.PartOfSpeech.Verb);
+
+            Assert.Equal(Domain.Models.Dictionary.PartOfSpeech.Verb, Assert.Single(words).PartOfSpeech);
+        }
+
+        [Fact]
+        public async Task SearchWordsAsync_WordsStartingWithEntry_ComeFirstAndShorterFirst()
+        {
+            await SeedAsync(
+                MakeWord("underrun", PartOfSpeech.Other),
+                MakeWord("running", PartOfSpeech.Other),
+                MakeWord("run", PartOfSpeech.Other),
+                MakeWord("walk", PartOfSpeech.Other));
+
+            Domain.Models.Dictionary.Word[] words = await _repository.SearchWordsAsync(["run"]);
+
+            Assert.Equal(["run", "running", "underrun"], words.Select(word => word.Values[0]));
+        }
+
+        [Fact]
+        public async Task SearchWordsAsync_WordWithSeveralValues_FoundBySecondValue()
+        {
+            await SeedAsync(MakeWord("antechamber, anteroom", PartOfSpeech.Other));
+
+            Domain.Models.Dictionary.Word[] words = await _repository.SearchWordsAsync(["anteroom"]);
+
+            Assert.Equal(["antechamber", "anteroom"], Assert.Single(words).Values);
+        }
+
+        [Fact]
+        public async Task IsWordExistedAsync_SameValuesInOtherOrder_ReturnsTrueOnlyForSamePartOfSpeech()
+        {
+            await SeedAsync(MakeWord("odds and ends, odds and sods", PartOfSpeech.Other));
+
+            Assert.True(await _repository.IsWordExistedAsync(["odds and sods", "odds and ends"], Domain.Models.Dictionary.PartOfSpeech.Other));
+            Assert.False(await _repository.IsWordExistedAsync(["odds and sods", "odds and ends"], Domain.Models.Dictionary.PartOfSpeech.Verb));
+        }
+
         // helpers
 
         private async Task SeedAsync(params Word[] words)
@@ -130,6 +218,14 @@ namespace Infrastructure.Tests.Tests
 
             return words.Select(word => word.Values[0]).ToArray();
         }
+
+        private static Word MakeWord(string value, PartOfSpeech partOfSpeech, params string[] definitions) =>
+            new()
+            {
+                Value = value,
+                PartOfSpeech = partOfSpeech,
+                Definitions = definitions.Select(definition => new Definition { Value = definition }).ToList()
+            };
 
         private static Word MakeWord(string value, decimal? popularity, bool shouldStudy = false, bool learned = false) =>
             new()

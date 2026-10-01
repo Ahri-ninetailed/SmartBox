@@ -8,6 +8,7 @@ namespace Infrastructure.Services
     public class WordRepository : IWordRepository
     {
         private const string Separator = ", ";
+        private const string LikeEscapeCharacter = "\\";
 
         private const string EmptyIdsCollectionError = "The 'ids' collection must not be null, empty, or contain zero values.";
         private const string EmptyWordsCollectionError = "The 'words' array must not be null, empty, or contain null elements.";
@@ -159,8 +160,11 @@ namespace Infrastructure.Services
 
             using MyDbContext db = _dbFactory.CreateDbContext();
 
+            // ILIKE сравнивает без учета регистра. % и _ экранируем, чтобы они искались как обычные символы, а не как шаблон
+            string pattern = $"%{EscapeLikePattern(meaning)}%";
+
             Word[] words = await db.EnglishWords
-                .Where(w => w.Definitions.Any(d => d.Value.Contains(meaning)))
+                .Where(w => w.Definitions.Any(d => EF.Functions.ILike(d.Value, pattern, LikeEscapeCharacter)))
                 .Where(w => partOfSpeech == null || w.PartOfSpeech == _partOfSpeechToInfsMapper.Map(partOfSpeech.Value))
                 .OrderBy(w => w.Value)
                 .Take(count)
@@ -206,6 +210,14 @@ namespace Infrastructure.Services
                 .AnyAsync(el => permutations.Contains(el.Value) && el.PartOfSpeech == dbPartOfSpeech);
 
             return exists;
+        }
+
+        private static string EscapeLikePattern(string value)
+        {
+            return value
+                .Replace(LikeEscapeCharacter, LikeEscapeCharacter + LikeEscapeCharacter)
+                .Replace("%", LikeEscapeCharacter + "%")
+                .Replace("_", LikeEscapeCharacter + "_");
         }
 
         private IEnumerable<string> GetAllPermutations(string[] wordValues)
