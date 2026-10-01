@@ -39,7 +39,7 @@ namespace Infrastructure.Tests.Tests
         }
 
         [Fact]
-        public async Task GetWordsForLearningAsync_ShouldStudyWithoutPopularity_ComeBeforeShouldStudyWithPopularity()
+        public async Task GetWordsForLearningAsync_ShouldStudyWithoutPopularity_ComeAfterShouldStudyWithPopularity()
         {
             await SeedAsync(
                 MakeWord("study-high", 0.9m, shouldStudy: true),
@@ -48,11 +48,11 @@ namespace Infrastructure.Tests.Tests
 
             string[] values = await GetValuesForLearningAsync();
 
-            Assert.Equal(["study-null", "study-high", "study-low"], values);
+            Assert.Equal(["study-high", "study-low", "study-null"], values);
         }
 
         [Fact]
-        public async Task GetWordsForLearningAsync_NotMarkedWithoutPopularity_ComeBeforeNotMarkedWithPopularity()
+        public async Task GetWordsForLearningAsync_NotMarkedWithoutPopularity_ComeAfterNotMarkedWithPopularity()
         {
             await SeedAsync(
                 MakeWord("plain-high", 0.9m),
@@ -61,7 +61,7 @@ namespace Infrastructure.Tests.Tests
 
             string[] values = await GetValuesForLearningAsync();
 
-            Assert.Equal(["plain-null", "plain-high", "plain-low"], values);
+            Assert.Equal(["plain-high", "plain-low", "plain-null"], values);
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace Infrastructure.Tests.Tests
 
             string[] values = await GetValuesForLearningAsync();
 
-            Assert.Equal(["study-null", "study-low", "plain-null", "plain-high"], values);
+            Assert.Equal(["study-low", "study-null", "plain-high", "plain-null"], values);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace Infrastructure.Tests.Tests
         }
 
         [Fact]
-        public async Task GetWordsForLearningAsync_ShouldStudyExceedCount_ShouldStudyWithoutPopularityKept()
+        public async Task GetWordsForLearningAsync_ShouldStudyExceedCount_ShouldStudyWithoutPopularityDropped()
         {
             await SeedAsync(
                 MakeWord("study-high", 0.9m, shouldStudy: true),
@@ -102,11 +102,11 @@ namespace Infrastructure.Tests.Tests
 
             string[] values = await GetValuesForLearningAsync(count: 2);
 
-            Assert.Equal(["study-null", "study-high"], values);
+            Assert.Equal(["study-high", "study-low"], values);
         }
 
         [Fact]
-        public async Task GetWordsForLearningAsync_RemainingSlots_FilledByNotMarkedWithoutPopularityFirst()
+        public async Task GetWordsForLearningAsync_RemainingSlots_FilledByNotMarkedWithPopularityFirst()
         {
             await SeedAsync(
                 MakeWord("study-high", 0.9m, shouldStudy: true),
@@ -115,7 +115,7 @@ namespace Infrastructure.Tests.Tests
 
             string[] values = await GetValuesForLearningAsync(count: 2);
 
-            Assert.Equal(["study-high", "plain-null"], values);
+            Assert.Equal(["study-high", "plain-high"], values);
         }
 
         [Theory]
