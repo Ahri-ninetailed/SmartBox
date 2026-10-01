@@ -75,6 +75,11 @@ namespace SmartBox.ViewModels
             Models.Dictionary.PartOfSpeech.Verb
         };
 
+        // Последние запущенные поиски. Поля поиска срабатывают и при открытии страницы с пустым текстом,
+        // а пустой запрос перезагружает список для изучения, который уже загружает InitializeAsync
+        private string? _lastSearchText;
+        private (string Text, Models.Dictionary.PartOfSpeech PartOfSpeech)? _lastMeaningSearch;
+
         private Models.Dictionary.Word[] _selectedWordsCache = Array.Empty<Models.Dictionary.Word>();
         private Models.Dictionary.Word[] SelectedWords => _selectedWordsCache;
         #endregion
@@ -96,6 +101,10 @@ namespace SmartBox.ViewModels
             RawSelectedWords.CollectionChanged += OnSelectedWordsChanged;
 
             Words.CollectionChanged += OnWordsCollectionChanged;
+
+            // Начальные значения полей соответствуют списку для изучения из InitializeAsync
+            _lastSearchText = SearchText;
+            _lastMeaningSearch = (MeaningSearchText, SelectedPartOfSpeech);
         }
 
         #region Public Methods
@@ -109,6 +118,15 @@ namespace SmartBox.ViewModels
         [RelayCommand]
         private async Task SearchByMeaningAsync()
         {
+            // Часть речи входит в запрос: с тем же текстом, но другим фильтром результат другой
+            (string Text, Models.Dictionary.PartOfSpeech PartOfSpeech) meaningSearch = (MeaningSearchText, SelectedPartOfSpeech);
+            if (meaningSearch == _lastMeaningSearch)
+            {
+                return;
+            }
+
+            _lastMeaningSearch = meaningSearch;
+
             try
             {
                 if (string.IsNullOrWhiteSpace(MeaningSearchText))
@@ -133,6 +151,9 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
+                // Чтобы тот же запрос можно было повторить, например когда появится интернет
+                _lastMeaningSearch = null;
+
                 _logger.LogError(ex, SearchByMeaningErrorMessage);
 
                 await _alertService.DisplayAlertAsync($"{SearchByMeaningErrorMessage}: {ex.Message}");
@@ -176,6 +197,13 @@ namespace SmartBox.ViewModels
         [RelayCommand]
         private async Task SearchAsync()
         {
+            if (SearchText == _lastSearchText)
+            {
+                return;
+            }
+
+            _lastSearchText = SearchText;
+
             try
             {
                 if (string.IsNullOrWhiteSpace(SearchText))
@@ -196,6 +224,9 @@ namespace SmartBox.ViewModels
             }
             catch (Exception ex)
             {
+                // Чтобы тот же запрос можно было повторить, например когда появится интернет
+                _lastSearchText = null;
+
                 _logger.LogError(ex, SearchWordsErrorMessage);
 
                 await _alertService.DisplayAlertAsync($"{SearchWordsErrorMessage}: {ex.Message}");
