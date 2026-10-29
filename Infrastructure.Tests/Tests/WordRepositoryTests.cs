@@ -193,12 +193,12 @@ namespace Infrastructure.Tests.Tests
         }
 
         [Fact]
-        public async Task IsWordExistedAsync_SameValuesInOtherOrder_ReturnsTrueOnlyForSamePartOfSpeech()
+        public async Task WordExistsAsync_SameValuesInOtherOrder_ReturnsTrueOnlyForSamePartOfSpeech()
         {
             await SeedAsync(MakeWord("odds and ends, odds and sods", PartOfSpeech.Other));
 
-            Assert.True(await _repository.IsWordExistedAsync(["odds and sods", "odds and ends"], Domain.Models.Dictionary.PartOfSpeech.Other));
-            Assert.False(await _repository.IsWordExistedAsync(["odds and sods", "odds and ends"], Domain.Models.Dictionary.PartOfSpeech.Verb));
+            Assert.True(await _repository.WordExistsAsync(["odds and sods", "odds and ends"], Domain.Models.Dictionary.PartOfSpeech.Other));
+            Assert.False(await _repository.WordExistsAsync(["odds and sods", "odds and ends"], Domain.Models.Dictionary.PartOfSpeech.Verb));
         }
 
         // helpers

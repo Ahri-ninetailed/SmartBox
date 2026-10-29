@@ -193,7 +193,7 @@ namespace Infrastructure.Services
             return result;
         }
 
-        public async Task<bool> IsWordExistedAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
+        public async Task<bool> WordExistsAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
         {
             if (wordValues == null || wordValues.Length == 0 || wordValues.Any(string.IsNullOrWhiteSpace))
             {

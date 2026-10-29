@@ -65,7 +65,7 @@ namespace SmartBox.ViewModels
 
         private async Task ShowWordFromDb(int id)
         {
-            Domain.Models.Parser.Word domainWord = await _parserService.GetWordFromDb(id);
+            Domain.Models.Parser.Word domainWord = await _parserService.GetWordFromDbAsync(id);
 
             Word word = _wordToUIParserMapper.Map(domainWord);
             word.DisableAll();

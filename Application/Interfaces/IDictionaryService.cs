@@ -14,6 +14,6 @@
 
         Task<Domain.Models.Dictionary.Word> AddWordAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech, string comment);
 
-        Task ChangeWordPartOfSpeech(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech);
+        Task ChangeWordPartOfSpeechAsync(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech);
     }
 }

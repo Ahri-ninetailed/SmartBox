@@ -20,7 +20,7 @@ namespace Application.Services
         private readonly AiSettings _aiSettings;
 
         public ParserService(Domain.Interfaces.IParserService parserService,
-                             Domain.Interfaces.IExportService excelService,
+                             Domain.Interfaces.IExportService exportService,
                              Domain.Interfaces.IAiService aiService,
                              Domain.Interfaces.IWordRepository wordRepository,
                              IMapper<Domain.Models.Parser.Definition, Domain.Models.Dictionary.Definition> parserToDictionaryDefinitionMapper,
@@ -28,7 +28,7 @@ namespace Application.Services
                              AiSettings aiSettings)
         {
             _parserService = parserService;
-            _exportService = excelService;
+            _exportService = exportService;
             _aiService = aiService;
             _wordRepository = wordRepository;
             _parserToDictionaryDefinitionMapper = parserToDictionaryDefinitionMapper;
@@ -55,7 +55,7 @@ namespace Application.Services
             return _exportService.GenerateAnkiTsv(directoryPath, source);
         }
 
-        public async Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode)
+        public async Task<List<Word>> GetDefinitionsAndExamplesAsync(string[] entries, AiMode aiMode)
         {
             string[] normalizedEntries = WordValues.Normalize(entries);
 
@@ -79,7 +79,7 @@ namespace Application.Services
             return dictionaryWords.Concat(await aiWordsTask).ToList();
         }
 
-        public async Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId)
+        public async Task<Domain.Models.Parser.Word> GetWordFromDbAsync(int wordId)
         {
             Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync(new[] { wordId }, true);
 

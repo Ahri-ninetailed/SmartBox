@@ -25,7 +25,7 @@ namespace Application.Tests.Tests
             _wordSource.Words = [MakeWord("reek", ("to smell bad", 0), ("to be full of something", 2))];
             _aiService.Examples = new() { [new WordMeaning("reek", "to smell bad")] = ["The garbage reeked", "His breath reeked"] };
 
-            List<Word> words = await _service.GetDefinitionsAndExamples(["reek"], AiMode.InputOnly);
+            List<Word> words = await _service.GetDefinitionsAndExamplesAsync(["reek"], AiMode.InputOnly);
 
             Assert.Equal([new WordMeaning("reek", "to smell bad")], _aiService.RequestedMeanings);
             Assert.Equal(3, _aiService.RequestedExamplesPerMeaning);
@@ -38,7 +38,7 @@ namespace Application.Tests.Tests
         {
             _wordSource.Words = [MakeWord("reek", ("to smell bad", 2))];
 
-            await _service.GetDefinitionsAndExamples(["reek"], AiMode.InputOnly);
+            await _service.GetDefinitionsAndExamplesAsync(["reek"], AiMode.InputOnly);
 
             Assert.Null(_aiService.RequestedMeanings);
         }
@@ -46,7 +46,7 @@ namespace Application.Tests.Tests
         [Fact]
         public async Task GetDefinitionsAndExamples_AiEnabled_AsksAiForNewWordsWithConfiguredExampleCount()
         {
-            await _service.GetDefinitionsAndExamples(["Reek "], AiMode.InputOnly);
+            await _service.GetDefinitionsAndExamplesAsync(["Reek "], AiMode.InputOnly);
 
             Assert.Equal(["reek"], _aiService.RequestedWords);
             Assert.Equal(4, _aiService.RequestedExamplesPerNewWordMeaning);
@@ -57,7 +57,7 @@ namespace Application.Tests.Tests
         {
             _wordSource.Words = [new Word { Value = "under way", OtherForms = ["underway"], PluralForms = ["under ways"] }];
 
-            await _service.GetDefinitionsAndExamples(["Underway"], AiMode.Full);
+            await _service.GetDefinitionsAndExamplesAsync(["Underway"], AiMode.Full);
 
             Assert.Equal(["underway", "under way"], _aiService.RequestedWords);
         }
@@ -67,7 +67,7 @@ namespace Application.Tests.Tests
         {
             _wordSource.Words = [new Word { Value = "under way", OtherForms = ["underway"] }];
 
-            await _service.GetDefinitionsAndExamples(["walk"], AiMode.InputOnly);
+            await _service.GetDefinitionsAndExamplesAsync(["walk"], AiMode.InputOnly);
 
             Assert.Equal(["walk"], _aiService.RequestedWords);
         }

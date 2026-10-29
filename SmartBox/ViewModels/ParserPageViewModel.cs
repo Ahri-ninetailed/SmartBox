@@ -145,7 +145,7 @@ namespace SmartBox.ViewModels
 
                 await _parserService.SyncDefinitionsAndExamplesAsync(wordId, parserDefinitions);
 
-                Domain.Models.Parser.Word updatedWord = await _parserService.GetWordFromDb(wordId);
+                Domain.Models.Parser.Word updatedWord = await _parserService.GetWordFromDbAsync(wordId);
 
                 Word uiUpdatedWord = _wordToUIParserMapper.Map(updatedWord);
                 uiUpdatedWord.DisableAll();
@@ -160,7 +160,7 @@ namespace SmartBox.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanEncrich))]
+        [RelayCommand(CanExecute = nameof(CanEnrich))]
         private async Task EnrichAsync()
         {
             try
@@ -170,7 +170,7 @@ namespace SmartBox.ViewModels
                                                 .Distinct()
                                                 .ToArray();
 
-                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamples(entries, SelectedAiMode.Mode);
+                List<Domain.Models.Parser.Word> rawAdditionalDefinitions = await _parserService.GetDefinitionsAndExamplesAsync(entries, SelectedAiMode.Mode);
 
                 List<Word> additionalDefinitions = _wordToUIParserMapper.MapToList(rawAdditionalDefinitions);
 
@@ -292,7 +292,7 @@ namespace SmartBox.ViewModels
             return string.IsNullOrWhiteSpace(EntryText) == false;
         }
 
-        private bool CanEncrich()
+        private bool CanEnrich()
         {
             return TreeViewNodes.Any(el => el.Id != 0);
         }
@@ -435,7 +435,7 @@ namespace SmartBox.ViewModels
 
         private async Task ShowDefinitionsAndExamples(string[] entries, AiMode aiMode)
         {
-            List<Domain.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamples(entries, aiMode);
+            List<Domain.Models.Parser.Word> words = await _parserService.GetDefinitionsAndExamplesAsync(entries, aiMode);
 
             TreeViewNodes = new ObservableCollection<Word>(_wordToUIParserMapper.MapToList(words));
 
@@ -452,7 +452,7 @@ namespace SmartBox.ViewModels
 
         private async Task ShowWordFromDb(int id)
         {
-            Domain.Models.Parser.Word domainWord = await _parserService.GetWordFromDb(id);
+            Domain.Models.Parser.Word domainWord = await _parserService.GetWordFromDbAsync(id);
 
             Word word = _wordToUIParserMapper.Map(domainWord);
             word.DisableAll();

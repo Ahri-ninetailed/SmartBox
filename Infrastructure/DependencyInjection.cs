@@ -83,7 +83,7 @@ namespace Infrastructure
             })
             .AddPolicyHandler((serviceProvider, request) =>
             {
-                ILogger<WordPopularityService> logger = serviceProvider.GetService<ILogger<WordPopularityService>>()!;
+                ILogger<WordPopularityService> logger = serviceProvider.GetRequiredService<ILogger<WordPopularityService>>();
                 return GetRetryPolicy(logger);
             });
 
@@ -119,7 +119,7 @@ namespace Infrastructure
             // TODO: Вынести в отдельный метод, когда появится другой парсер
             .AddPolicyHandler((serviceProvider, request) =>
             {
-                ILogger logger = serviceProvider.GetService<ILoggerFactory>()!
+                ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>()
                     .CreateLogger(Models.Parser.Parser.CambridgeDictionary.ToString());
 
                 return Policy

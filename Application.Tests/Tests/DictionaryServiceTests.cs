@@ -83,7 +83,7 @@ namespace Application.Tests.Tests
             public string[]? SearchedEntries { get; private set; }
             public string? SearchedMeaning { get; private set; }
 
-            public Task<bool> IsWordExistedAsync(string[] wordValues, PartOfSpeech partOfSpeech)
+            public Task<bool> WordExistsAsync(string[] wordValues, PartOfSpeech partOfSpeech)
             {
                 CheckedValues = wordValues;
                 return Task.FromResult(WordExists);

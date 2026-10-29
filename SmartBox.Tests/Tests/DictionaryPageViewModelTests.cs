@@ -76,7 +76,7 @@ namespace SmartBox.Tests.Tests
             public Task LearnWordsAsync(IEnumerable<int> ids) => throw new NotSupportedException();
             public Task MarkWordsAsync(IEnumerable<int> ids) => throw new NotSupportedException();
             public Task<Domain.Models.Dictionary.Word> AddWordAsync(string[] wordValues, Domain.Models.Dictionary.PartOfSpeech partOfSpeech, string comment) => throw new NotSupportedException();
-            public Task ChangeWordPartOfSpeech(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech) => throw new NotSupportedException();
+            public Task ChangeWordPartOfSpeechAsync(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech) => throw new NotSupportedException();
         }
 
         private class FakeAlertService : IAlertService

@@ -5,9 +5,9 @@ namespace Application.Interfaces
 {
     public interface IParserService
     {
-        Task<List<Word>> GetDefinitionsAndExamples(string[] entries, AiMode aiMode);
+        Task<List<Word>> GetDefinitionsAndExamplesAsync(string[] entries, AiMode aiMode);
 
-        Task<Domain.Models.Parser.Word> GetWordFromDb(int wordId);
+        Task<Domain.Models.Parser.Word> GetWordFromDbAsync(int wordId);
 
         string ExportAnkiWords(string directoryPath, Domain.Models.Parser.Word[] source);
 

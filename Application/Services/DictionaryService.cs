@@ -34,9 +34,9 @@ namespace Application.Services
         {
             Domain.Models.Dictionary.Word newWord = Domain.Models.Dictionary.Word.CreateNew(wordValues, partOfSpeech, comment);
 
-            bool isWordExisted = await _wordRepository.IsWordExistedAsync(newWord.Values, partOfSpeech);
+            bool wordExists = await _wordRepository.WordExistsAsync(newWord.Values, partOfSpeech);
 
-            if (isWordExisted)
+            if (wordExists)
             {
                 throw new InvalidOperationException(string.Format(WordAlreadyExistsError, string.Join(Separator, newWord.Values), partOfSpeech));
             }
@@ -57,7 +57,7 @@ namespace Application.Services
             return word;
         }
 
-        public async Task ChangeWordPartOfSpeech(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
+        public async Task ChangeWordPartOfSpeechAsync(int id, Domain.Models.Dictionary.PartOfSpeech partOfSpeech)
         {
             Domain.Models.Dictionary.Word[] words = await _wordRepository.GetWordsByIdsAsync([id], false);
 

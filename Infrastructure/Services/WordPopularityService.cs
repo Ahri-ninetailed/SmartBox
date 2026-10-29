@@ -43,6 +43,8 @@ namespace Infrastructure.Services
 
             HttpResponseMessage response = await _httpClient.GetAsync($"?{query}");
 
+            response.EnsureSuccessStatusCode();
+
             string jsonContent = await response.Content.ReadAsStringAsync();
 
             NgramModel[]? result = JsonSerializer.Deserialize<NgramModel[]>(jsonContent, _jsonOptions);

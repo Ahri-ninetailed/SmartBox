@@ -355,7 +355,7 @@ namespace SmartBox.ViewModels
 
                 Domain.Models.Dictionary.PartOfSpeech newPartOfSpeech = _partOfSpeechMapper.Map(SelectedPartOfSpeech);
 
-                await _dictionaryService.ChangeWordPartOfSpeech(SelectedWords[0].Id, newPartOfSpeech);
+                await _dictionaryService.ChangeWordPartOfSpeechAsync(SelectedWords[0].Id, newPartOfSpeech);
 
                 SelectedWords[0].PartOfSpeech = SelectedPartOfSpeech;
             }
