@@ -4,6 +4,10 @@ SmartBox is a Windows desktop app for building a personal English vocabulary. It
 
 Built with .NET 9 and .NET MAUI.
 
+![Parser page: meanings and examples for "cat" from the Cambridge Dictionary](Docs/screenshots/parser.png)
+
+![Dictionary page: saved words to study, ordered by popularity](Docs/screenshots/dictionary.png)
+
 ## Features
 
 - **Parser.** Enter a word, or the ID of a saved word, and get its meanings and examples. The source is picked per request:
